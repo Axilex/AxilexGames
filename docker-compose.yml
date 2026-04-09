@@ -1,0 +1,69 @@
+## ============================================================
+## WikiRace — Docker Compose (auto-hébergement)
+## ============================================================
+## Architecture :
+##   Caddy (reverse proxy + HTTPS auto)
+##     ├── sert les fichiers statiques Vue.js
+##     ├── proxifie /wiki/* vers l'API NestJS
+##     └── proxifie /socket.io/* vers l'API NestJS (WebSocket)
+##
+## Usage :
+##   cp .env.example .env          # configurer le domaine
+##   docker compose up -d --build  # premier lancement
+##   docker compose logs -f        # logs en temps réel
+## ============================================================
+
+services:
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - frontend_dist:/srv/frontend:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    depends_on:
+      web:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ""   # Vide = même domaine, Caddy gère le proxy
+    volumes:
+      - frontend_dist:/output
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - CORS_ORIGINS=https://${DOMAIN:-localhost}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>{if(!r.ok)throw r;process.exit(0)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  frontend_dist:
+  caddy_data:
+  caddy_config:

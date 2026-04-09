@@ -1,0 +1,29 @@
+# ============================================================
+# WikiRace API — Render.com
+# ============================================================
+# Render détecte ce fichier et configure le service automatiquement.
+# Doc : https://docs.render.com/blueprint-spec
+#
+# Étapes après le premier déploiement :
+#   1. Récupérer l'URL Vercel du frontend (ex: https://axilex-games.vercel.app)
+#   2. Dans Render → Environment → CORS_ORIGINS : coller cette URL
+#   3. Redéployer
+# ============================================================
+
+services:
+  - type: web
+    name: axilex-games-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    branch: main
+    plan: free           # free = cold start après 15 min d'inactivité
+                         # starter ($7/mois) = toujours allumé
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: CORS_ORIGINS
+        sync: false      # À remplir manuellement avec l'URL Vercel du frontend
+    healthCheckPath: /health

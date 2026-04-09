@@ -33,7 +33,12 @@ const RECONNECT_TIMEOUT_MS = 30_000;
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway({
-  cors: { origin: 'http://localhost:5173', credentials: true },
+  cors: {
+    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
+      .split(',')
+      .map((o) => o.trim()),
+    credentials: true,
+  },
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
