@@ -1,0 +1,12 @@
+export enum GameStatus {
+  WAITING = 'WAITING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  FINISHED = 'FINISHED',
+}
+
+export enum PlayerStatus {
+  CONNECTED = 'CONNECTED',
+  DISCONNECTED = 'DISCONNECTED',
+  SURRENDERED = 'SURRENDERED',
+  FINISHED = 'FINISHED',
+}

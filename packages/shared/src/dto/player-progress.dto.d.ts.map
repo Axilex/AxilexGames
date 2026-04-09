@@ -1,0 +1,1 @@
+{"version":3,"file":"player-progress.dto.d.ts","sourceRoot":"","sources":["player-progress.dto.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,iBAAiB,CAAC;AAE/C,MAAM,WAAW,iBAAiB;IAChC,MAAM,EAAE,MAAM,CAAC;IACf,MAAM,EAAE,YAAY,CAAC;IACrB,QAAQ,EAAE,MAAM,CAAC;IACjB,WAAW,EAAE,MAAM,CAAC;CACrB"}
