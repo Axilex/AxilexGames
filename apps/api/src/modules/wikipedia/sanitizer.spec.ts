@@ -63,12 +63,14 @@ describe('sanitizeWikipediaHtml', () => {
     expect(result).not.toContain('/wiki/Spécial:');
   });
 
-  it('strips <img> tags', () => {
-    expect(result).not.toContain('<img');
+  it('strips <img> tags whose src is not from Wikimedia', () => {
+    // flag.png and photo.jpg are not Wikimedia URLs → stripped
+    expect(result).not.toContain('src="flag.png"');
+    expect(result).not.toContain('src="photo.jpg"');
   });
 
-  it('strips <figure> tags', () => {
-    expect(result).not.toContain('<figure');
+  it('preserves <figure> tags (images/infoboxes are allowed)', () => {
+    expect(result).toContain('<figure');
   });
 
   it('strips <script> tags', () => {

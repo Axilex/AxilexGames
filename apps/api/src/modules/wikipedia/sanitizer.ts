@@ -90,15 +90,18 @@ export function sanitizeWikipediaHtml(rawHtml: string): string {
       'hr',
       'blockquote',
       'section',
+      'nav',
       'figure',
       'figcaption',
       'img',
       'small',
       'abbr',
       's',
+      'h5',
+      'h6',
     ],
     allowedAttributes: {
-      a: ['href'],
+      a: ['href', 'id'],
       img: ['src', 'alt', 'width', 'height', 'decoding', 'loading'],
       figure: ['class', 'typeof'],
       figcaption: ['class'],
@@ -109,14 +112,26 @@ export function sanitizeWikipediaHtml(rawHtml: string): string {
       tr: ['class', 'style'],
       th: ['scope', 'colspan', 'rowspan', 'class', 'style'],
       td: ['colspan', 'rowspan', 'class', 'style'],
-      div: ['class', 'style'],
+      div: ['class', 'style', 'id'],
       span: ['class', 'style'],
-      section: ['class'],
+      section: ['class', 'id'],
+      nav: ['class', 'id', 'role'],
+      h1: ['id'],
+      h2: ['id'],
+      h3: ['id'],
+      h4: ['id'],
+      h5: ['id'],
+      h6: ['id'],
       abbr: ['title'],
     },
     transformTags: {
       a: (tagName, attribs) => {
-        const wikiPath = toWikiPath(attribs['href'] ?? '');
+        const href = attribs['href'] ?? '';
+        // Allow in-page anchor links (TOC navigation)
+        if (href.startsWith('#')) {
+          return { tagName: 'a', attribs: { href } };
+        }
+        const wikiPath = toWikiPath(href);
         if (!wikiPath || isBlocked(wikiPath)) {
           // Unwrap to plain text — strip the link but keep the label
           return { tagName: 'span', attribs: {} as Record<string, string> };

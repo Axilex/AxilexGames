@@ -1,18 +1,26 @@
 <template>
   <div class="h-screen bg-stone-50 flex flex-col overflow-hidden">
     <!-- Top bar -->
-    <header class="shrink-0 bg-white border-b border-stone-200 px-4 py-2 flex items-center justify-between gap-4">
-      <TargetPageDisplay :target-slug="gameStore.targetSlug" />
-
-      <GameTimer
-        v-if="gameStore.gameState"
-        :start-time="gameStore.gameState.startTime"
-        :time-limit-seconds="gameStore.gameState.timeLimitSeconds"
-      />
-
-      <div class="flex items-center gap-2">
-        <ErrorToast :message="gameStore.navigationError" />
-        <SurrenderButton @surrender="surrender" />
+    <header class="shrink-0 bg-white border-b border-stone-200 px-4 py-2">
+      <!-- Start page name — big, centered -->
+      <div class="text-center mb-1">
+        <span class="text-xs text-stone-400 uppercase tracking-widest">Départ</span>
+        <div class="text-2xl font-bold text-stone-900 leading-tight truncate">
+          {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
+        </div>
+      </div>
+      <!-- Controls row -->
+      <div class="flex items-center justify-between gap-4">
+        <TargetPageDisplay :target-slug="gameStore.targetSlug" />
+        <GameTimer
+          v-if="gameStore.gameState"
+          :start-time="gameStore.gameState.startTime"
+          :time-limit-seconds="gameStore.gameState.timeLimitSeconds"
+        />
+        <div class="flex items-center gap-2">
+          <ErrorToast :message="gameStore.navigationError" />
+          <SurrenderButton @surrender="surrender" />
+        </div>
       </div>
     </header>
 
@@ -32,6 +40,7 @@
         <WikiContentArea
           v-else
           :html-content="gameStore.currentPage.htmlContent"
+          :title="gameStore.currentPage.title"
           :is-navigating="gameStore.isNavigating"
           @navigate="navigate"
         />

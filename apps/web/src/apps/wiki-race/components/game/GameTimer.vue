@@ -1,10 +1,10 @@
 <template>
   <div
     :class="[
-      'font-mono text-xl font-bold tabular-nums px-3 py-1 rounded-lg',
+      'font-mono text-sm font-semibold tabular-nums px-2 py-0.5 rounded-md',
       isCountdown && secondsLeft < 60
         ? 'text-red-600 bg-red-50 animate-pulse'
-        : 'text-gray-700 bg-gray-100',
+        : 'text-stone-500 bg-stone-100',
     ]"
     :title="isCountdown ? 'Temps restant' : 'Temps écoulé'"
   >
