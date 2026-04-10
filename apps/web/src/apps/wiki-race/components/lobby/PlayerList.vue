@@ -21,7 +21,12 @@
         </svg>
         <span v-else class="h-4 w-4 shrink-0" />
         <span class="flex-1 text-xs font-medium text-stone-800 truncate">{{ player.pseudo }}</span>
-        <span :class="['text-[10px] font-medium px-1.5 py-0.5 rounded-full', statusClass(player.status)]">
+        <span
+          :class="[
+            'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
+            statusClass(player.status),
+          ]"
+        >
           {{ statusLabel(player.status) }}
         </span>
       </li>

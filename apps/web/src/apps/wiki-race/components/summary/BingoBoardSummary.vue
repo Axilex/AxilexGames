@@ -22,7 +22,9 @@
           }}
         </span>
         <div class="flex-1 min-w-0">
-          <div class="font-semibold text-stone-900 text-sm">{{ player.pseudo }}</div>
+          <div class="font-semibold text-stone-900 text-sm">
+            {{ player.pseudo }}
+          </div>
           <div class="text-xs text-stone-500">
             {{ player.bingoValidated.length }}/{{ totalConstraints }} contraintes ·
             {{ player.hopCount }} clic{{ player.hopCount !== 1 ? 's' : '' }}

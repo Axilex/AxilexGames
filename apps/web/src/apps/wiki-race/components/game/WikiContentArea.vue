@@ -39,7 +39,9 @@
     <div ref="containerRef" class="wiki-content h-full overflow-y-auto">
       <div class="wiki-inner">
         <!-- Page title -->
-        <h1 v-if="title" class="wiki-page-title">{{ title }}</h1>
+        <h1 v-if="title" class="wiki-page-title">
+          {{ title }}
+        </h1>
 
         <!-- Generated table of contents -->
         <nav v-if="toc.length >= 3" class="wiki-toc">

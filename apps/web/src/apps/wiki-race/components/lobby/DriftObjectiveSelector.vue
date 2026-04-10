@@ -16,8 +16,12 @@
       >
         <span class="text-lg">{{ opt.icon }}</span>
         <div>
-          <div class="text-sm font-semibold">{{ opt.label }}</div>
-          <div class="text-xs text-stone-400">{{ opt.description }}</div>
+          <div class="text-sm font-semibold">
+            {{ opt.label }}
+          </div>
+          <div class="text-xs text-stone-400">
+            {{ opt.description }}
+          </div>
         </div>
       </button>
     </div>

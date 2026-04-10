@@ -1,10 +1,7 @@
 <template>
   <div class="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-2xl flex flex-col gap-6">
-      <WinnerBanner
-        v-if="summary"
-        :summary="summary"
-      />
+      <WinnerBanner v-if="summary" :summary="summary" />
 
       <!-- DRIFT: ranked leaderboard -->
       <div
@@ -27,9 +24,7 @@
         v-else
         class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 flex flex-col gap-5"
       >
-        <h3 class="text-sm font-semibold text-stone-500 uppercase tracking-widest">
-          Parcours
-        </h3>
+        <h3 class="text-sm font-semibold text-stone-500 uppercase tracking-widest">Parcours</h3>
         <PlayerPathDisplay
           v-for="player in summary?.players"
           :key="player.pseudo"
@@ -45,25 +40,9 @@
 
       <!-- Actions -->
       <div class="flex gap-3 justify-center">
-        <BaseButton
-          variant="secondary"
-          @click="goHome"
-        >
-          Accueil
-        </BaseButton>
-        <BaseButton
-          v-if="isHost"
-          @click="playAgain"
-        >
-          Rejouer dans cette room →
-        </BaseButton>
-        <BaseButton
-          v-else
-          variant="secondary"
-          @click="goToLobby"
-        >
-          Retour au lobby
-        </BaseButton>
+        <BaseButton variant="secondary" @click="goHome"> Accueil </BaseButton>
+        <BaseButton v-if="isHost" @click="playAgain"> Rejouer dans cette room → </BaseButton>
+        <BaseButton v-else variant="secondary" @click="goToLobby"> Retour au lobby </BaseButton>
       </div>
     </div>
   </div>

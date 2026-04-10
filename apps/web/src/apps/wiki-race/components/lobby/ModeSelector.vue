@@ -16,8 +16,12 @@
       >
         <span class="text-xl leading-none mt-0.5">{{ m.icon }}</span>
         <div>
-          <div class="text-sm font-semibold">{{ m.label }}</div>
-          <div class="text-xs text-stone-400">{{ m.description }}</div>
+          <div class="text-sm font-semibold">
+            {{ m.label }}
+          </div>
+          <div class="text-xs text-stone-400">
+            {{ m.description }}
+          </div>
         </div>
       </button>
     </div>

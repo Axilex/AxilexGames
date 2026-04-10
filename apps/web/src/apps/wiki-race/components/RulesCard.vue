@@ -9,11 +9,7 @@
       <!-- Modes -->
       <div class="flex flex-col gap-1.5">
         <p class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Modes</p>
-        <div
-          v-for="m in modes"
-          :key="m.value"
-          class="flex gap-1.5 items-start"
-        >
+        <div v-for="m in modes" :key="m.value" class="flex gap-1.5 items-start">
           <span class="shrink-0 text-xs leading-tight mt-px">{{ m.icon }}</span>
           <div class="text-[10px] leading-tight">
             <span class="font-semibold text-stone-700">{{ m.label }}</span>
@@ -27,11 +23,7 @@
         <p class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">
           Contraintes Bingo
         </p>
-        <div
-          v-for="c in constraints"
-          :key="c.id"
-          class="flex gap-1.5 items-start"
-        >
+        <div v-for="c in constraints" :key="c.id" class="flex gap-1.5 items-start">
           <span class="shrink-0 text-xs leading-tight mt-px">{{ c.icon }}</span>
           <div class="text-[10px] leading-tight">
             <span class="font-semibold text-stone-700">{{ c.label }}</span>
@@ -69,7 +61,7 @@ const modes = [
     value: GameMode.SPRINT,
     icon: '⚡',
     label: 'Sprint',
-    description: "Même but, timer obligatoire.",
+    description: 'Même but, timer obligatoire.',
   },
   {
     value: GameMode.LABYRINTH,
@@ -81,7 +73,7 @@ const modes = [
     value: GameMode.DRIFT,
     icon: '🌊',
     label: 'WikiDrift',
-    description: 'Optimisez un score selon l\'objectif.',
+    description: "Optimisez un score selon l'objectif.",
   },
   {
     value: GameMode.BINGO,
@@ -108,13 +100,13 @@ const CONSTRAINT_DESCRIPTIONS: Record<string, string> = {
   year_in_title: 'Titre avec une année (ex: Guerre de 1812).',
   biographical: 'Page sur une personne (infobox Naissance).',
   country: 'Pays ou état (infobox Capitale/Gentilé).',
-  has_main_image: 'Image principale dans l\'infobox.',
+  has_main_image: "Image principale dans l'infobox.",
   artist: 'Artiste (infobox Activité: musicien, acteur…).',
   sportsperson: 'Sportif (infobox Sport).',
   city: 'Commune ou ville (classe infobox commune).',
   many_images: '10+ images réelles dans la page.',
   film_or_series: 'Film ou série (infobox Réalisation/Chaîne).',
-  science: 'Discipline scientifique mentionnée dans l\'intro.',
+  science: "Discipline scientifique mentionnée dans l'intro.",
 };
 
 const constraints = BINGO_CONSTRAINTS.map((c) => ({

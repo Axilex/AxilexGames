@@ -22,7 +22,9 @@
           }}
         </span>
         <div class="flex-1 min-w-0">
-          <div class="font-semibold text-stone-900 text-sm">{{ player.pseudo }}</div>
+          <div class="font-semibold text-stone-900 text-sm">
+            {{ player.pseudo }}
+          </div>
           <div v-if="player.driftBestSlug" class="text-xs text-stone-500 truncate">
             {{ decodeURIComponent(player.driftBestSlug).replace(/_/g, ' ') }}
           </div>

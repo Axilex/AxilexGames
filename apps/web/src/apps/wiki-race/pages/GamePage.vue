@@ -8,14 +8,15 @@
         <template
           v-if="
             gameStore.mode === 'CLASSIC' ||
-              gameStore.mode === 'SPRINT' ||
-              gameStore.mode === 'LABYRINTH'
+            gameStore.mode === 'SPRINT' ||
+            gameStore.mode === 'LABYRINTH'
           "
         >
           <div class="flex flex-col items-center min-w-0">
             <span
               class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest leading-none mb-0.5"
-            >Départ</span>
+              >Départ</span
+            >
             <span class="text-lg font-bold text-stone-900 leading-tight truncate max-w-[180px]">
               {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
             </span>
@@ -27,16 +28,13 @@
             stroke="currentColor"
             stroke-width="2.5"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
-            />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
           <div class="flex flex-col items-center min-w-0">
             <span
               class="text-[10px] font-semibold text-amber-500 uppercase tracking-widest leading-none mb-0.5"
-            >Arrivée</span>
+              >Arrivée</span
+            >
             <span class="text-lg font-bold text-amber-700 leading-tight truncate max-w-[180px]">
               {{
                 gameStore.targetSlug
@@ -66,7 +64,8 @@
           <div class="flex flex-col items-center min-w-0">
             <span
               class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest leading-none mb-0.5"
-            >Départ</span>
+              >Départ</span
+            >
             <span class="text-base font-bold text-stone-900 truncate max-w-[140px]">
               {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
             </span>
@@ -78,16 +77,13 @@
             stroke="currentColor"
             stroke-width="2.5"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
-            />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
           <div class="flex flex-col items-center min-w-0">
             <span
               class="text-[10px] font-semibold text-amber-500 uppercase tracking-widest leading-none mb-0.5"
-            >Objectif</span>
+              >Objectif</span
+            >
             <span class="text-base font-bold text-amber-700">{{ driftObjectiveLabel }}</span>
           </div>
           <div
@@ -103,7 +99,8 @@
           <div class="flex flex-col items-center min-w-0">
             <span
               class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest leading-none mb-0.5"
-            >Départ</span>
+              >Départ</span
+            >
             <span class="text-base font-bold text-stone-900 truncate max-w-[140px]">
               {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
             </span>
@@ -140,14 +137,8 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- Wikipedia content (main area) -->
       <main class="flex-1 overflow-hidden bg-white border-r border-stone-200">
-        <div
-          v-if="!gameStore.currentPage"
-          class="h-full flex items-center justify-center"
-        >
-          <LoadingSpinner
-            size="lg"
-            color="blue"
-          />
+        <div v-if="!gameStore.currentPage" class="h-full flex items-center justify-center">
+          <LoadingSpinner size="lg" color="blue" />
         </div>
         <WikiContentArea
           v-else

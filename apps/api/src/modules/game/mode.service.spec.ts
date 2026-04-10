@@ -129,8 +129,7 @@ describe('ModeService — Bingo', () => {
   });
 
   it('checkConstraints - biographical finds Naissance in infobox', () => {
-    const html =
-      '<table class="infobox"><tr><th>Naissance</th><td>5 juin 1980</td></tr></table>';
+    const html = '<table class="infobox"><tr><th>Naissance</th><td>5 juin 1980</td></tr></table>';
     const validated = service.checkConstraints(['biographical'], 'any', html);
     expect(validated).toContain('biographical');
   });

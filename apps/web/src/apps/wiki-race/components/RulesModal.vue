@@ -7,10 +7,7 @@
         @click.self="closeRules"
       >
         <!-- Backdrop -->
-        <div
-          class="absolute inset-0 bg-black/40"
-          @click="closeRules"
-        />
+        <div class="absolute inset-0 bg-black/40" @click="closeRules" />
 
         <!-- Panel -->
         <div
@@ -22,9 +19,7 @@
           >
             <div class="flex items-center gap-2">
               <span class="text-xl">📖</span>
-              <h2 class="text-base font-bold text-stone-900">
-                Règles du jeu
-              </h2>
+              <h2 class="text-base font-bold text-stone-900">Règles du jeu</h2>
             </div>
             <button
               type="button"
@@ -40,9 +35,7 @@
           <div class="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-7">
             <!-- Modes -->
             <section class="flex flex-col gap-3">
-              <h3
-                class="text-xs font-semibold text-stone-500 uppercase tracking-widest"
-              >
+              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
                 Modes de jeu
               </h3>
               <div
@@ -64,9 +57,7 @@
 
             <!-- Bingo constraints -->
             <section class="flex flex-col gap-3">
-              <h3
-                class="text-xs font-semibold text-stone-500 uppercase tracking-widest"
-              >
+              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
                 Contraintes Bingo
               </h3>
               <p class="text-xs text-stone-400">
@@ -94,9 +85,7 @@
 
             <!-- General rules -->
             <section class="flex flex-col gap-2">
-              <h3
-                class="text-xs font-semibold text-stone-500 uppercase tracking-widest"
-              >
+              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
                 Règles générales
               </h3>
               <ul class="text-xs text-stone-500 flex flex-col gap-1 list-disc list-inside">
@@ -127,7 +116,7 @@ const modes = [
     value: GameMode.CLASSIC,
     icon: '🏁',
     label: 'Classique',
-    description: "Premier à atteindre la page cible gagne. Une limite de temps est optionnelle.",
+    description: 'Premier à atteindre la page cible gagne. Une limite de temps est optionnelle.',
   },
   {
     value: GameMode.SPRINT,
@@ -141,7 +130,7 @@ const modes = [
     icon: '🧩',
     label: 'Labyrinthe',
     description:
-      "Atteindre la cible avec un nombre de clics limité. Épuiser ses clics = élimination. Le dernier joueur restant ou le premier à la cible gagne.",
+      'Atteindre la cible avec un nombre de clics limité. Épuiser ses clics = élimination. Le dernier joueur restant ou le premier à la cible gagne.',
   },
   {
     value: GameMode.DRIFT,
@@ -173,15 +162,16 @@ const CONSTRAINT_ICONS: Record<string, string> = {
   science: '🔬',
 };
 const CONSTRAINT_DESCRIPTIONS: Record<string, string> = {
-  year_in_title: "Le titre de la page contient une année (ex : Guerre de 1812).",
-  biographical: "Page sur une personne — l'infobox doit avoir une ligne \"Naissance\".",
+  year_in_title: 'Le titre de la page contient une année (ex : Guerre de 1812).',
+  biographical: 'Page sur une personne — l\'infobox doit avoir une ligne "Naissance".',
   country: "Page sur un pays ou état — l'infobox mentionne une capitale ou un gentilé.",
-  has_main_image: "La page possède une image principale (miniature) dans son infobox.",
+  has_main_image: 'La page possède une image principale (miniature) dans son infobox.',
   artist: "Page sur un artiste — l'infobox indique chanteur, musicien, acteur, peintre ou artiste.",
   sportsperson: "Page sur un sportif — l'infobox indique son sport.",
-  city: "Page sur une commune ou ville — classe infobox \"commune\" ou code postal présent.",
-  many_images: "La page contient au moins 10 images réelles (miniatures Wikimedia).",
-  film_or_series: "Page sur un film ou une série — l'infobox mentionne un réalisateur ou une chaîne TV.",
+  city: 'Page sur une commune ou ville — classe infobox "commune" ou code postal présent.',
+  many_images: 'La page contient au moins 10 images réelles (miniatures Wikimedia).',
+  film_or_series:
+    "Page sur un film ou une série — l'infobox mentionne un réalisateur ou une chaîne TV.",
   science:
     "L'introduction de l'article mentionne une discipline scientifique (physique, chimie, biologie…).",
 };
