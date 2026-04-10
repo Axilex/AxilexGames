@@ -1,0 +1,31 @@
+# ── WikiRace Frontend — GKE image (Caddy + static files) ──
+# Contrairement au Dockerfile de base (qui produit seulement /dist),
+# cette image embarque Caddy + les fichiers statiques en un seul conteneur.
+# DOMAIN doit être défini en variable d'environnement au runtime (K8s).
+
+# ── Stage 1: Build Vue.js ──
+FROM node:22-slim AS builder
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+WORKDIR /app
+
+# VITE_API_URL vide = même origine, Caddy proxifie vers l'API
+ARG VITE_API_URL=""
+ENV VITE_API_URL=${VITE_API_URL}
+
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+COPY packages/ ./packages/
+COPY apps/web/ ./apps/web/
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter shared build && pnpm --filter web build
+
+# ── Stage 2: Caddy server ──
+FROM caddy:2-alpine
+
+# Fichiers statiques Vue (même chemin que docker-compose)
+COPY --from=builder /app/apps/web/dist /srv/frontend
+
+# Caddyfile commun (racine du repo) — gère {$DOMAIN}, proxy /wiki/*, /socket.io/*
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80 443 443/udp

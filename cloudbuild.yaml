@@ -1,0 +1,100 @@
+# ============================================================
+# AxilexGames — Cloud Build pipeline
+# ============================================================
+# Déclenché par un tag Git (ex: v1.2.3).
+#
+# Substitutions (à surcharger dans le trigger GCP Console) :
+#   _CLUSTER_NAME  : nom du cluster GKE (défaut: axilex-games-cluster)
+#   _REGION        : région GCP         (défaut: europe-west1)
+#   _REPO          : repo Artifact Registry (défaut: axilex-games)
+#
+# Pré-requis :
+#   - Artifact Registry repo créé dans $_REGION
+#   - Cluster GKE $_CLUSTER_NAME créé dans $_REGION
+#   - Compte de service Cloud Build avec roles/container.developer
+#     et roles/artifactregistry.writer
+# ============================================================
+
+substitutions:
+  _CLUSTER_NAME: axilex-games-cluster
+  _REGION: europe-west1
+  _REPO: axilex-games
+
+steps:
+  # ── 1. Build image API ──────────────────────────────────────────
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=apps/api/Dockerfile
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/api:$TAG_NAME
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/api:latest
+      - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/api:latest
+      - .
+
+  # ── 2. Build image Web (Caddy + static Vue) ─────────────────────
+  - id: build-web
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=apps/web/Dockerfile.gke
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/web:$TAG_NAME
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/web:latest
+      - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/web:latest
+      - .
+
+  # ── 3. Push image API ───────────────────────────────────────────
+  - id: push-api
+    name: gcr.io/cloud-builders/docker
+    args: [push, --all-tags, $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/api]
+    waitFor: [build-api]
+
+  # ── 4. Push image Web ───────────────────────────────────────────
+  - id: push-web
+    name: gcr.io/cloud-builders/docker
+    args: [push, --all-tags, $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/web]
+    waitFor: [build-web]
+
+  # ── 5. Récupérer les credentials GKE ───────────────────────────
+  - id: get-credentials
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - container
+      - clusters
+      - get-credentials
+      - $_CLUSTER_NAME
+      - --region=$_REGION
+      - --project=$PROJECT_ID
+    waitFor: [push-api, push-web]
+
+  # ── 6. Déployer sur GKE ─────────────────────────────────────────
+  # Cloud Build résout $TAG_NAME, $PROJECT_ID, $_REGION, $_REPO avant
+  # que bash s'exécute. envsubst substitue ${IMAGE_TAG} et ${GCR_HOST}
+  # dans les manifests Kubernetes.
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        export IMAGE_TAG=$TAG_NAME
+        export GCR_HOST=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO
+
+        kubectl apply -f k8s/namespace.yaml
+
+        for manifest in k8s/api-deployment.yaml k8s/api-service.yaml k8s/web-deployment.yaml k8s/web-service.yaml; do
+          envsubst < "$$manifest" | kubectl apply -f -
+        done
+
+        kubectl rollout status deployment/api -n axilex-games --timeout=120s
+        kubectl rollout status deployment/web -n axilex-games --timeout=120s
+    waitFor: [get-credentials]
+
+# Images publiées dans Artifact Registry (affiché dans l'UI Cloud Build)
+images:
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/api:$TAG_NAME
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/web:$TAG_NAME
+
+options:
+  logging: CLOUD_LOGGING_ONLY
