@@ -4,6 +4,9 @@ import { PlayerProgressDTO } from '../dto/player-progress.dto';
 import { GameSummary } from '../domain/game-summary.types';
 import { WikipediaPage } from '../domain/wikipedia.types';
 import { BingoConstraintId } from '../domain/bingo.types';
+import { ChoosingPreviewPayload } from './client-to-server.events';
+
+export type ChoosingPreviewData = Omit<ChoosingPreviewPayload, 'roomCode'>;
 
 export interface NavigationErrorPayload {
   message: string;
@@ -25,5 +28,6 @@ export interface ServerToClientEvents {
   'player:disconnected': (pseudo: string) => void;
   'player:reconnected': (pseudo: string) => void;
   'bingo:validated': (payload: BingoValidatedPayload) => void;
+  'choosing:preview': (data: ChoosingPreviewData) => void;
   error: (message: string) => void;
 }

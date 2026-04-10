@@ -7,7 +7,13 @@
         <span class="text-stone-300">·</span>
         <span class="text-sm text-stone-500">Salle d'attente</span>
       </div>
-      <BaseButton variant="ghost" size="sm" @click="leaveRoom"> Quitter </BaseButton>
+      <BaseButton
+        variant="ghost"
+        size="sm"
+        @click="leaveRoom"
+      >
+        Quitter
+      </BaseButton>
     </header>
 
     <div class="flex-1 max-w-4xl mx-auto w-full p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -25,7 +31,9 @@
             v-if="isHost"
             class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 flex flex-col gap-4"
           >
-            <h3 class="text-sm font-semibold text-stone-700">Paramètres</h3>
+            <h3 class="text-sm font-semibold text-stone-700">
+              Paramètres
+            </h3>
             <BaseButton
               size="lg"
               :disabled="room.players.length < 1"
@@ -41,7 +49,10 @@
             v-else
             class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 flex items-center gap-3"
           >
-            <LoadingSpinner size="sm" color="blue" />
+            <LoadingSpinner
+              size="sm"
+              color="blue"
+            />
             <span class="text-sm text-stone-500">En attente du host...</span>
           </div>
         </template>
@@ -56,8 +67,12 @@
             <div class="flex items-center gap-2">
               <span class="text-lg">🎲</span>
               <div>
-                <h3 class="text-sm font-semibold text-stone-900">C'est à vous de choisir !</h3>
-                <p class="text-xs text-stone-500">Vous avez été sélectionné·e au hasard</p>
+                <h3 class="text-sm font-semibold text-stone-900">
+                  C'est à vous de choisir !
+                </h3>
+                <p class="text-xs text-stone-500">
+                  Vous avez été sélectionné·e au hasard
+                </p>
               </div>
             </div>
 
@@ -68,9 +83,17 @@
             <template v-if="needsTarget">
               <TimeLimitSelector v-model="timeLimitSeconds" />
               <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
-                <WikiPageSearch label="Page d'arrivée" @select="targetPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
+                <WikiPageSearch
+                  label="Page de départ"
+                  @select="startPage = $event"
+                />
+                <WikiPageSearch
+                  label="Page d'arrivée"
+                  @select="targetPage = $event"
+                />
+                <p class="text-xs text-stone-400">
+                  Laisser vide = sélection aléatoire
+                </p>
               </div>
             </template>
 
@@ -82,9 +105,17 @@
                 label="Nombre de clics maximum"
               />
               <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
-                <WikiPageSearch label="Page d'arrivée" @select="targetPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
+                <WikiPageSearch
+                  label="Page de départ"
+                  @select="startPage = $event"
+                />
+                <WikiPageSearch
+                  label="Page d'arrivée"
+                  @select="targetPage = $event"
+                />
+                <p class="text-xs text-stone-400">
+                  Laisser vide = sélection aléatoire
+                </p>
               </div>
             </template>
 
@@ -97,8 +128,13 @@
                 label="Clics maximum par joueur"
               />
               <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
+                <WikiPageSearch
+                  label="Page de départ"
+                  @select="startPage = $event"
+                />
+                <p class="text-xs text-stone-400">
+                  Laisser vide = sélection aléatoire
+                </p>
               </div>
             </template>
 
@@ -111,8 +147,13 @@
                 label="Clics maximum par joueur"
               />
               <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
+                <WikiPageSearch
+                  label="Page de départ"
+                  @select="startPage = $event"
+                />
+                <p class="text-xs text-stone-400">
+                  Laisser vide = sélection aléatoire
+                </p>
               </div>
             </template>
 
@@ -126,18 +167,128 @@
               Confirmer →
             </BaseButton>
           </div>
-          <!-- Others: waiting for chooser -->
+          <!-- Others: live preview of chooser selections -->
           <div
             v-else
-            class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 flex flex-col items-center gap-3 py-8"
+            class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 flex flex-col gap-4"
           >
-            <span class="text-4xl">🎲</span>
-            <p class="text-sm font-semibold text-stone-900">
-              {{ room.chooserPseudo }} choisit les articles
-            </p>
             <div class="flex items-center gap-2">
-              <LoadingSpinner size="sm" color="blue" />
-              <span class="text-xs text-stone-400">En attente...</span>
+              <span class="text-lg">🎲</span>
+              <div>
+                <p class="text-sm font-semibold text-stone-900">
+                  {{ room.chooserPseudo }} choisit…
+                </p>
+                <p class="text-xs text-stone-400">
+                  Aperçu en direct
+                </p>
+              </div>
+              <LoadingSpinner
+                size="sm"
+                color="blue"
+                class="ml-auto"
+              />
+            </div>
+
+            <!-- Preview card, appears once chooser starts selecting -->
+            <template v-if="lobbyStore.choosingPreview">
+              <!-- Mode -->
+              <div class="flex items-center gap-2 rounded-xl border border-stone-100 bg-stone-50 px-3 py-2">
+                <span class="text-lg">{{ modeIcon(lobbyStore.choosingPreview.mode) }}</span>
+                <div>
+                  <div class="text-xs font-semibold text-stone-700">
+                    {{ modeLabel(lobbyStore.choosingPreview.mode) }}
+                  </div>
+                  <div class="text-xs text-stone-400">
+                    Mode de jeu
+                  </div>
+                </div>
+              </div>
+
+              <!-- Articles -->
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="w-14 text-stone-400 shrink-0">Départ</span>
+                  <span class="font-medium text-stone-700 truncate">
+                    {{ lobbyStore.choosingPreview.startTitle ?? '— aléatoire' }}
+                  </span>
+                </div>
+                <div
+                  v-if="lobbyStore.choosingPreview.mode === 'CLASSIC' || lobbyStore.choosingPreview.mode === 'SPRINT' || lobbyStore.choosingPreview.mode === 'LABYRINTH'"
+                  class="flex items-center gap-2 text-xs"
+                >
+                  <span class="w-14 text-stone-400 shrink-0">Arrivée</span>
+                  <span class="font-medium text-stone-700 truncate">
+                    {{ lobbyStore.choosingPreview.targetTitle ?? '— aléatoire' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- CLASSIC / SPRINT: timer -->
+              <template
+                v-if="lobbyStore.choosingPreview.mode === 'CLASSIC' || lobbyStore.choosingPreview.mode === 'SPRINT'"
+              >
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-if="lobbyStore.choosingPreview.timeLimitSeconds"
+                    class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-medium text-amber-700"
+                  >
+                    ⏱ {{ lobbyStore.choosingPreview.timeLimitSeconds / 60 }} min
+                  </span>
+                  <span
+                    v-else-if="lobbyStore.choosingPreview.mode === 'CLASSIC'"
+                    class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs text-stone-400"
+                  >
+                    ⏱ Sans limite
+                  </span>
+                </div>
+              </template>
+
+              <!-- LABYRINTH / DRIFT / BINGO: clics -->
+              <template
+                v-else-if="lobbyStore.choosingPreview.mode === 'LABYRINTH' || lobbyStore.choosingPreview.mode === 'DRIFT' || lobbyStore.choosingPreview.mode === 'BINGO'"
+              >
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-if="lobbyStore.choosingPreview.clickLimit"
+                    class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs font-medium text-stone-600"
+                  >
+                    🖱 {{ lobbyStore.choosingPreview.clickLimit }} clics
+                  </span>
+                  <!-- DRIFT: objectif -->
+                  <span
+                    v-if="lobbyStore.choosingPreview.mode === 'DRIFT' && lobbyStore.choosingPreview.driftObjective"
+                    class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs font-medium text-stone-600"
+                  >
+                    {{ driftObjectiveLabel(lobbyStore.choosingPreview.driftObjective) }}
+                  </span>
+                </div>
+                <!-- BINGO: contraintes -->
+                <div
+                  v-if="lobbyStore.choosingPreview.mode === 'BINGO' && lobbyStore.choosingPreview.bingoConstraintIds?.length"
+                  class="flex flex-col gap-1"
+                >
+                  <span class="text-xs text-stone-400">
+                    Contraintes ({{ lobbyStore.choosingPreview.bingoConstraintIds.length }}/4–6)
+                  </span>
+                  <div class="flex flex-wrap gap-1">
+                    <span
+                      v-for="id in lobbyStore.choosingPreview.bingoConstraintIds"
+                      :key="id"
+                      class="inline-flex items-center rounded-full bg-stone-100 border border-stone-200 px-2 py-0.5 text-xs text-stone-600"
+                    >
+                      {{ constraintLabel(id) }}
+                    </span>
+                  </div>
+                </div>
+              </template>
+            </template>
+
+            <!-- Placeholder before any preview arrives -->
+            <div
+              v-else
+              class="text-xs text-stone-400 text-center py-2"
+            >
+              En attente des premières sélections…
             </div>
           </div>
         </template>
@@ -154,13 +305,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { GameMode, DriftObjective } from '@wiki-race/shared';
+import { ref, computed, watch } from 'vue';
+import { GameMode, DriftObjective, BINGO_CONSTRAINTS } from '@wiki-race/shared';
 import type { BingoConstraintId } from '@wiki-race/shared';
 import { useLobbyStore } from '../stores/useLobbyStore';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
 import { useGameSession } from '../composables/useGameSession';
 import { useLobby } from '../composables/useLobby';
+import { gameService } from '../services/game.service';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import LoadingSpinner from '@/shared/components/ui/LoadingSpinner.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
@@ -245,5 +397,64 @@ function handleConfirm() {
       bingoConstraintIds: selectedConstraints.value,
     });
   }
+}
+
+// Emit live preview to other players whenever the chooser changes a selection
+function emitPreview() {
+  if (!isChooser.value || !room.value) return;
+  const mode = selectedMode.value;
+  const payload: import('@wiki-race/shared').ChoosingPreviewPayload = {
+    roomCode: room.value.code,
+    mode,
+    startTitle: startPage.value?.title,
+  };
+  if (mode === GameMode.CLASSIC || mode === GameMode.SPRINT) {
+    payload.targetTitle = targetPage.value?.title;
+    payload.timeLimitSeconds = timeLimitSeconds.value;
+  } else if (mode === GameMode.LABYRINTH) {
+    payload.targetTitle = targetPage.value?.title;
+    payload.clickLimit = clickLimit.value;
+  } else if (mode === GameMode.DRIFT) {
+    payload.clickLimit = clickLimit.value;
+    payload.driftObjective = driftObjective.value;
+  } else if (mode === GameMode.BINGO) {
+    payload.clickLimit = clickLimit.value;
+    payload.bingoConstraintIds = selectedConstraints.value;
+  }
+  gameService.previewChoices(payload);
+}
+
+// Fire immediately when this player becomes the chooser (covers initial state + transition from WAITING)
+watch(isChooser, (val) => { if (val) emitPreview(); }, { immediate: true });
+
+// Re-emit whenever any option changes
+watch(
+  [selectedMode, timeLimitSeconds, clickLimit, driftObjective, selectedConstraints, startPage, targetPage],
+  emitPreview,
+  { deep: true },
+);
+
+// Helper functions for the non-chooser preview panel
+const MODE_META: Record<GameMode, { icon: string; label: string }> = {
+  [GameMode.CLASSIC]: { icon: '🏁', label: 'Classique' },
+  [GameMode.SPRINT]: { icon: '⚡', label: 'Sprint' },
+  [GameMode.LABYRINTH]: { icon: '🧩', label: 'Labyrinthe' },
+  [GameMode.DRIFT]: { icon: '🌊', label: 'WikiDrift' },
+  [GameMode.BINGO]: { icon: '🎯', label: 'Bingo Wiki' },
+};
+
+function modeIcon(mode: GameMode): string {
+  return MODE_META[mode]?.icon ?? '🎮';
+}
+function modeLabel(mode: GameMode): string {
+  return MODE_META[mode]?.label ?? mode;
+}
+function driftObjectiveLabel(obj: DriftObjective): string {
+  if (obj === DriftObjective.OLDEST_TITLE_YEAR) return '📜 Plus ancienne';
+  if (obj === DriftObjective.SHORTEST) return '📄 Plus courte';
+  return '🖼 Plus d\'images';
+}
+function constraintLabel(id: BingoConstraintId): string {
+  return BINGO_CONSTRAINTS.find((c) => c.id === id)?.label ?? id;
 }
 </script>

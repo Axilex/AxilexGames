@@ -19,6 +19,7 @@ import {
   GameConfirmChoicesPayload,
   GameNavigatePayload,
   GameSurrenderPayload,
+  ChoosingPreviewPayload,
   PlayerStatus,
   GameMode,
 } from '@wiki-race/shared';
@@ -144,6 +145,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     const room = this.lobby.startChoosing(payload.roomCode, client.id);
     this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+  }
+
+  @SubscribeMessage('choosing:preview')
+  handleChoosingPreview(
+    @ConnectedSocket() client: TypedSocket,
+    @MessageBody() payload: ChoosingPreviewPayload,
+  ): void {
+    const { roomCode, ...data } = payload;
+    client.broadcast.to(roomCode).emit('choosing:preview', data);
   }
 
   @SubscribeMessage('game:confirm_choices')

@@ -1,5 +1,5 @@
 import { socketService } from '@/shared/services/socket.service';
-import type { GameMode, DriftObjective, BingoConstraintId } from '@wiki-race/shared';
+import type { GameMode, DriftObjective, BingoConstraintId, ChoosingPreviewPayload } from '@wiki-race/shared';
 
 export interface ConfirmChoicesOptions {
   clickLimit?: number | null;
@@ -26,6 +26,10 @@ export const gameService = {
       timeLimitSeconds,
       ...options,
     });
+  },
+
+  previewChoices(payload: ChoosingPreviewPayload): void {
+    socketService.emit('choosing:preview', payload);
   },
 
   navigate(roomCode: string, targetSlug: string): void {

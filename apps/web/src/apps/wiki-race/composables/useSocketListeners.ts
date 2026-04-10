@@ -58,6 +58,11 @@ export function useSocketListeners() {
     gameStore.setBingoValidated(payload.constraintIds, payload.slug);
   });
 
+  // Choosing phase live preview (for non-chooser players)
+  socketService.on('choosing:preview', (data) => {
+    lobbyStore.setChoosingPreview(data);
+  });
+
   // Errors
   socketService.on('error', (message) => {
     if (STALE_SESSION_ERRORS.some((e) => message.includes(e))) {

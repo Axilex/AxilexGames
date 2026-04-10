@@ -34,6 +34,17 @@ export interface GameSurrenderPayload {
   roomCode: string;
 }
 
+export interface ChoosingPreviewPayload {
+  roomCode: string;
+  mode: GameMode;
+  startTitle?: string;
+  targetTitle?: string;
+  timeLimitSeconds?: number | null;
+  clickLimit?: number | null;
+  driftObjective?: DriftObjective | null;
+  bingoConstraintIds?: BingoConstraintId[];
+}
+
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload) => void;
   'room:join': (payload: RoomJoinPayload) => void;
@@ -43,4 +54,5 @@ export interface ClientToServerEvents {
   'game:confirm_choices': (payload: GameConfirmChoicesPayload) => void;
   'game:navigate': (payload: GameNavigatePayload) => void;
   'game:surrender': (payload: GameSurrenderPayload) => void;
+  'choosing:preview': (payload: ChoosingPreviewPayload) => void;
 }
