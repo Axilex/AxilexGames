@@ -16,6 +16,7 @@ import {
   RoomCreatePayload,
   RoomJoinPayload,
   GameStartPayload,
+  GameConfirmChoicesPayload,
   GameNavigatePayload,
   GameSurrenderPayload,
   PlayerStatus,
@@ -138,11 +139,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('game:start')
-  async handleGameStart(
+  handleGameStart(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameStartPayload,
+  ): void {
+    const room = this.lobby.startChoosing(payload.roomCode, client.id);
+    this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+  }
+
+  @SubscribeMessage('game:confirm_choices')
+  async handleGameConfirmChoices(
+    @ConnectedSocket() client: TypedSocket,
+    @MessageBody() payload: GameConfirmChoicesPayload,
   ): Promise<void> {
-    const { gameStateDTO, startPage } = await this.game.startGame(
+    const { gameStateDTO, startPage } = await this.game.confirmChoices(
       payload.roomCode,
       client.id,
       payload.timeLimitSeconds,

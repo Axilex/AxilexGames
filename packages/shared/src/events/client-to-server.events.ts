@@ -9,6 +9,10 @@ export interface RoomJoinPayload {
 
 export interface GameStartPayload {
   roomCode: string;
+}
+
+export interface GameConfirmChoicesPayload {
+  roomCode: string;
   timeLimitSeconds: number | null;
   startSlug?: string;
   targetSlug?: string;
@@ -29,6 +33,7 @@ export interface ClientToServerEvents {
   'room:leave': (payload: { roomCode: string }) => void;
   'room:reset': (payload: { roomCode: string }) => void;
   'game:start': (payload: GameStartPayload) => void;
+  'game:confirm_choices': (payload: GameConfirmChoicesPayload) => void;
   'game:navigate': (payload: GameNavigatePayload) => void;
   'game:surrender': (payload: GameSurrenderPayload) => void;
 }

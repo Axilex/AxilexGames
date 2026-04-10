@@ -9,6 +9,7 @@ const mockRoom: RoomDTO = {
   status: GameStatus.WAITING,
   players: [{ pseudo: 'Alice', status: PlayerStatus.CONNECTED, isHost: true }],
   hostPseudo: 'Alice',
+  chooserPseudo: null,
 };
 
 describe('useLobbyStore', () => {

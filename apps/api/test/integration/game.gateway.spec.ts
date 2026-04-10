@@ -19,29 +19,9 @@ const TARGET_HTML = '<a href="/wiki/France">France</a>';
 
 const mockWikipediaService = {
   selectStartAndTarget: jest.fn().mockReturnValue({ start: 'France', target: 'Tour_Eiffel' }),
-  fetchPage: jest.fn().mockImplementation(async (slug: string) => {
-    const content: Record<string, string> = {
-      France: FRANCE_HTML,
-      Paris: PARIS_HTML,
-      Tour_Eiffel: TARGET_HTML,
-    };
-    return { slug, title: slug, htmlContent: content[slug] ?? '<p>stub</p>' };
-  }),
-  isValidNavigation: jest.fn().mockImplementation(async (_from: string, to: string) => {
-    const links: Record<string, string[]> = {
-      France: ['Paris', 'Tour_Eiffel'],
-      Paris: ['Tour_Eiffel', 'France'],
-    };
-    return (_links: Record<string, string[]>) => {
-      // We need to use the `from` parameter
-      return true; // will be overridden per test
-    };
-    return links[_from]?.includes(to) ?? false;
-  }),
+  fetchPage: jest.fn(),
+  isValidNavigation: jest.fn().mockResolvedValue(true),
 };
-
-// Fix isValidNavigation mock — simpler approach
-mockWikipediaService.isValidNavigation = jest.fn().mockResolvedValue(true);
 
 async function setupApp() {
   const module = await Test.createTestingModule({ imports: [AppModule] })
@@ -73,6 +53,33 @@ async function setupGame(port: number): Promise<{
   return { host, guest, code: hostRoom.code };
 }
 
+/**
+ * Two-step game start:
+ * 1. host emits game:start → server picks a random chooser (room:update)
+ * 2. the chooser emits game:confirm_choices → game:state + game:page broadcast
+ */
+async function startFullGame(
+  host: TestSocket,
+  guest: TestSocket,
+  code: string,
+  hostPseudo: string,
+): Promise<void> {
+  const hostRoomUpdate = waitForEvent(host, 'room:update');
+  host.emit('game:start', { roomCode: code });
+  const updatedRoom = await hostRoomUpdate;
+
+  const chooser = updatedRoom.chooserPseudo === hostPseudo ? host : guest;
+
+  const allReady = Promise.all([
+    waitForEvent(host, 'game:state'),
+    waitForEvent(guest, 'game:state'),
+    waitForEvent(host, 'game:page'),
+    waitForEvent(guest, 'game:page'),
+  ]);
+  chooser.emit('game:confirm_choices', { roomCode: code, timeLimitSeconds: null });
+  await allReady;
+}
+
 describe('GameGateway — game flow (integration)', () => {
   let app: INestApplication;
   let port: number;
@@ -102,7 +109,20 @@ describe('GameGateway — game flow (integration)', () => {
     mockWikipediaService.isValidNavigation.mockResolvedValue(true);
   });
 
-  it('game:start → emits game:state and game:page to all players', async () => {
+  it('game:start → picks a chooser and emits room:update with CHOOSING status', async () => {
+    const { host, guest, code } = await setupGame(port);
+
+    const hostUpdate = waitForEvent(host, 'room:update');
+    host.emit('game:start', { roomCode: code });
+    const room = await hostUpdate;
+
+    expect(room.status).toBe('CHOOSING');
+    expect(room.chooserPseudo).not.toBeNull();
+
+    disconnectAll(host, guest);
+  });
+
+  it('game:confirm_choices → emits game:state and game:page to all players', async () => {
     const { host, guest, code } = await setupGame(port);
 
     const hostState = waitForEvent(host, 'game:state');
@@ -110,7 +130,7 @@ describe('GameGateway — game flow (integration)', () => {
     const hostPage = waitForEvent(host, 'game:page');
     const guestPage = waitForEvent(guest, 'game:page');
 
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
+    await startFullGame(host, guest, code, 'Alice');
 
     const [state, , page] = await Promise.all([hostState, guestState, hostPage, guestPage]);
     expect(state.startSlug).toBe('France');
@@ -125,7 +145,7 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
 
     const errorPromise = waitForEvent(guest, 'error');
-    guest.emit('game:start', { roomCode: code, timeLimitSeconds: null });
+    guest.emit('game:start', { roomCode: code });
     const err = await errorPromise;
     expect(err).toContain('NOT_HOST');
 
@@ -134,18 +154,8 @@ describe('GameGateway — game flow (integration)', () => {
 
   it('game:navigate valid → game:page to navigator, player:progress to room', async () => {
     const { host, guest, code } = await setupGame(port);
+    await startFullGame(host, guest, code, 'Alice');
 
-    // Start game
-    const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
-    ]);
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
-    await allReady;
-
-    // Host navigates to Paris
     const hostPage = waitForEvent(host, 'game:page');
     const hostProgress = waitForEvent(host, 'player:progress');
     const guestProgress = waitForEvent(guest, 'player:progress');
@@ -164,15 +174,7 @@ describe('GameGateway — game flow (integration)', () => {
   it('game:navigate invalid → navigation:error to navigator only', async () => {
     mockWikipediaService.isValidNavigation.mockResolvedValue(false);
     const { host, guest, code } = await setupGame(port);
-
-    const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
-    ]);
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
-    await allReady;
+    await startFullGame(host, guest, code, 'Alice');
 
     const errorPromise = waitForEvent(host, 'error');
     host.emit('game:navigate', { roomCode: code, targetSlug: 'Allemagne' });
@@ -184,15 +186,7 @@ describe('GameGateway — game flow (integration)', () => {
 
   it('game:navigate to target → game:finished emitted to room', async () => {
     const { host, guest, code } = await setupGame(port);
-
-    const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
-    ]);
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
-    await allReady;
+    await startFullGame(host, guest, code, 'Alice');
 
     const hostFinished = waitForEvent(host, 'game:finished');
     const guestFinished = waitForEvent(guest, 'game:finished');
@@ -208,15 +202,7 @@ describe('GameGateway — game flow (integration)', () => {
 
   it('game:surrender by one player → player:progress with SURRENDERED', async () => {
     const { host, guest, code } = await setupGame(port);
-
-    const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
-    ]);
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
-    await allReady;
+    await startFullGame(host, guest, code, 'Alice');
 
     const hostProgress = waitForEvent(host, 'player:progress');
     const guestProgress = waitForEvent(guest, 'player:progress');
@@ -232,17 +218,8 @@ describe('GameGateway — game flow (integration)', () => {
 
   it('all players surrender → game:finished with no winner', async () => {
     const { host, guest, code } = await setupGame(port);
+    await startFullGame(host, guest, code, 'Alice');
 
-    const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
-    ]);
-    host.emit('game:start', { roomCode: code, timeLimitSeconds: null });
-    await allReady;
-
-    // Consume first surrender's player:progress events
     const p1 = waitForEvent(host, 'player:progress');
     const p2 = waitForEvent(guest, 'player:progress');
     host.emit('game:surrender', { roomCode: code });

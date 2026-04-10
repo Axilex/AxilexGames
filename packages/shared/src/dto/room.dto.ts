@@ -6,4 +6,5 @@ export interface RoomDTO {
   status: GameStatus;
   players: PlayerDTO[];
   hostPseudo: string;
+  chooserPseudo: string | null;
 }

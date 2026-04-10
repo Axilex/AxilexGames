@@ -12,6 +12,7 @@ export class RoomRegistryService {
     const room: Room = {
       code,
       hostSocketId: host.socketId,
+      chooserSocketId: null,
       players: new Map([[host.socketId, host]]),
       status: GameStatus.WAITING,
       game: null,
@@ -65,6 +66,9 @@ export class RoomRegistryService {
     this.socketToRoom.set(newSocketId, code);
     if (room.hostSocketId === oldSocketId) {
       room.hostSocketId = newSocketId;
+    }
+    if (room.chooserSocketId === oldSocketId) {
+      room.chooserSocketId = newSocketId;
     }
   }
 

@@ -15,10 +15,27 @@ export class LobbyService {
     return { room, code };
   }
 
+  startChoosing(roomCode: string, hostSocketId: string): Room {
+    const room = this.registry.findRoom(roomCode);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    if (room.hostSocketId !== hostSocketId) throw new Error('NOT_HOST');
+    if (room.status !== GameStatus.WAITING) throw new Error('ROOM_NOT_WAITING');
+
+    const connected = Array.from(room.players.values()).filter(
+      (p) => p.status === PlayerStatus.CONNECTED,
+    );
+    if (connected.length === 0) throw new Error('NO_PLAYERS');
+
+    const chooser = connected[Math.floor(Math.random() * connected.length)];
+    room.chooserSocketId = chooser.socketId;
+    room.status = GameStatus.CHOOSING;
+    return room;
+  }
+
   joinRoom(roomCode: string, pseudo: string, socketId: string): Room {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
-    if (room.status === GameStatus.IN_PROGRESS) throw new Error('GAME_IN_PROGRESS');
+    if (room.status === GameStatus.IN_PROGRESS || room.status === GameStatus.CHOOSING) throw new Error('GAME_IN_PROGRESS');
 
     const players = Array.from(room.players.values());
     if (players.length >= MAX_PLAYERS) throw new Error('ROOM_FULL');
@@ -80,6 +97,7 @@ export class LobbyService {
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
     room.status = GameStatus.WAITING;
+    room.chooserSocketId = null;
     room.game = null;
     for (const player of room.players.values()) {
       if (
@@ -103,13 +121,16 @@ export class LobbyService {
     const hostPlayer = room.players.get(room.hostSocketId);
     const hostPseudo = hostPlayer?.pseudo ?? '';
 
+    const chooserPlayer = room.chooserSocketId ? room.players.get(room.chooserSocketId) : null;
+    const chooserPseudo = chooserPlayer?.pseudo ?? null;
+
     const players: PlayerDTO[] = Array.from(room.players.values()).map((p) => ({
       pseudo: p.pseudo,
       status: p.status,
       isHost: p.socketId === room.hostSocketId,
     }));
 
-    return { code: room.code, status: room.status, players, hostPseudo };
+    return { code: room.code, status: room.status, players, hostPseudo, chooserPseudo };
   }
 
   private makePlayer(socketId: string, pseudo: string): Player {

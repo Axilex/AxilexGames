@@ -28,7 +28,7 @@ export class GameService {
     private readonly gameState: GameStateService,
   ) {}
 
-  async startGame(
+  async confirmChoices(
     roomCode: string,
     socketId: string,
     timeLimitSeconds: number | null,
@@ -37,9 +37,18 @@ export class GameService {
     chosenTargetSlug?: string,
   ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
     const room = this.getRoom(roomCode);
-    if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
-    if (room.status === GameStatus.IN_PROGRESS) throw new Error('GAME_ALREADY_STARTED');
+    if (room.chooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
+    if (room.status !== GameStatus.CHOOSING) throw new Error('NOT_IN_CHOOSING_PHASE');
+    return this.runStartGame(room, timeLimitSeconds, onTimerExpire, chosenStartSlug, chosenTargetSlug);
+  }
 
+  private async runStartGame(
+    room: Room,
+    timeLimitSeconds: number | null,
+    onTimerExpire: (summary: GameSummary) => void,
+    chosenStartSlug?: string,
+    chosenTargetSlug?: string,
+  ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
     // Reset players who finished or surrendered in a previous game
     for (const player of room.players.values()) {
       if (
@@ -57,6 +66,7 @@ export class GameService {
     const now = Date.now();
 
     room.status = GameStatus.IN_PROGRESS;
+    room.chooserSocketId = null;
     room.game = {
       startSlug: start,
       targetSlug: target,
@@ -77,7 +87,7 @@ export class GameService {
     }
 
     if (timeLimitSeconds !== null) {
-      this.gameState.startGameTimer(roomCode, timeLimitSeconds, () => {
+      this.gameState.startGameTimer(room.code, timeLimitSeconds, () => {
         const summary = this.buildSummary(room);
         this.endGame(room, null);
         onTimerExpire(summary);

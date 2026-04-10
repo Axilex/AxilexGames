@@ -31,7 +31,7 @@ export function useSocketListeners() {
   // Lobby
   socketService.on('room:update', (room) => {
     lobbyStore.setRoom(room);
-    sessionStore.setSession(sessionStore.pseudo, room.code);
+    if (room.code) sessionStore.setSession(sessionStore.pseudo, room.code);
   });
 
   // Game lifecycle

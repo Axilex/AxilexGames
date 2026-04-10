@@ -14,6 +14,7 @@ export interface Player {
 export interface Room {
   code: string;
   hostSocketId: string;
+  chooserSocketId: string | null;
   players: Map<string, Player>; // keyed by socketId
   status: GameStatus;
   game: GameSession | null;

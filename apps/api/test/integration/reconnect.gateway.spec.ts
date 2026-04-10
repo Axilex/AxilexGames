@@ -102,14 +102,19 @@ describe('Reconnection flow (integration)', () => {
     const hostRoom = await createRoom(host, 'Alice');
     await joinRoom(guest, hostRoom.code, 'Bob');
 
-    // Start game
+    // Start game (two-step: host picks chooser, then chooser confirms)
+    const hostRoomUpdate = waitForEvent(host, 'room:update');
+    host.emit('game:start', { roomCode: hostRoom.code });
+    const updatedRoom = await hostRoomUpdate;
+    const chooser = updatedRoom.chooserPseudo === 'Alice' ? host : guest;
+
     const allReady = Promise.all([
       waitForEvent(host, 'game:state'),
       waitForEvent(guest, 'game:state'),
       waitForEvent(host, 'game:page'),
       waitForEvent(guest, 'game:page'),
     ]);
-    host.emit('game:start', { roomCode: hostRoom.code, timeLimitSeconds: null });
+    chooser.emit('game:confirm_choices', { roomCode: hostRoom.code, timeLimitSeconds: null });
     await allReady;
 
     // Bob disconnects mid-game

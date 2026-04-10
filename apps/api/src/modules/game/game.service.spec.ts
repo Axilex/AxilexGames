@@ -33,6 +33,28 @@ async function setup() {
   };
 }
 
+/** Helper: host selects chooser phase, then chooser confirms to start the game */
+async function startGame(
+  lobbyService: LobbyService,
+  gameService: GameService,
+  code: string,
+  hostSocketId: string,
+  timeLimitSeconds: number | null = null,
+  onTimerExpire = jest.fn(),
+  startSlug?: string,
+  targetSlug?: string,
+) {
+  const room = lobbyService.startChoosing(code, hostSocketId);
+  return gameService.confirmChoices(
+    code,
+    room.chooserSocketId!,
+    timeLimitSeconds,
+    onTimerExpire,
+    startSlug,
+    targetSlug,
+  );
+}
+
 describe('GameService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -53,8 +75,7 @@ describe('GameService', () => {
     const { room, code } = lobbyService.createRoom('Alice', 'socket1');
     lobbyService.joinRoom(code, 'Bob', 'socket2');
 
-    const noop = jest.fn();
-    const { gameStateDTO } = await gameService.startGame(code, 'socket1', null, noop);
+    const { gameStateDTO } = await startGame(lobbyService, gameService, code, 'socket1');
 
     expect(room.status).toBe(GameStatus.IN_PROGRESS);
     expect(gameStateDTO.startSlug).toBe('France');
@@ -63,30 +84,41 @@ describe('GameService', () => {
     expect(room.players.get('socket2')!.currentSlug).toBe('France');
   });
 
-  it('rejects game start from non-host', async () => {
+  it('rejects startChoosing from non-host', async () => {
+    const { lobbyService } = await setup();
+    const { code } = lobbyService.createRoom('Alice', 'socket1');
+    lobbyService.joinRoom(code, 'Bob', 'socket2');
+
+    expect(() => lobbyService.startChoosing(code, 'socket2')).toThrow('NOT_HOST');
+  });
+
+  it('rejects confirmChoices from non-chooser', async () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
     lobbyService.joinRoom(code, 'Bob', 'socket2');
 
-    await expect(gameService.startGame(code, 'socket2', null, jest.fn())).rejects.toThrow(
-      'NOT_HOST',
+    lobbyService.startChoosing(code, 'socket1');
+    // Use an unrelated socket that is definitely not the chooser
+    await expect(gameService.confirmChoices(code, 'socket-other', null, jest.fn())).rejects.toThrow(
+      'NOT_CHOOSER',
     );
   });
 
-  it('rejects game start if already started', async () => {
+  it('rejects confirmChoices if room is not in CHOOSING phase', async () => {
     const { gameService, lobbyService } = await setup();
     const { room, code } = lobbyService.createRoom('Alice', 'socket1');
     room.status = GameStatus.IN_PROGRESS;
+    room.chooserSocketId = 'socket1';
 
-    await expect(gameService.startGame(code, 'socket1', null, jest.fn())).rejects.toThrow(
-      'GAME_ALREADY_STARTED',
+    await expect(gameService.confirmChoices(code, 'socket1', null, jest.fn())).rejects.toThrow(
+      'NOT_IN_CHOOSING_PHASE',
     );
   });
 
   it('handles a valid navigation step', async () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     const result = await gameService.navigate(code, 'socket1', 'Paris');
     expect(result.finished).toBe(false);
@@ -97,7 +129,7 @@ describe('GameService', () => {
   it('detects win when player reaches target slug', async () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     const result = await gameService.navigate(code, 'socket1', 'Tour_Eiffel');
     expect(result.finished).toBe(true);
@@ -108,7 +140,7 @@ describe('GameService', () => {
   it('rejects invalid navigation', async () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     mockWikipediaService.isValidNavigation.mockResolvedValue(false);
     await expect(gameService.navigate(code, 'socket1', 'Allemagne')).rejects.toThrow(
@@ -129,7 +161,7 @@ describe('GameService', () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
     lobbyService.joinRoom(code, 'Bob', 'socket2');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     const result = gameService.surrender(code, 'socket2');
     expect(result.allDone).toBe(false);
@@ -140,7 +172,7 @@ describe('GameService', () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
     lobbyService.joinRoom(code, 'Bob', 'socket2');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     gameService.surrender(code, 'socket1');
     const result = gameService.surrender(code, 'socket2');
@@ -152,14 +184,14 @@ describe('GameService', () => {
   it('stores timeLimitSeconds in the game session', async () => {
     const { gameService, lobbyService } = await setup();
     const { room, code } = lobbyService.createRoom('Alice', 'socket1');
-    await gameService.startGame(code, 'socket1', 300, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1', 300);
     expect(room.game!.timeLimitSeconds).toBe(300);
   });
 
   it('builds a summary with full path history', async () => {
     const { gameService, lobbyService } = await setup();
     const { code } = lobbyService.createRoom('Alice', 'socket1');
-    await gameService.startGame(code, 'socket1', null, jest.fn());
+    await startGame(lobbyService, gameService, code, 'socket1');
 
     await gameService.navigate(code, 'socket1', 'Paris');
 
