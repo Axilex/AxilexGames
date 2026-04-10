@@ -1,5 +1,6 @@
 {
   "name": "wiki-race",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter shared build && concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
@@ -8,9 +9,13 @@
     "build": "pnpm --filter shared build && pnpm --filter api build && pnpm --filter web build",
     "test": "pnpm --filter api test && pnpm --filter web test",
     "lint": "eslint \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\"",
-    "format": "prettier --write \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\""
+    "format": "prettier --write \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\"",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm version && git add -A && git commit -m \"chore: release v$(node -p \\\"require('./package.json').version\\\")\" && git tag v$(node -p \"require('./package.json').version\") && git push && git push --tags"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "concurrently": "^8.2.2",
