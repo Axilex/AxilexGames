@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 0.0.2
+
+### Patch Changes
+
+- First release
+
 ## 1.1.0
 
 ### Minor Changes
