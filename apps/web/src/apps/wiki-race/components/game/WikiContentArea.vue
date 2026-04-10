@@ -119,6 +119,8 @@ let searchBlockedTimer: ReturnType<typeof setTimeout> | null = null;
 function handleClick(e: MouseEvent) {
   const anchor = (e.target as Element).closest('a[href^="/wiki/"]');
   if (!anchor) return;
+  // Ignore footnote/reference links inside <sup> tags (double protection with backend sanitizer)
+  if (anchor.closest('sup')) return;
   e.preventDefault();
   const href = anchor.getAttribute('href');
   if (!href) return;

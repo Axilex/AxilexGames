@@ -51,12 +51,24 @@ function isBlocked(wikiPath: string): boolean {
 }
 
 /**
+ * Removes all <a> tags inside <sup> elements so footnote markers are not
+ * clickable navigation links. Text content is preserved.
+ */
+function stripLinksInSup(html: string): string {
+  return html.replace(
+    /(<sup\b[^>]*>)([\s\S]{0,500}?)(<\/sup>)/gi,
+    (_m, open: string, inner: string, close: string) =>
+      open + inner.replace(/<\/?a\b[^>]*>/gi, '') + close,
+  );
+}
+
+/**
  * Pure function — strips all unsafe content from raw Wikipedia Parsoid HTML.
  * Returns clean HTML where every <a> href is in /wiki/Slug form.
  * Images are kept if their src is from Wikimedia origins.
  */
 export function sanitizeWikipediaHtml(rawHtml: string): string {
-  return sanitizeHtml(rawHtml, {
+  return sanitizeHtml(stripLinksInSup(rawHtml), {
     allowedTags: [
       'p',
       'h1',

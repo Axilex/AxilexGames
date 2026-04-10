@@ -128,29 +128,39 @@ describe('ModeService — Bingo', () => {
     expect(validated).not.toContain('year_in_title');
   });
 
-  it('checkConstraints - biographical finds Naissance in HTML', () => {
+  it('checkConstraints - biographical finds Naissance in infobox', () => {
+    const html =
+      '<table class="infobox"><tr><th>Naissance</th><td>5 juin 1980</td></tr></table>';
+    const validated = service.checkConstraints(['biographical'], 'any', html);
+    expect(validated).toContain('biographical');
+  });
+
+  it('checkConstraints - biographical does not match without infobox', () => {
     const validated = service.checkConstraints(
       ['biographical'],
       'any',
       '<p>Naissance le 5 juin 1980.</p>',
     );
-    expect(validated).toContain('biographical');
+    expect(validated).not.toContain('biographical');
   });
 
-  it('checkConstraints - many_images counts 5+ img tags', () => {
-    const html = '<img/><img/><img/><img/><img/>';
+  it('checkConstraints - many_images counts 10+ thumbnail img tags', () => {
+    const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
+    const html = img.repeat(10);
     const validated = service.checkConstraints(['many_images'], 'any', html);
     expect(validated).toContain('many_images');
   });
 
-  it('checkConstraints - many_images false when < 5 images', () => {
-    const html = '<img/><img/>';
+  it('checkConstraints - many_images false when < 10 thumbnail images', () => {
+    const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
+    const html = img.repeat(5);
     const validated = service.checkConstraints(['many_images'], 'any', html);
     expect(validated).not.toContain('many_images');
   });
 
   it('checkConstraints - returns only matching constraints from given subset', () => {
-    const html = '<img/><img/><img/><img/><img/>';
+    const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
+    const html = img.repeat(10);
     const validated = service.checkConstraints(['many_images', 'biographical'], 'any', html);
     expect(validated).toContain('many_images');
     expect(validated).not.toContain('biographical');

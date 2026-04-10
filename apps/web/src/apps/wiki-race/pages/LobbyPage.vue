@@ -1,19 +1,21 @@
 <template>
   <div class="min-h-screen bg-stone-50 flex flex-col">
     <!-- Header -->
-    <header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between">
+    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="text-lg font-bold text-stone-900">WikiRace</span>
         <span class="text-stone-300">·</span>
         <span class="text-sm text-stone-500">Salle d'attente</span>
       </div>
-      <BaseButton
-        variant="ghost"
-        size="sm"
-        @click="leaveRoom"
-      >
-        Quitter
-      </BaseButton>
+      <div class="flex items-center gap-2">
+        <BaseButton
+          variant="ghost"
+          size="sm"
+          @click="leaveRoom"
+        >
+          Quitter
+        </BaseButton>
+      </div>
     </header>
 
     <div class="flex-1 max-w-4xl mx-auto w-full p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -125,6 +127,7 @@
               <ClickLimitSelector
                 v-model="clickLimit"
                 :options="[5, 6, 8, 10]"
+                :allow-infinite="true"
                 label="Clics maximum par joueur"
               />
               <div class="flex flex-col gap-3">
@@ -144,6 +147,7 @@
               <ClickLimitSelector
                 v-model="clickLimit"
                 :options="[10, 15, 20]"
+                :allow-infinite="true"
                 label="Clics maximum par joueur"
               />
               <div class="flex flex-col gap-3">
@@ -199,7 +203,7 @@
                     {{ modeLabel(lobbyStore.choosingPreview.mode) }}
                   </div>
                   <div class="text-xs text-stone-400">
-                    Mode de jeu
+                    {{ modeDescription(lobbyStore.choosingPreview.mode) }}
                   </div>
                 </div>
               </div>
@@ -249,10 +253,16 @@
               >
                 <div class="flex flex-wrap gap-2">
                   <span
-                    v-if="lobbyStore.choosingPreview.clickLimit"
+                    v-if="lobbyStore.choosingPreview.clickLimit !== null && lobbyStore.choosingPreview.clickLimit !== undefined"
                     class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs font-medium text-stone-600"
                   >
                     🖱 {{ lobbyStore.choosingPreview.clickLimit }} clics
+                  </span>
+                  <span
+                    v-else-if="lobbyStore.choosingPreview.clickLimit === null"
+                    class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs font-medium text-stone-600"
+                  >
+                    🖱 ∞ Illimité
                   </span>
                   <!-- DRIFT: objectif -->
                   <span
@@ -296,9 +306,12 @@
         <ErrorToast :message="lobbyStore.error" />
       </div>
 
-      <!-- Right: player list -->
-      <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-        <PlayerList :players="room.players" />
+      <!-- Right: player list + rules card -->
+      <div class="flex flex-col gap-4">
+        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-4">
+          <PlayerList :players="room.players" />
+        </div>
+        <RulesCard />
       </div>
     </div>
   </div>
@@ -325,19 +338,19 @@ import ModeSelector from '../components/lobby/ModeSelector.vue';
 import ClickLimitSelector from '../components/lobby/ClickLimitSelector.vue';
 import DriftObjectiveSelector from '../components/lobby/DriftObjectiveSelector.vue';
 import BingoConstraintPicker from '../components/lobby/BingoConstraintPicker.vue';
+import RulesCard from '../components/RulesCard.vue';
 
 const lobbyStore = useLobbyStore();
 const sessionStore = useSessionStore();
 const { startGame, confirmChoices } = useGameSession();
 const { leaveRoom } = useLobby();
-
 const starting = ref(false);
 const confirming = ref(false);
 
 // Mode state
 const selectedMode = ref<GameMode>(GameMode.CLASSIC);
 const timeLimitSeconds = ref<number | null>(null);
-const clickLimit = ref<number>(6);
+const clickLimit = ref<number | null>(6);
 const driftObjective = ref<DriftObjective>(DriftObjective.OLDEST_TITLE_YEAR);
 const selectedConstraints = ref<BingoConstraintId[]>([]);
 
@@ -435,12 +448,32 @@ watch(
 );
 
 // Helper functions for the non-chooser preview panel
-const MODE_META: Record<GameMode, { icon: string; label: string }> = {
-  [GameMode.CLASSIC]: { icon: '🏁', label: 'Classique' },
-  [GameMode.SPRINT]: { icon: '⚡', label: 'Sprint' },
-  [GameMode.LABYRINTH]: { icon: '🧩', label: 'Labyrinthe' },
-  [GameMode.DRIFT]: { icon: '🌊', label: 'WikiDrift' },
-  [GameMode.BINGO]: { icon: '🎯', label: 'Bingo Wiki' },
+const MODE_META: Record<GameMode, { icon: string; label: string; description: string }> = {
+  [GameMode.CLASSIC]: {
+    icon: '🏁',
+    label: 'Classique',
+    description: 'Premier à atteindre la page cible gagne.',
+  },
+  [GameMode.SPRINT]: {
+    icon: '⚡',
+    label: 'Sprint',
+    description: 'Même but, mais avec un timer court.',
+  },
+  [GameMode.LABYRINTH]: {
+    icon: '🧩',
+    label: 'Labyrinthe',
+    description: 'Nombre de clics limité. Réfléchissez avant de cliquer !',
+  },
+  [GameMode.DRIFT]: {
+    icon: '🌊',
+    label: 'WikiDrift',
+    description: 'Explorez Wikipedia selon un objectif secret.',
+  },
+  [GameMode.BINGO]: {
+    icon: '🎯',
+    label: 'Bingo Wiki',
+    description: 'Validez des contraintes en visitant des pages.',
+  },
 };
 
 function modeIcon(mode: GameMode): string {
@@ -448,6 +481,9 @@ function modeIcon(mode: GameMode): string {
 }
 function modeLabel(mode: GameMode): string {
   return MODE_META[mode]?.label ?? mode;
+}
+function modeDescription(mode: GameMode): string {
+  return MODE_META[mode]?.description ?? '';
 }
 function driftObjectiveLabel(obj: DriftObjective): string {
   if (obj === DriftObjective.OLDEST_TITLE_YEAR) return '📜 Plus ancienne';

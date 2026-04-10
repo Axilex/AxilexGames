@@ -129,50 +129,91 @@ export class ModeService {
     }
   }
 
+  /**
+   * Returns true if the HTML contains an element with class="...infobox...".
+   * French Wikipedia infoboxes always carry this class.
+   */
+  private hasInfobox(html: string): boolean {
+    return /<table[^>]*class="[^"]*\binfobox\b[^"]*"/i.test(html);
+  }
+
+  /**
+   * Returns the HTML substring starting at the infobox opening tag (up to 6000 chars).
+   * Covers the infobox content even when it contains nested tables.
+   */
+  private infoboxArea(html: string): string {
+    const idx = html.search(/<table[^>]*class="[^"]*\binfobox\b[^"]*"/i);
+    if (idx === -1) return '';
+    return html.slice(idx, idx + 6000);
+  }
+
   private checkYearInTitle(slug: string): boolean {
     return /\b\d{4}\b/.test(normalizeSlug(slug));
   }
 
+  /** Biographical page: infobox must have a "Naissance" row header. */
   private checkBiographical(html: string): boolean {
-    return /naissance|décès/i.test(stripHtml(html));
+    return this.hasInfobox(html) && /<th[^>]*>\s*Naissance\s*<\/th>/i.test(html);
   }
 
+  /** Country page: infobox must have a "Capitale" or "Gentilé" row header. */
   private checkCountry(html: string): boolean {
-    // Check in the first table (infobox area)
-    const infobox = html.match(/<table[\s\S]*?<\/table>/i)?.[0] ?? html;
-    return /\b(pays|republic|royaume|état|kingdom|state)\b/i.test(stripHtml(infobox));
+    return this.hasInfobox(html) && /<th[^>]*>\s*(Capitale|Gentilé)\s*<\/th>/i.test(html);
   }
 
+  /** Main image: a Wikimedia thumbnail must appear inside the infobox area. */
   private checkHasMainImage(html: string): boolean {
-    const infoboxOrFigure =
-      html.match(/<table[\s\S]*?<\/table>/i)?.[0] ??
-      html.match(/<figure[\s\S]*?<\/figure>/i)?.[0] ??
-      '';
-    return /<img/i.test(infoboxOrFigure);
+    return /<img[^>]+src="[^"]*\/thumb\/[^"]*"/i.test(this.infoboxArea(html));
   }
 
+  /**
+   * Artist page: infobox has an "Activité" or "Profession" row AND the
+   * infobox area contains an artist-related keyword.
+   */
   private checkArtist(html: string): boolean {
-    return /chanteu|musicien|acteur|peintre|artiste/i.test(stripHtml(html));
+    if (!this.hasInfobox(html)) return false;
+    if (!/<th[^>]*>\s*(Activité|Profession)\s*<\/th>/i.test(html)) return false;
+    return /\b(chanteur|chanteuse|musicien|musicienne|acteur|actrice|peintre|compositeur|compositrice|artiste)\b/i.test(
+      stripHtml(this.infoboxArea(html)),
+    );
   }
 
+  /** Sportsperson: infobox has a "Sport" row header (universal on French WP athlete pages). */
   private checkSportsperson(html: string): boolean {
-    return /footballeur|tennisman|athlète|nageur|basketteur/i.test(stripHtml(html));
+    return this.hasInfobox(html) && /<th[^>]*>\s*Sport\s*<\/th>/i.test(html);
   }
 
+  /**
+   * City / commune: the table carries the CSS class "commune" (French WP standard),
+   * or the infobox has a "Code postal" row header as fallback.
+   */
   private checkCity(html: string): boolean {
-    return /\b(commune|municipality|ville)\b/i.test(stripHtml(html));
+    if (/<table[^>]*class="[^"]*\bcommune\b[^"]*"/i.test(html)) return true;
+    return this.hasInfobox(html) && /<th[^>]*>\s*Code postal\s*<\/th>/i.test(html);
   }
 
+  /** 10+ Wikimedia thumbnail images (excludes small icons and flags). */
   private checkManyImages(html: string): boolean {
-    return (html.match(/<img/g) ?? []).length >= 5;
+    return (html.match(/<img[^>]+src="[^"]*\/thumb\/[^"]*"/gi) ?? []).length >= 10;
   }
 
+  /** Film or series: infobox has a "Réalisation", "Réalisateur", "Chaîne" or "Créateur" row. */
   private checkFilmOrSeries(html: string): boolean {
-    return /\bfilm\b|série télévisée/i.test(stripHtml(html));
+    return (
+      this.hasInfobox(html) &&
+      /<th[^>]*>\s*(Réalisation|Réalisateur|Chaîne|Créateur)\s*<\/th>/i.test(html)
+    );
   }
 
+  /**
+   * Science article: the first paragraph's text mentions a scientific discipline.
+   * Using only the lede avoids matching biographies of scientists.
+   */
   private checkScience(html: string): boolean {
-    return /mathématiques|physique|chimie|biologie/i.test(stripHtml(html));
+    const firstP = html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[0] ?? '';
+    return /\b(mathématiques|physique|chimie|biologie|astronomie|géologie|mécanique|thermodynamique)\b/i.test(
+      stripHtml(firstP),
+    );
   }
 
   checkBingoWin(player: Player, game: GameSession): boolean {

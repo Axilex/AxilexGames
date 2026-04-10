@@ -36,6 +36,12 @@ const RECONNECT_TIMEOUT_MS = 30_000;
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway({
+  // Faster heartbeat: detect dead connections in ~15 s instead of the default ~45 s.
+  // This matters on Render free tier where idle connections can be silently dropped.
+  pingInterval: 10000,
+  pingTimeout: 5000,
+  // Force WebSocket only — avoids HTTP long-polling which is heavier on CPU.
+  transports: ['websocket'],
   cors: {
     origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
     credentials: true,

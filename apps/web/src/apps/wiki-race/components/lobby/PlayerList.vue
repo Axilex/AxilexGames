@@ -7,7 +7,7 @@
       <li
         v-for="player in players"
         :key="player.pseudo"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-stone-100 bg-stone-50"
+        class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-stone-100 bg-stone-50"
       >
         <svg
           v-if="player.isHost"
@@ -20,8 +20,8 @@
           />
         </svg>
         <span v-else class="h-4 w-4 shrink-0" />
-        <span class="flex-1 text-sm font-medium text-stone-800 truncate">{{ player.pseudo }}</span>
-        <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', statusClass(player.status)]">
+        <span class="flex-1 text-xs font-medium text-stone-800 truncate">{{ player.pseudo }}</span>
+        <span :class="['text-[10px] font-medium px-1.5 py-0.5 rounded-full', statusClass(player.status)]">
           {{ statusLabel(player.status) }}
         </span>
       </li>
