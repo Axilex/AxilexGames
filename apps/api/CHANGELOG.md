@@ -1,5 +1,16 @@
 # api
 
+## 1.1.0
+
+### Minor Changes
+
+- fix docker file
+
+### Patch Changes
+
+- Updated dependencies
+  - @wiki-race/shared@1.1.0
+
 ## 1.0.0
 
 ### Major Changes
