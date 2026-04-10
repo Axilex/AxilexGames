@@ -61,21 +61,62 @@ gcloud container clusters create-auto axilex-games-cluster \
 
 Cloud Build a besoin de pouvoir pousser des images et déployer sur GKE.
 
+**Linux / macOS (bash) :**
 ```bash
 PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')
 
-# Pousser des images dans Artifact Registry
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
   --role="roles/artifactregistry.writer"
 
-# Déployer sur GKE (kubectl apply, rollout)
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
   --role="roles/container.developer"
 ```
 
+**Windows — PowerShell :**
+```powershell
+$PROJECT_NUMBER = gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)'
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID `
+  --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" `
+  --role="roles/artifactregistry.writer"
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID `
+  --member="serviceAccount:$PROJECT_NUMBER@cloudbuild.gserviceaccount.com" `
+  --role="roles/container.developer"
+```
+
+**Windows — CMD :**
+```cmd
+for /f "tokens=*" %i in ('gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)"') do set PROJECT_NUMBER=%i
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:%PROJECT_NUMBER%@cloudbuild.gserviceaccount.com" --role="roles/artifactregistry.writer"
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:%PROJECT_NUMBER%@cloudbuild.gserviceaccount.com" --role="roles/container.developer"
+```
+
 Vérifie dans **IAM & Admin → IAM** que le compte `@cloudbuild.gserviceaccount.com` a bien ces deux rôles.
+
+### Droits du compte de service Compute (logs Cloud Build)
+
+Le compte Compute par défaut doit aussi pouvoir écrire les logs, sinon Cloud Build affiche une erreur de permission.
+
+**PowerShell :**
+```powershell
+$PROJECT_NUMBER = gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)'
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID `
+  --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" `
+  --role="roles/logging.logWriter"
+```
+
+**CMD :**
+```cmd
+for /f "tokens=*" %i in ('gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)"') do set PROJECT_NUMBER=%i
+
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="serviceAccount:%PROJECT_NUMBER%-compute@developer.gserviceaccount.com" --role="roles/logging.logWriter"
+```
 
 ---
 
@@ -123,19 +164,21 @@ Clique **Save**.
 
 ## Étape 7 — Remplir les placeholders dans k8s/
 
-Avant le premier déploiement, édite ces deux fichiers avec ton vrai domaine :
+Pas de domaine DNS — on utilise l'IP externe directement (HTTP simple, pas de TLS).
 
 **`k8s/api-deployment.yaml`** — ligne `CORS_ORIGINS` :
 ```yaml
-value: "https://ton-domaine.com"
+value: "http://EXTERNAL_IP"
 ```
 
 **`k8s/web-deployment.yaml`** — ligne `DOMAIN` :
 ```yaml
-value: "ton-domaine.com"
+value: "localhost"
 ```
 
-> Sans domaine pour l'instant ? Mets `localhost` — Caddy servira en HTTP simple.
+> L'`EXTERNAL_IP` n'est connue qu'après le premier déploiement (étape 9). Pour le tout premier push, mets `localhost` dans les deux fichiers — le site fonctionnera en accès direct via l'IP une fois l'IP récupérée et les fichiers mis à jour.
+
+> Quand tu auras un domaine DNS : remplace `localhost` par ton domaine dans les deux fichiers, pousse un nouveau tag — Caddy obtiendra le certificat TLS automatiquement.
 
 ---
 

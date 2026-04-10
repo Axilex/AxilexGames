@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 1.0.0
+
+### Major Changes
+
+- test gcp deploy
+
 ## 0.1.0
 
 ### Minor Changes
