@@ -20,6 +20,7 @@ import {
   GameNavigatePayload,
   GameSurrenderPayload,
   PlayerStatus,
+  GameMode,
 } from '@wiki-race/shared';
 import { LobbyService } from '../modules/lobby/lobby.service';
 import { GameService } from '../modules/game/game.service';
@@ -35,9 +36,7 @@ const RECONNECT_TIMEOUT_MS = 30_000;
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway({
   cors: {
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
-      .split(',')
-      .map((o) => o.trim()),
+    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
     credentials: true,
   },
 })
@@ -70,14 +69,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     });
 
-    // If game in progress and all remaining are done/surrendered, end the game
+    // If game in progress and all remaining players are inactive, end the game properly
     if (room.status === 'IN_PROGRESS') {
       const active = Array.from(room.players.values()).filter(
         (p) => p.status === PlayerStatus.CONNECTED,
       );
-      if (active.length === 0) {
-        const summary = this.game.toGameStateDTO(room);
-        this.server.to(room.code).emit('game:state', summary);
+      if (active.length === 0 && room.game) {
+        const summary = this.game.buildSummaryPublic(room);
+        this.server.to(room.code).emit('game:finished', summary);
       }
     }
   }
@@ -152,15 +151,36 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameConfirmChoicesPayload,
   ): Promise<void> {
+    const mode = payload.mode ?? GameMode.CLASSIC;
+
+    // Validate Sprint: timer required
+    if (mode === GameMode.SPRINT && !payload.timeLimitSeconds) {
+      client.emit('error', 'SPRINT_REQUIRES_TIME_LIMIT');
+      return;
+    }
+
+    // Validate Bingo: 4–6 constraints required
+    if (mode === GameMode.BINGO) {
+      const n = payload.bingoConstraintIds?.length ?? 0;
+      if (n < 4 || n > 6) {
+        client.emit('error', 'BINGO_INVALID_CONSTRAINTS');
+        return;
+      }
+    }
+
     const { gameStateDTO, startPage } = await this.game.confirmChoices(
       payload.roomCode,
       client.id,
+      mode,
       payload.timeLimitSeconds,
       (summary) => {
         this.server.to(payload.roomCode).emit('game:finished', summary);
       },
+      payload.clickLimit,
       payload.startSlug,
       payload.targetSlug,
+      payload.driftObjective,
+      payload.bingoConstraintIds,
     );
 
     this.server.to(payload.roomCode).emit('game:state', gameStateDTO);
@@ -180,6 +200,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Broadcast progress update to the whole room
     this.server.to(payload.roomCode).emit('player:progress', result.progress);
 
+    // Notify navigating player of newly validated Bingo constraints
+    if (result.newlyValidated?.length) {
+      client.emit('bingo:validated', {
+        constraintIds: result.newlyValidated,
+        slug: result.page.slug,
+      });
+    }
+
     if (result.finished && result.summary) {
       this.server.to(payload.roomCode).emit('game:finished', result.summary);
     }
@@ -194,8 +222,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const room = this.lobby.findRoom(payload.roomCode);
     const player = room?.players.get(client.id);
-    if (player) {
-      this.server.to(payload.roomCode).emit('player:progress', this.game.toPlayerProgress(player));
+    if (player && room?.game) {
+      this.server
+        .to(payload.roomCode)
+        .emit('player:progress', this.game.toPlayerProgress(player, room.game));
     }
 
     if (result.allDone && result.summary) {

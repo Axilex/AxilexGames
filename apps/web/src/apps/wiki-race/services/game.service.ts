@@ -1,4 +1,13 @@
 import { socketService } from '@/shared/services/socket.service';
+import type { GameMode, DriftObjective, BingoConstraintId } from '@wiki-race/shared';
+
+export interface ConfirmChoicesOptions {
+  clickLimit?: number | null;
+  startSlug?: string;
+  targetSlug?: string;
+  driftObjective?: DriftObjective;
+  bingoConstraintIds?: BingoConstraintId[];
+}
 
 export const gameService = {
   startGame(roomCode: string): void {
@@ -7,11 +16,16 @@ export const gameService = {
 
   confirmChoices(
     roomCode: string,
+    mode: GameMode,
     timeLimitSeconds: number | null,
-    startSlug?: string,
-    targetSlug?: string,
+    options?: ConfirmChoicesOptions,
   ): void {
-    socketService.emit('game:confirm_choices', { roomCode, timeLimitSeconds, startSlug, targetSlug });
+    socketService.emit('game:confirm_choices', {
+      roomCode,
+      mode,
+      timeLimitSeconds,
+      ...options,
+    });
   },
 
   navigate(roomCode: string, targetSlug: string): void {

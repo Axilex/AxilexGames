@@ -16,11 +16,7 @@
       class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10"
     >
       <div class="flex flex-col items-center gap-3">
-        <svg
-          class="animate-spin h-8 w-8 text-amber-500"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg class="animate-spin h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24">
           <circle
             class="opacity-25"
             cx="12"
@@ -40,32 +36,24 @@
     </div>
 
     <!-- Wikipedia content — HTML sanitized server-side before sending -->
-    <div
-      ref="containerRef"
-      class="wiki-content h-full overflow-y-auto"
-    >
+    <div ref="containerRef" class="wiki-content h-full overflow-y-auto">
       <div class="wiki-inner">
         <!-- Page title -->
         <h1 v-if="title" class="wiki-page-title">{{ title }}</h1>
 
         <!-- Generated table of contents -->
-        <nav
-          v-if="toc.length >= 3"
-          class="wiki-toc"
-        >
+        <nav v-if="toc.length >= 3" class="wiki-toc">
           <div class="wiki-toc-title">Sommaire</div>
           <ol class="wiki-toc-list">
-            <li
-              v-for="entry in toc"
-              :key="entry.id"
-            >
-              <a :href="`#${entry.id}`"><span class="tocnumber">{{ entry.number }}</span> {{ entry.text }}</a>
+            <li v-for="entry in toc" :key="entry.id">
+              <a :href="`#${entry.id}`"
+                ><span class="tocnumber">{{ entry.number }}</span> {{ entry.text }}</a
+              >
               <ol v-if="entry.children.length">
-                <li
-                  v-for="child in entry.children"
-                  :key="child.id"
-                >
-                  <a :href="`#${child.id}`"><span class="tocnumber">{{ child.number }}</span> {{ child.text }}</a>
+                <li v-for="child in entry.children" :key="child.id">
+                  <a :href="`#${child.id}`"
+                    ><span class="tocnumber">{{ child.number }}</span> {{ child.text }}</a
+                  >
                 </li>
               </ol>
             </li>
@@ -83,7 +71,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 
-interface TocEntry { id: string; text: string; number: string; children: TocEntry[] }
+interface TocEntry {
+  id: string;
+  text: string;
+  number: string;
+  children: TocEntry[];
+}
 
 const props = defineProps<{ htmlContent: string; title?: string; isNavigating?: boolean }>();
 
@@ -99,7 +92,8 @@ const toc = computed<TocEntry[]>(() => {
     const text = h.textContent?.trim() ?? '';
     if (!id || !text) return;
     if (h.tagName === 'H2') {
-      h2n++; h3n = 0;
+      h2n++;
+      h3n = 0;
       result.push({ id, text, number: `${h2n}`, children: [] });
     } else if (result.length) {
       h3n++;
@@ -111,9 +105,14 @@ const toc = computed<TocEntry[]>(() => {
 const emit = defineEmits<{ navigate: [slug: string] }>();
 const containerRef = ref<HTMLElement | null>(null);
 
-watch(() => props.htmlContent, () => {
-  nextTick(() => { containerRef.value?.scrollTo({ top: 0, behavior: 'instant' }); });
-});
+watch(
+  () => props.htmlContent,
+  () => {
+    nextTick(() => {
+      containerRef.value?.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  },
+);
 const showSearchBlocked = ref(false);
 let searchBlockedTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -132,7 +131,9 @@ function handleKeydown(e: KeyboardEvent) {
     e.preventDefault();
     showSearchBlocked.value = true;
     if (searchBlockedTimer) clearTimeout(searchBlockedTimer);
-    searchBlockedTimer = setTimeout(() => { showSearchBlocked.value = false; }, 2000);
+    searchBlockedTimer = setTimeout(() => {
+      showSearchBlocked.value = false;
+    }, 2000);
   }
 }
 
@@ -163,22 +164,50 @@ onUnmounted(() => {
   padding: 1.5rem 2rem 3rem;
 }
 
-.wiki-inner h1 { font-size: 2rem; font-weight: 400; margin: 0 0 0.5rem; border-bottom: 1px solid #a2a9b1; padding-bottom: 0.25rem; color: #000; font-family: 'Linux Libertine', Georgia, Times, serif; }
-.wiki-inner h2 { font-size: 1.5rem; font-weight: 400; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid #a2a9b1; padding-bottom: 0.2rem; color: #000; font-family: 'Linux Libertine', Georgia, Times, serif; }
-.wiki-inner h3 { font-size: 1.2rem; font-weight: 600; margin: 1.25rem 0 0.4rem; color: #000; }
-.wiki-inner h4 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.25rem; color: #000; }
+.wiki-inner h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  border-bottom: 1px solid #a2a9b1;
+  padding-bottom: 0.25rem;
+  color: #000;
+  font-family: 'Linux Libertine', Georgia, Times, serif;
+}
+.wiki-inner h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 1.5rem 0 0.5rem;
+  border-bottom: 1px solid #a2a9b1;
+  padding-bottom: 0.2rem;
+  color: #000;
+  font-family: 'Linux Libertine', Georgia, Times, serif;
+}
+.wiki-inner h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.4rem;
+  color: #000;
+}
+.wiki-inner h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.25rem;
+  color: #000;
+}
 
-.wiki-inner p { margin: 0 0 0.8rem; }
+.wiki-inner p {
+  margin: 0 0 0.8rem;
+}
 
-.wiki-inner a[href^="/wiki/"] {
+.wiki-inner a[href^='/wiki/'] {
   color: #3366cc;
   text-decoration: none;
   cursor: pointer;
 }
-.wiki-inner a[href^="/wiki/"]:hover {
+.wiki-inner a[href^='/wiki/']:hover {
   text-decoration: underline;
 }
-.wiki-inner a[href^="/wiki/"]:visited {
+.wiki-inner a[href^='/wiki/']:visited {
   color: #795cb2;
 }
 
@@ -226,7 +255,8 @@ onUnmounted(() => {
   font-size: 0.875rem;
   max-width: 100%;
 }
-.wiki-inner th, .wiki-inner td {
+.wiki-inner th,
+.wiki-inner td {
   border: 1px solid #a2a9b1;
   padding: 0.35rem 0.5rem;
   text-align: left;
@@ -236,7 +266,9 @@ onUnmounted(() => {
   background: #eaecf0;
   font-weight: 600;
 }
-.wiki-inner tr:nth-child(even) td { background: #f8f9fa; }
+.wiki-inner tr:nth-child(even) td {
+  background: #f8f9fa;
+}
 
 /* Infobox (floated right info panel) */
 .wiki-inner .infobox,
@@ -279,28 +311,71 @@ onUnmounted(() => {
 }
 
 /* --- Lists --- */
-.wiki-inner ul, .wiki-inner ol { padding-left: 1.75rem; margin: 0 0 0.8rem; }
-.wiki-inner li { margin-bottom: 0.2rem; }
+.wiki-inner ul,
+.wiki-inner ol {
+  padding-left: 1.75rem;
+  margin: 0 0 0.8rem;
+}
+.wiki-inner li {
+  margin-bottom: 0.2rem;
+}
 
 /* Definition lists */
-.wiki-inner dl { margin: 0 0 0.8rem 1rem; }
-.wiki-inner dt { font-weight: 600; }
-.wiki-inner dd { margin-left: 1.5rem; margin-bottom: 0.2rem; }
+.wiki-inner dl {
+  margin: 0 0 0.8rem 1rem;
+}
+.wiki-inner dt {
+  font-weight: 600;
+}
+.wiki-inner dd {
+  margin-left: 1.5rem;
+  margin-bottom: 0.2rem;
+}
 
 /* --- Inline elements --- */
-.wiki-inner sup { font-size: 0.7em; vertical-align: super; }
-.wiki-inner sub { font-size: 0.7em; vertical-align: sub; }
-.wiki-inner sup a { color: #3366cc; }
+.wiki-inner sup {
+  font-size: 0.7em;
+  vertical-align: super;
+}
+.wiki-inner sub {
+  font-size: 0.7em;
+  vertical-align: sub;
+}
+.wiki-inner sup a {
+  color: #3366cc;
+}
 
-.wiki-inner b, .wiki-inner strong { font-weight: 600; }
-.wiki-inner i, .wiki-inner em { font-style: italic; }
-.wiki-inner small { font-size: 0.85em; }
-.wiki-inner s { text-decoration: line-through; }
-.wiki-inner abbr { text-decoration: underline dotted; cursor: help; }
+.wiki-inner b,
+.wiki-inner strong {
+  font-weight: 600;
+}
+.wiki-inner i,
+.wiki-inner em {
+  font-style: italic;
+}
+.wiki-inner small {
+  font-size: 0.85em;
+}
+.wiki-inner s {
+  text-decoration: line-through;
+}
+.wiki-inner abbr {
+  text-decoration: underline dotted;
+  cursor: help;
+}
 
 /* --- Block elements --- */
-.wiki-inner hr { border: none; border-top: 1px solid #a2a9b1; margin: 1.25rem 0; }
-.wiki-inner blockquote { margin: 0.5rem 1.5rem; padding-left: 1rem; border-left: 3px solid #a2a9b1; color: #54595d; }
+.wiki-inner hr {
+  border: none;
+  border-top: 1px solid #a2a9b1;
+  margin: 1.25rem 0;
+}
+.wiki-inner blockquote {
+  margin: 0.5rem 1.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid #a2a9b1;
+  color: #54595d;
+}
 
 /* --- Page title --- */
 .wiki-page-title {
@@ -357,6 +432,15 @@ onUnmounted(() => {
   clear: both;
 }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+}
 </style>

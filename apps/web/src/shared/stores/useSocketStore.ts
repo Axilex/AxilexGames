@@ -23,5 +23,13 @@ export const useSocketStore = defineStore('socket', () => {
     pendingRejoin.value = value;
   }
 
-  return { isConnected, isReconnecting, hasConnectedOnce, pendingRejoin, setConnected, setReconnecting, setPendingRejoin };
+  return {
+    isConnected,
+    isReconnecting,
+    hasConnectedOnce,
+    pendingRejoin,
+    setConnected,
+    setReconnecting,
+    setPendingRejoin,
+  };
 });

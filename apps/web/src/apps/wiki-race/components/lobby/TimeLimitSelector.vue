@@ -1,8 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-      Limite de temps
-    </p>
+    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Limite de temps</p>
     <div class="flex gap-2 flex-wrap">
       <button
         v-for="option in options"

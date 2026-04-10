@@ -22,7 +22,9 @@ let interval: ReturnType<typeof setInterval>;
 
 onMounted(() => {
   elapsed.value = Math.floor((Date.now() - props.startTime) / 1000);
-  interval = setInterval(() => { elapsed.value = Math.floor((Date.now() - props.startTime) / 1000); }, 1000);
+  interval = setInterval(() => {
+    elapsed.value = Math.floor((Date.now() - props.startTime) / 1000);
+  }, 1000);
 });
 onUnmounted(() => clearInterval(interval));
 
@@ -33,6 +35,8 @@ const secondsLeft = computed(() =>
 const displaySeconds = computed(() => (isCountdown.value ? secondsLeft.value : elapsed.value));
 const display = computed(() => {
   const s = displaySeconds.value;
-  return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  return `${Math.floor(s / 60)
+    .toString()
+    .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 });
 </script>

@@ -1,10 +1,6 @@
 <template>
   <div class="flex flex-col gap-1">
-    <label
-      v-if="label"
-      :for="id"
-      class="text-sm font-medium text-stone-700"
-    >
+    <label v-if="label" :for="id" class="text-sm font-medium text-stone-700">
       {{ label }}
     </label>
     <input
@@ -21,11 +17,8 @@
       ]"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       @keydown.enter="$emit('enter')"
-    >
-    <p
-      v-if="error"
-      class="text-xs text-red-600"
-    >
+    />
+    <p v-if="error" class="text-xs text-red-600">
       {{ error }}
     </p>
   </div>

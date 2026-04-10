@@ -1,16 +1,30 @@
 <template>
   <div class="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-2xl flex flex-col gap-6">
-      <WinnerBanner
-        v-if="summary"
-        :summary="summary"
-      />
+      <WinnerBanner v-if="summary" :summary="summary" />
 
-      <!-- Player paths -->
-      <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 flex flex-col gap-5">
-        <h3 class="text-sm font-semibold text-stone-500 uppercase tracking-widest">
-          Parcours
-        </h3>
+      <!-- DRIFT: ranked leaderboard -->
+      <div
+        v-if="summary?.mode === 'DRIFT'"
+        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6"
+      >
+        <DriftLeaderboard :summary="summary" />
+      </div>
+
+      <!-- BINGO: bingo board summary -->
+      <div
+        v-else-if="summary?.mode === 'BINGO'"
+        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6"
+      >
+        <BingoBoardSummary :summary="summary" />
+      </div>
+
+      <!-- CLASSIC / SPRINT / LABYRINTH: player paths -->
+      <div
+        v-else
+        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 flex flex-col gap-5"
+      >
+        <h3 class="text-sm font-semibold text-stone-500 uppercase tracking-widest">Parcours</h3>
         <PlayerPathDisplay
           v-for="player in summary?.players"
           :key="player.pseudo"
@@ -26,15 +40,8 @@
 
       <!-- Actions -->
       <div class="flex gap-3 justify-center">
-        <BaseButton
-          variant="secondary"
-          @click="goHome"
-        >
-          Accueil
-        </BaseButton>
-        <BaseButton @click="playAgain">
-          Rejouer dans cette room →
-        </BaseButton>
+        <BaseButton variant="secondary" @click="goHome"> Accueil </BaseButton>
+        <BaseButton @click="playAgain"> Rejouer dans cette room → </BaseButton>
       </div>
     </div>
   </div>
@@ -50,6 +57,8 @@ import { lobbyService } from '../services/lobby.service';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import WinnerBanner from '../components/summary/WinnerBanner.vue';
 import PlayerPathDisplay from '../components/summary/PlayerPathDisplay.vue';
+import DriftLeaderboard from '../components/summary/DriftLeaderboard.vue';
+import BingoBoardSummary from '../components/summary/BingoBoardSummary.vue';
 
 const router = useRouter();
 const gameStore = useGameStore();

@@ -91,7 +91,11 @@ export class WikipediaService {
   }
 
   private normalizeSlug(slug: string): string {
-    try { return decodeURIComponent(slug); } catch { return slug; }
+    try {
+      return decodeURIComponent(slug);
+    } catch {
+      return slug;
+    }
   }
 
   private async fetchWithRetry(slug: string): Promise<string> {

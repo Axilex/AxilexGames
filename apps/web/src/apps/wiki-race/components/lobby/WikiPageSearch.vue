@@ -18,10 +18,7 @@
     </div>
 
     <!-- Search input -->
-    <div
-      v-else
-      class="relative"
-    >
+    <div v-else class="relative">
       <input
         v-model="query"
         type="text"
@@ -30,16 +27,9 @@
         @input="onInput"
         @blur="onBlur"
         @focus="showDropdown = results.length > 0"
-      >
-      <div
-        v-if="loading"
-        class="absolute right-3 top-1/2 -translate-y-1/2"
-      >
-        <svg
-          class="animate-spin h-4 w-4 text-stone-400"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+      />
+      <div v-if="loading" class="absolute right-3 top-1/2 -translate-y-1/2">
+        <svg class="animate-spin h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24">
           <circle
             class="opacity-25"
             cx="12"
@@ -83,9 +73,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const API_BASE = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? 'http://localhost:3000';
+const API_BASE =
+  (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? 'http://localhost:3000';
 
-interface WikiResult { slug: string; title: string }
+interface WikiResult {
+  slug: string;
+  title: string;
+}
 
 defineProps<{ label: string; placeholder?: string }>();
 const emit = defineEmits<{ select: [result: WikiResult | null] }>();
@@ -102,7 +96,11 @@ function onInput() {
   searched.value = false;
   showDropdown.value = false;
   if (debounceTimer) clearTimeout(debounceTimer);
-  if (query.value.trim().length < 2) { results.value = []; loading.value = false; return; }
+  if (query.value.trim().length < 2) {
+    results.value = [];
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   debounceTimer = setTimeout(() => search(query.value.trim()), 350);
 }
@@ -110,17 +108,30 @@ function onInput() {
 async function search(q: string) {
   try {
     const res = await fetch(`${API_BASE}/wiki/search?q=${encodeURIComponent(q)}`);
-    results.value = await res.json() as WikiResult[];
+    results.value = (await res.json()) as WikiResult[];
     showDropdown.value = results.value.length > 0;
     searched.value = true;
-  } catch { results.value = []; }
-  finally { loading.value = false; }
+  } catch {
+    results.value = [];
+  } finally {
+    loading.value = false;
+  }
 }
 
 function select(result: WikiResult) {
-  selected.value = result; query.value = ''; results.value = []; showDropdown.value = false;
+  selected.value = result;
+  query.value = '';
+  results.value = [];
+  showDropdown.value = false;
   emit('select', result);
 }
-function clear() { selected.value = null; emit('select', null); }
-function onBlur() { setTimeout(() => { showDropdown.value = false; }, 150); }
+function clear() {
+  selected.value = null;
+  emit('select', null);
+}
+function onBlur() {
+  setTimeout(() => {
+    showDropdown.value = false;
+  }, 150);
+}
 </script>

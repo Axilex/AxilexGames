@@ -8,8 +8,8 @@ A personal web hub hosting multiple projects. Currently hosts **WikiRace Multipl
 
 ## Status
 
-All 7 phases implemented and passing:
-- 95 tests green (64 backend Jest + 31 frontend Vitest)
+All 7 phases + game modes implemented and passing:
+- 120 tests green (86 backend Jest + 34 frontend Vitest)
 - `pnpm lint` clean (0 errors, 0 warnings)
 - `pnpm build` succeeds across all packages
 
@@ -29,6 +29,7 @@ All 7 phases implemented and passing:
 - Reconnection after network drop requires a manual button click (no auto-rejoin) — `useReconnection` sets `pendingRejoin` in `useSocketStore`; `DisconnectOverlay` shows the button
 - `room:reset` event resets room to `WAITING` (host triggered from summary "Rejouer") — resets player statuses, clears history and `game` field
 - Win detection and slug comparison fully normalized via `normalizeSlug` (`decodeURIComponent`) on all incoming slugs before storage, cache lookup, and comparison
+- **5 game modes**: CLASSIC, SPRINT, LABYRINTH, DRIFT, BINGO — chooser selects mode + config during CHOOSING phase; ranked summaries for DRIFT and BINGO
 
 ## Stack
 
@@ -76,7 +77,7 @@ pnpm format
 NestJS modules with strict separation:
 
 - **`modules/lobby/`** — room creation, join, leave, host transfer, reconnect. Owns `LobbyService` and `RoomRegistryService`.
-- **`modules/game/`** — game lifecycle, navigation validation, win condition, surrender, timer. Owns `GameService` and `GameStateService`.
+- **`modules/game/`** — game lifecycle, navigation validation, win condition, surrender, timer, mode logic. Owns `GameService`, `GameStateService`, and `ModeService`.
 - **`modules/wikipedia/`** — fetches French Wikipedia pages, sanitizes HTML, LRU cache (500 pages, 10min TTL). Owns `WikipediaService`, `WikipediaController` (REST search), and `sanitizer.ts`.
 - **`gateways/`** — Socket.IO `GameGateway`, thin orchestrator, no business logic. Uses `WsExceptionFilter` and `WsLoggingInterceptor`.
 - **`interceptors/`** — `WsLoggingInterceptor` logs all gateway events.
@@ -107,9 +108,9 @@ src/
       useSocketStore.ts            — isConnected, hasConnectedOnce
   apps/
     wiki-race/                     — self-contained WikiRace module
-      components/game/             — WikiContentArea, GameTimer, TargetPageDisplay, PlayerSidebar, NavigationHistory, SurrenderButton
-      components/lobby/            — PlayerList, RoomCodeDisplay, ShareLink, TimeLimitSelector, WikiPageSearch
-      components/summary/          — WinnerBanner, PlayerPathDisplay
+      components/game/             — WikiContentArea, GameTimer, PlayerSidebar, NavigationHistory, SurrenderButton, BingoCard, DriftScoreDisplay
+      components/lobby/            — PlayerList, RoomCodeDisplay, ShareLink, TimeLimitSelector, WikiPageSearch, ModeSelector, ClickLimitSelector, DriftObjectiveSelector, BingoConstraintPicker
+      components/summary/          — WinnerBanner, PlayerPathDisplay, DriftLeaderboard, BingoBoardSummary
       composables/                 — useLobby, useGameSession, useReconnection, useSocketListeners
       pages/                       — WikiRacePage (/wikirace), LobbyPage, GamePage, SummaryPage
       services/                    — game.service.ts, lobby.service.ts
@@ -163,9 +164,35 @@ Warm minimalist palette — **stone** neutrals + **amber** accent:
 
 ### Shared (`packages/shared/src/`)
 
-- **`domain/`** — `enums.ts` (`GameStatus`, `PlayerStatus`), domain interfaces (`Room`, `Player`, `WikipediaPage`, `NavigationStep`, `GameSummary`)
-- **`dto/`** — wire-safe DTOs (`RoomDTO`, `PlayerDTO`, `GameStateDTO`, `PlayerProgressDTO`)
+- **`domain/`** — `enums.ts` (`GameStatus`, `PlayerStatus`, `GameMode`, `DriftObjective`), `bingo.types.ts` (`BingoConstraintId`, `BINGO_CONSTRAINTS`, `BingoCardEntry`), domain interfaces (`Room`, `Player`, `WikipediaPage`, `NavigationStep`, `GameSummary`)
+- **`dto/`** — wire-safe DTOs (`RoomDTO`, `PlayerDTO`, `GameStateDTO`, `PlayerProgressDTO`); all extended with mode-specific fields (`clicksLeft`, `driftBestScore`, `bingoValidated`, etc.)
 - **`events/`** — typed Socket.IO maps (`ClientToServerEvents`, `ServerToClientEvents`)
+
+### Game modes
+
+The mode is selected by the **chooser** during the CHOOSING phase alongside start/target articles. `GameConfirmChoicesPayload` carries `mode`, `clickLimit`, `driftObjective`, `bingoConstraintIds`.
+
+| Mode | Win condition | Key config |
+|---|---|---|
+| CLASSIC | First to reach target | Optional time limit |
+| SPRINT | First to reach target | Mandatory time limit |
+| LABYRINTH | First to reach target | Click limit (4–6); no clicks left = eliminated |
+| DRIFT | Best metric score when clicks exhausted | `DriftObjective` (oldest year in slug / shortest / most images); click limit |
+| BINGO | First to validate all selected constraints | `BingoConstraintId[]` (4–6 from 10 predefined); click limit |
+
+**`ModeService`** (backend, injectable, pure logic):
+- `computeDriftScore(objective, html, slug)` — OLDEST: regex `/\b\d{4}\b/` on decoded slug title; SHORTEST: strip HTML then word count; MOST_IMAGES: count `<img` tags
+- `checkConstraints(ids, slug, html)` — returns which constraint IDs are validated by a given page (10 regex-based checks)
+- `allPlayersFinished(room)` — true when every player's status is not CONNECTED (used to trigger ranked end in DRIFT/BINGO)
+- `rankDriftPlayers(players, objective)` — sorts by `driftBestScore` (null last), tie-break by hop count
+
+**Navigation flow per mode:**
+- CLASSIC/SPRINT: first player to reach `targetSlug` → `endGame(socketId)`, instant winner
+- LABYRINTH: reaching `targetSlug` wins; exhausting click limit eliminates; `allPlayersFinished` → `endGame(null)`
+- DRIFT: each navigation updates `driftBestScore`/`driftBestSlug`; when click limit reached → `FINISHED`; `allPlayersFinished` → ranked `buildSummary`
+- BINGO: each navigation runs `checkConstraints`; new validated constraints emitted via `bingo:validated` (unicast); validating all → instant win; click limit exhausted → ranked end
+
+**`targetSlug` is nullable** — `null` for DRIFT and BINGO (no destination). All downstream code handles `string | null`.
 
 ### Socket.IO events
 
@@ -186,6 +213,7 @@ Warm minimalist palette — **stone** neutrals + **amber** accent:
 | `navigation:error` | S→C | Invalid navigation feedback |
 | `player:disconnected` | S→C | Player lost connection |
 | `player:reconnected` | S→C | Player reconnected |
+| `bingo:validated` | S→C | Unicast to navigating player — newly validated Bingo constraint IDs |
 
 ## Key constraints
 

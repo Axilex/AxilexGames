@@ -4,16 +4,12 @@
 
     <div class="flex-1 flex items-center justify-center p-4">
       <div class="w-full max-w-md flex flex-col gap-5">
-
         <!-- Header -->
         <div class="text-center mb-2">
-          <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mb-4 shadow-md shadow-amber-200">
-            <svg
-              class="h-7 w-7 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <div
+            class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mb-4 shadow-md shadow-amber-200"
+          >
+            <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -22,21 +18,15 @@
               />
             </svg>
           </div>
-          <h1 class="text-3xl font-bold text-stone-900 tracking-tight">
-            WikiRace
-          </h1>
-          <p class="text-stone-500 mt-1 text-sm">
-            Course de page en page sur Wikipédia
-          </p>
+          <h1 class="text-3xl font-bold text-stone-900 tracking-tight">WikiRace</h1>
+          <p class="text-stone-500 mt-1 text-sm">Course de page en page sur Wikipédia</p>
         </div>
 
         <ErrorToast :message="lobbyStore.error" />
 
         <!-- Create room -->
         <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4">
-          <h2 class="text-base font-semibold text-stone-800">
-            Créer une room
-          </h2>
+          <h2 class="text-base font-semibold text-stone-800">Créer une room</h2>
           <BaseInput
             v-model="createPseudo"
             label="Ton pseudo"
@@ -45,11 +35,7 @@
             :error="createPseudoError"
             @enter="handleCreate"
           />
-          <BaseButton
-            :loading="creating"
-            class="w-full"
-            @click="handleCreate"
-          >
+          <BaseButton :loading="creating" class="w-full" @click="handleCreate">
             Créer une room →
           </BaseButton>
         </div>
@@ -63,9 +49,7 @@
 
         <!-- Join room -->
         <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4">
-          <h2 class="text-base font-semibold text-stone-800">
-            Rejoindre une room
-          </h2>
+          <h2 class="text-base font-semibold text-stone-800">Rejoindre une room</h2>
           <BaseInput
             v-model="joinPseudo"
             label="Ton pseudo"
@@ -82,12 +66,7 @@
             class="font-mono uppercase"
             @enter="handleJoin"
           />
-          <BaseButton
-            variant="secondary"
-            :loading="joining"
-            class="w-full"
-            @click="handleJoin"
-          >
+          <BaseButton variant="secondary" :loading="joining" class="w-full" @click="handleJoin">
             Rejoindre →
           </BaseButton>
         </div>
@@ -119,14 +98,30 @@ const joining = ref(false);
 const urlCode = new URLSearchParams(window.location.search).get('code');
 if (urlCode) joinCode.value = urlCode.toUpperCase();
 
-watch(() => lobbyStore.room, (room) => {
-  if (room) { creating.value = false; joining.value = false; router.push({ name: 'lobby' }); }
-});
-watch(() => lobbyStore.error, () => { creating.value = false; joining.value = false; });
+watch(
+  () => lobbyStore.room,
+  (room) => {
+    if (room) {
+      creating.value = false;
+      joining.value = false;
+      router.push({ name: 'lobby' });
+    }
+  },
+);
+watch(
+  () => lobbyStore.error,
+  () => {
+    creating.value = false;
+    joining.value = false;
+  },
+);
 
 function handleCreate() {
   createPseudoError.value = '';
-  if (!createPseudo.value.trim()) { createPseudoError.value = 'Entre un pseudo.'; return; }
+  if (!createPseudo.value.trim()) {
+    createPseudoError.value = 'Entre un pseudo.';
+    return;
+  }
   creating.value = true;
   createRoom(createPseudo.value.trim());
 }
@@ -134,7 +129,10 @@ function handleCreate() {
 function handleJoin() {
   joinCodeError.value = '';
   if (!joinPseudo.value.trim()) return;
-  if (joinCode.value.trim().length < 6) { joinCodeError.value = 'Le code doit faire 6 caractères.'; return; }
+  if (joinCode.value.trim().length < 6) {
+    joinCodeError.value = 'Le code doit faire 6 caractères.';
+    return;
+  }
   joining.value = true;
   joinRoom(joinCode.value.trim().toUpperCase(), joinPseudo.value.trim());
 }

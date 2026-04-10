@@ -2,22 +2,31 @@ import { Injectable } from '@nestjs/common';
 import {
   Room,
   Player,
+  GameSession,
   GameStatus,
   PlayerStatus,
+  GameMode,
+  DriftObjective,
   GameStateDTO,
   PlayerProgressDTO,
   GameSummary,
   PlayerSummary,
   WikipediaPage,
 } from '@wiki-race/shared';
+import { BingoConstraintId, BingoCardEntry } from '@wiki-race/shared';
 import { RoomRegistryService } from '../lobby/room-registry.service';
 import { WikipediaService } from '../wikipedia/wikipedia.service';
 import { GameStateService } from './game-state.service';
+import { ModeService } from './mode.service';
 
 const NAVIGATION_RATE_LIMIT_MS = 500;
 
 function normalizeSlug(slug: string): string {
-  try { return decodeURIComponent(slug); } catch { return slug; }
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
 }
 
 @Injectable()
@@ -26,55 +35,77 @@ export class GameService {
     private readonly registry: RoomRegistryService,
     private readonly wikipedia: WikipediaService,
     private readonly gameState: GameStateService,
+    private readonly modeService: ModeService,
   ) {}
 
   async confirmChoices(
     roomCode: string,
     socketId: string,
+    mode: GameMode = GameMode.CLASSIC,
     timeLimitSeconds: number | null,
     onTimerExpire: (summary: GameSummary) => void,
+    clickLimit?: number | null,
     chosenStartSlug?: string,
     chosenTargetSlug?: string,
+    driftObjective?: DriftObjective,
+    bingoConstraintIds?: BingoConstraintId[],
   ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
     const room = this.getRoom(roomCode);
     if (room.chooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
     if (room.status !== GameStatus.CHOOSING) throw new Error('NOT_IN_CHOOSING_PHASE');
-    return this.runStartGame(room, timeLimitSeconds, onTimerExpire, chosenStartSlug, chosenTargetSlug);
+    return this.runStartGame(
+      room,
+      mode,
+      timeLimitSeconds,
+      onTimerExpire,
+      clickLimit,
+      chosenStartSlug,
+      chosenTargetSlug,
+      driftObjective,
+      bingoConstraintIds,
+    );
   }
 
   private async runStartGame(
     room: Room,
+    mode: GameMode,
     timeLimitSeconds: number | null,
     onTimerExpire: (summary: GameSummary) => void,
+    clickLimit?: number | null,
     chosenStartSlug?: string,
     chosenTargetSlug?: string,
+    driftObjective?: DriftObjective,
+    bingoConstraintIds?: BingoConstraintId[],
   ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
-    // Reset players who finished or surrendered in a previous game
+    // Reset players from previous game
     for (const player of room.players.values()) {
-      if (
-        player.status === PlayerStatus.FINISHED ||
-        player.status === PlayerStatus.SURRENDERED
-      ) {
+      if (player.status === PlayerStatus.FINISHED || player.status === PlayerStatus.SURRENDERED) {
         player.status = PlayerStatus.CONNECTED;
       }
     }
 
+    const needsTarget =
+      mode === GameMode.CLASSIC || mode === GameMode.SPRINT || mode === GameMode.LABYRINTH;
     const random = this.wikipedia.selectStartAndTarget();
     const start = normalizeSlug(chosenStartSlug ?? random.start);
-    const target = normalizeSlug(chosenTargetSlug ?? random.target);
+    const target = needsTarget ? normalizeSlug(chosenTargetSlug ?? random.target) : null;
     const startPage = await this.wikipedia.fetchPage(start);
     const now = Date.now();
 
     room.status = GameStatus.IN_PROGRESS;
     room.chooserSocketId = null;
     room.game = {
+      mode,
       startSlug: start,
       targetSlug: target,
       startTime: now,
       endTime: null,
       timeLimitSeconds,
+      clickLimit: clickLimit ?? null,
       winnerSocketId: null,
       timerHandle: null,
+      driftObjective: driftObjective ?? null,
+      bingoConstraintIds: bingoConstraintIds ?? null,
     };
 
     // Place all connected players on the start page
@@ -83,6 +114,10 @@ export class GameService {
         player.currentSlug = start;
         player.history = [];
         player.lastNavigationAt = 0;
+        player.driftBestScore = null;
+        player.driftBestSlug = null;
+        player.bingoValidated = [];
+        player.bingoValidatedOnSlug = {};
       }
     }
 
@@ -106,6 +141,7 @@ export class GameService {
     progress: PlayerProgressDTO;
     finished: boolean;
     summary?: GameSummary;
+    newlyValidated?: BingoConstraintId[];
   }> {
     const room = this.getRoom(roomCode);
     if (room.status !== GameStatus.IN_PROGRESS) throw new Error('GAME_NOT_IN_PROGRESS');
@@ -128,16 +164,126 @@ export class GameService {
     player.lastNavigationAt = now;
 
     const page = await this.wikipedia.fetchPage(normalizedTarget);
-    const progress = this.toPlayerProgress(player);
+    const game = room.game!;
 
-    if (normalizedTarget === room.game!.targetSlug) {
-      player.status = PlayerStatus.FINISHED;
-      const summary = this.buildSummary(room, socketId);
-      this.endGame(room, socketId);
-      return { page, progress, finished: true, summary };
+    switch (game.mode) {
+      case GameMode.CLASSIC:
+      case GameMode.SPRINT: {
+        if (normalizedTarget === game.targetSlug) {
+          player.status = PlayerStatus.FINISHED;
+          const summary = this.buildSummary(room, socketId);
+          this.endGame(room, socketId);
+          return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
+        }
+        break;
+      }
+
+      case GameMode.LABYRINTH: {
+        if (normalizedTarget === game.targetSlug) {
+          player.status = PlayerStatus.FINISHED;
+          const summary = this.buildSummary(room, socketId);
+          this.endGame(room, socketId);
+          return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
+        }
+        if (game.clickLimit !== null && player.history.length >= game.clickLimit) {
+          player.status = PlayerStatus.FINISHED;
+          if (this.modeService.allPlayersFinished(room)) {
+            const summary = this.buildSummary(room, null);
+            this.endGame(room, null);
+            return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
+          }
+          return { page, progress: this.toPlayerProgress(player, game), finished: true };
+        }
+        break;
+      }
+
+      case GameMode.DRIFT: {
+        if (game.driftObjective) {
+          const score = this.modeService.computeDriftScore(
+            game.driftObjective,
+            page.htmlContent,
+            normalizedTarget,
+          );
+          this.modeService.updatePlayerDriftScore(
+            player,
+            score,
+            normalizedTarget,
+            game.driftObjective,
+          );
+        }
+        if (game.clickLimit !== null && player.history.length >= game.clickLimit) {
+          player.status = PlayerStatus.FINISHED;
+          if (this.modeService.allPlayersFinished(room)) {
+            const summary = this.buildSummary(room, null);
+            this.endGame(room, null);
+            return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
+          }
+          return { page, progress: this.toPlayerProgress(player, game), finished: true };
+        }
+        break;
+      }
+
+      case GameMode.BINGO: {
+        let newlyValidated: BingoConstraintId[] = [];
+        if (game.bingoConstraintIds) {
+          const unvalidated = game.bingoConstraintIds.filter(
+            (id) => !player.bingoValidated.includes(id),
+          );
+          newlyValidated = this.modeService.checkConstraints(
+            unvalidated,
+            normalizedTarget,
+            page.htmlContent,
+          );
+          for (const id of newlyValidated) {
+            player.bingoValidated.push(id);
+            player.bingoValidatedOnSlug[id] = normalizedTarget;
+          }
+        }
+
+        if (this.modeService.checkBingoWin(player, game)) {
+          player.status = PlayerStatus.FINISHED;
+          const summary = this.buildSummary(room, socketId);
+          this.endGame(room, socketId);
+          return {
+            page,
+            progress: this.toPlayerProgress(player, game),
+            finished: true,
+            summary,
+            newlyValidated,
+          };
+        }
+
+        if (game.clickLimit !== null && player.history.length >= game.clickLimit) {
+          player.status = PlayerStatus.FINISHED;
+          if (this.modeService.allPlayersFinished(room)) {
+            const summary = this.buildSummary(room, null);
+            this.endGame(room, null);
+            return {
+              page,
+              progress: this.toPlayerProgress(player, game),
+              finished: true,
+              summary,
+              newlyValidated,
+            };
+          }
+          return {
+            page,
+            progress: this.toPlayerProgress(player, game),
+            finished: true,
+            newlyValidated,
+          };
+        }
+
+        return {
+          page,
+          progress: this.toPlayerProgress(player, game),
+          finished: false,
+          newlyValidated,
+        };
+      }
     }
 
-    return { page, progress, finished: false };
+    return { page, progress: this.toPlayerProgress(player, game), finished: false };
   }
 
   surrender(roomCode: string, socketId: string): { allDone: boolean; summary?: GameSummary } {
@@ -148,11 +294,7 @@ export class GameService {
     if (!player) throw new Error('PLAYER_NOT_FOUND');
     player.status = PlayerStatus.SURRENDERED;
 
-    const activePlayers = Array.from(room.players.values()).filter(
-      (p) => p.status === PlayerStatus.CONNECTED,
-    );
-
-    if (activePlayers.length === 0) {
+    if (this.modeService.allPlayersFinished(room)) {
       const summary = this.buildSummary(room, null);
       this.endGame(room, null);
       return { allDone: true, summary };
@@ -162,22 +304,33 @@ export class GameService {
   }
 
   toGameStateDTO(room: Room): GameStateDTO {
+    const game = room.game!;
     return {
       roomCode: room.code,
-      startSlug: room.game!.startSlug,
-      targetSlug: room.game!.targetSlug,
-      startTime: room.game!.startTime,
-      timeLimitSeconds: room.game!.timeLimitSeconds,
-      playerStatuses: Array.from(room.players.values()).map((p) => this.toPlayerProgress(p)),
+      mode: game.mode,
+      startSlug: game.startSlug,
+      targetSlug: game.targetSlug,
+      startTime: game.startTime,
+      timeLimitSeconds: game.timeLimitSeconds,
+      clickLimit: game.clickLimit,
+      driftObjective: game.driftObjective,
+      bingoConstraints: game.bingoConstraintIds,
+      playerStatuses: Array.from(room.players.values()).map((p) => this.toPlayerProgress(p, game)),
     };
   }
 
-  toPlayerProgress(player: Player): PlayerProgressDTO {
+  toPlayerProgress(player: Player, game: GameSession | null): PlayerProgressDTO {
+    const clicksLeft =
+      game?.clickLimit != null ? Math.max(0, game.clickLimit - player.history.length) : null;
     return {
       pseudo: player.pseudo,
       status: player.status,
       hopCount: player.history.length,
       currentSlug: player.currentSlug,
+      clicksLeft,
+      driftBestScore: player.driftBestScore,
+      driftBestSlug: player.driftBestSlug,
+      bingoValidated: player.bingoValidated,
     };
   }
 
@@ -189,27 +342,82 @@ export class GameService {
   }
 
   private buildSummary(room: Room, winnerSocketId?: string | null): GameSummary {
-    const winnerId = winnerSocketId !== undefined ? winnerSocketId : room.game!.winnerSocketId;
-    const winnerPlayer = winnerId ? room.players.get(winnerId) : null;
+    const game = room.game!;
+    const winnerId = winnerSocketId !== undefined ? winnerSocketId : game.winnerSocketId;
 
-    const players: PlayerSummary[] = Array.from(room.players.values()).map((p) => ({
-      pseudo: p.pseudo,
-      isWinner: p.socketId === winnerId,
-      surrendered: p.status === PlayerStatus.SURRENDERED,
-      hopCount: p.history.length,
-      path: p.history,
-    }));
+    const players: PlayerSummary[] = Array.from(room.players.values()).map((p) => {
+      const bingoCardEntries: BingoCardEntry[] = (game.bingoConstraintIds ?? []).map((cid) => ({
+        constraintId: cid,
+        validated: p.bingoValidated.includes(cid),
+        validatedOnSlug: p.bingoValidatedOnSlug[cid] ?? null,
+      }));
+
+      return {
+        pseudo: p.pseudo,
+        isWinner: p.socketId === winnerId,
+        surrendered: p.status === PlayerStatus.SURRENDERED,
+        hopCount: p.history.length,
+        path: p.history,
+        rank: null,
+        driftBestScore: p.driftBestScore,
+        driftBestSlug: p.driftBestSlug,
+        bingoValidated: p.bingoValidated,
+        bingoCardEntries,
+      };
+    });
+
+    let resolvedWinnerPseudo: string | null = winnerId
+      ? (room.players.get(winnerId)?.pseudo ?? null)
+      : null;
+
+    // Ranked modes: compute ranks and override winnerPseudo
+    if (game.mode === GameMode.DRIFT && game.driftObjective) {
+      const ranked = this.modeService.rankDriftPlayers(
+        Array.from(room.players.values()),
+        game.driftObjective,
+      );
+      ranked.forEach((p, idx) => {
+        const summary = players.find((ps) => ps.pseudo === p.pseudo);
+        if (summary) summary.rank = idx + 1;
+      });
+      resolvedWinnerPseudo = ranked[0]?.pseudo ?? null;
+      players.forEach((p) => {
+        p.isWinner = p.pseudo === resolvedWinnerPseudo;
+      });
+    }
+
+    if (game.mode === GameMode.BINGO) {
+      const ranked = [...players].sort((a, b) => {
+        const diff = b.bingoValidated.length - a.bingoValidated.length;
+        return diff !== 0 ? diff : a.hopCount - b.hopCount;
+      });
+      ranked.forEach((p, idx) => {
+        p.rank = idx + 1;
+      });
+      resolvedWinnerPseudo = ranked[0]?.pseudo ?? null;
+      players.forEach((p) => {
+        p.isWinner = p.pseudo === resolvedWinnerPseudo;
+      });
+    }
 
     return {
       roomCode: room.code,
-      startSlug: room.game!.startSlug,
-      targetSlug: room.game!.targetSlug,
-      startTime: room.game!.startTime,
-      endTime: room.game!.endTime ?? Date.now(),
-      timeLimitSeconds: room.game!.timeLimitSeconds,
-      winnerPseudo: winnerPlayer?.pseudo ?? null,
+      mode: game.mode,
+      startSlug: game.startSlug,
+      targetSlug: game.targetSlug,
+      startTime: game.startTime,
+      endTime: game.endTime ?? Date.now(),
+      timeLimitSeconds: game.timeLimitSeconds,
+      clickLimit: game.clickLimit,
+      winnerPseudo: resolvedWinnerPseudo,
+      driftObjective: game.driftObjective,
+      bingoConstraintIds: game.bingoConstraintIds,
       players,
     };
+  }
+
+  buildSummaryPublic(room: Room): GameSummary {
+    return this.buildSummary(room);
   }
 
   private getRoom(roomCode: string): Room {

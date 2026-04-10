@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameService } from './game.service';
 import { GameStateService } from './game-state.service';
+import { ModeService } from './mode.service';
 import { RoomRegistryService } from '../lobby/room-registry.service';
 import { LobbyService } from '../lobby/lobby.service';
 import { WikipediaService } from '../wikipedia/wikipedia.service';
-import { GameStatus } from '@wiki-race/shared';
+import { GameStatus, GameMode } from '@wiki-race/shared';
 
 const mockWikipediaService = {
   selectStartAndTarget: jest.fn().mockReturnValue({ start: 'France', target: 'Tour_Eiffel' }),
@@ -21,6 +22,7 @@ async function setup() {
     providers: [
       GameService,
       GameStateService,
+      ModeService,
       RoomRegistryService,
       LobbyService,
       { provide: WikipediaService, useValue: mockWikipediaService },
@@ -48,8 +50,10 @@ async function startGame(
   return gameService.confirmChoices(
     code,
     room.chooserSocketId!,
+    GameMode.CLASSIC,
     timeLimitSeconds,
     onTimerExpire,
+    undefined, // clickLimit
     startSlug,
     targetSlug,
   );
@@ -99,9 +103,9 @@ describe('GameService', () => {
 
     lobbyService.startChoosing(code, 'socket1');
     // Use an unrelated socket that is definitely not the chooser
-    await expect(gameService.confirmChoices(code, 'socket-other', null, jest.fn())).rejects.toThrow(
-      'NOT_CHOOSER',
-    );
+    await expect(
+      gameService.confirmChoices(code, 'socket-other', GameMode.CLASSIC, null, jest.fn()),
+    ).rejects.toThrow('NOT_CHOOSER');
   });
 
   it('rejects confirmChoices if room is not in CHOOSING phase', async () => {
@@ -110,9 +114,9 @@ describe('GameService', () => {
     room.status = GameStatus.IN_PROGRESS;
     room.chooserSocketId = 'socket1';
 
-    await expect(gameService.confirmChoices(code, 'socket1', null, jest.fn())).rejects.toThrow(
-      'NOT_IN_CHOOSING_PHASE',
-    );
+    await expect(
+      gameService.confirmChoices(code, 'socket1', GameMode.CLASSIC, null, jest.fn()),
+    ).rejects.toThrow('NOT_IN_CHOOSING_PHASE');
   });
 
   it('handles a valid navigation step', async () => {

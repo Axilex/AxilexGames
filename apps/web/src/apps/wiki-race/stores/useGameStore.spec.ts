@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useGameStore } from './useGameStore';
-import { PlayerStatus } from '@wiki-race/shared';
+import { PlayerStatus, GameMode } from '@wiki-race/shared';
 import type {
   GameStateDTO,
   WikipediaPage,
@@ -9,16 +9,28 @@ import type {
   PlayerProgressDTO,
 } from '@wiki-race/shared';
 
+const mockPlayerProgress = (pseudo: string): PlayerProgressDTO => ({
+  pseudo,
+  status: PlayerStatus.CONNECTED,
+  hopCount: 0,
+  currentSlug: 'France',
+  clicksLeft: null,
+  driftBestScore: null,
+  driftBestSlug: null,
+  bingoValidated: [],
+});
+
 const mockState: GameStateDTO = {
   roomCode: 'ABCDEF',
+  mode: GameMode.CLASSIC,
   startSlug: 'France',
   targetSlug: 'Tour_Eiffel',
   startTime: Date.now(),
   timeLimitSeconds: null,
-  playerStatuses: [
-    { pseudo: 'Alice', status: PlayerStatus.CONNECTED, hopCount: 0, currentSlug: 'France' },
-    { pseudo: 'Bob', status: PlayerStatus.CONNECTED, hopCount: 0, currentSlug: 'France' },
-  ],
+  clickLimit: null,
+  driftObjective: null,
+  bingoConstraints: null,
+  playerStatuses: [mockPlayerProgress('Alice'), mockPlayerProgress('Bob')],
 };
 
 const mockPage: WikipediaPage = {
@@ -48,6 +60,18 @@ describe('useGameStore', () => {
     expect(store.isInProgress).toBe(true);
   });
 
+  it('setGameState exposes mode and clickLimit', () => {
+    const store = useGameStore();
+    store.setGameState({ ...mockState, mode: GameMode.LABYRINTH, clickLimit: 5 });
+    expect(store.mode).toBe(GameMode.LABYRINTH);
+    expect(store.clickLimit).toBe(5);
+  });
+
+  it('targetSlug returns null when no gameState', () => {
+    const store = useGameStore();
+    expect(store.targetSlug).toBeNull();
+  });
+
   it('setCurrentPage stores page and clears navigating flag', () => {
     const store = useGameStore();
     store.setNavigating();
@@ -66,6 +90,10 @@ describe('useGameStore', () => {
       status: PlayerStatus.CONNECTED,
       hopCount: 2,
       currentSlug: 'Paris',
+      clicksLeft: null,
+      driftBestScore: null,
+      driftBestSlug: null,
+      bingoValidated: [],
     };
     store.updatePlayerProgress(progress);
 
@@ -74,18 +102,28 @@ describe('useGameStore', () => {
     expect(alice?.currentSlug).toBe('Paris');
   });
 
+  it('setBingoValidated updates recentlyValidatedBingo', () => {
+    const store = useGameStore();
+    store.setBingoValidated(['year_in_title', 'city'], 'Paris');
+    expect(store.recentlyValidatedBingo).toEqual(['year_in_title', 'city']);
+  });
+
   it('setFinished stores summary and isInProgress becomes false', () => {
     const store = useGameStore();
     store.setGameState(mockState);
 
     const summary: GameSummary = {
       roomCode: 'ABCDEF',
+      mode: GameMode.CLASSIC,
       startSlug: 'France',
       targetSlug: 'Tour_Eiffel',
       startTime: mockState.startTime,
       endTime: Date.now(),
       timeLimitSeconds: null,
+      clickLimit: null,
       winnerPseudo: 'Alice',
+      driftObjective: null,
+      bingoConstraintIds: null,
       players: [],
     };
     store.setFinished(summary);

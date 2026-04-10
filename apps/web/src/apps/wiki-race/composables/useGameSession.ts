@@ -1,6 +1,7 @@
-import { gameService } from '../services/game.service';
+import { gameService, type ConfirmChoicesOptions } from '../services/game.service';
 import { useGameStore } from '../stores/useGameStore';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
+import type { GameMode } from '@wiki-race/shared';
 
 export function useGameSession() {
   const gameStore = useGameStore();
@@ -13,13 +14,13 @@ export function useGameSession() {
   }
 
   function confirmChoices(
+    mode: GameMode,
     timeLimitSeconds: number | null,
-    startSlug?: string,
-    targetSlug?: string,
+    options?: ConfirmChoicesOptions,
   ): void {
     const roomCode = sessionStore.roomCode;
     if (!roomCode) return;
-    gameService.confirmChoices(roomCode, timeLimitSeconds, startSlug, targetSlug);
+    gameService.confirmChoices(roomCode, mode, timeLimitSeconds, options);
   }
 
   function navigate(targetSlug: string): void {

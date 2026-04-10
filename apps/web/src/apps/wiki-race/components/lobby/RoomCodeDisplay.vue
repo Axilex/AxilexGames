@@ -1,8 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-      Code de la room
-    </p>
+    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Code de la room</p>
     <div class="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
       <span class="flex-1 text-3xl font-mono font-bold tracking-[0.2em] text-stone-900 select-all">
         {{ code }}
@@ -12,13 +10,7 @@
         :title="copied ? 'Copié !' : 'Copier le code'"
         @click="copy"
       >
-        <svg
-          v-if="!copied"
-          class="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg v-if="!copied" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -54,6 +46,8 @@ const copied = ref(false);
 async function copy() {
   await navigator.clipboard.writeText(props.code);
   copied.value = true;
-  setTimeout(() => { copied.value = false; }, 2000);
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 }
 </script>

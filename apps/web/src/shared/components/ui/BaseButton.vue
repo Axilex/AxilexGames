@@ -10,20 +10,8 @@
     ]"
     v-bind="$attrs"
   >
-    <svg
-      v-if="loading"
-      class="animate-spin h-4 w-4"
-      viewBox="0 0 24 24"
-      fill="none"
-    >
-      <circle
-        class="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        stroke-width="4"
-      />
+    <svg v-if="loading" class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
       <path
         class="opacity-75"
         fill="currentColor"
@@ -66,8 +54,7 @@ const variantClasses = computed(
         'bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-700 border border-stone-300 shadow-sm focus-visible:ring-stone-400',
       danger:
         'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-sm focus-visible:ring-red-500',
-      ghost:
-        'text-stone-600 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-stone-400',
+      ghost: 'text-stone-600 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-stone-400',
     })[props.variant],
 );
 </script>

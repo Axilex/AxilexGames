@@ -65,10 +65,7 @@
         >
           {{ tag }}
         </span>
-        <span
-          v-if="players"
-          class="ml-auto text-xs text-stone-400 font-medium"
-        >
+        <span v-if="players" class="ml-auto text-xs text-stone-400 font-medium">
           {{ players }}
         </span>
       </div>
@@ -104,12 +101,7 @@
             />
           </svg>
         </span>
-        <span
-          v-else
-          class="text-sm text-stone-300 font-medium"
-        >
-          Bientôt disponible
-        </span>
+        <span v-else class="text-sm text-stone-300 font-medium"> Bientôt disponible </span>
       </div>
     </div>
   </component>

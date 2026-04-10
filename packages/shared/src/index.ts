@@ -3,6 +3,7 @@ export * from './domain/enums';
 export * from './domain/room.types';
 export * from './domain/wikipedia.types';
 export * from './domain/game-summary.types';
+export * from './domain/bingo.types';
 
 // DTOs (wire format)
 export * from './dto/player.dto';

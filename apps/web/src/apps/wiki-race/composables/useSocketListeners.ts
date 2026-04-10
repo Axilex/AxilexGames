@@ -54,6 +54,9 @@ export function useSocketListeners() {
   socketService.on('navigation:error', (error) => {
     gameStore.setNavigationError(error.message);
   });
+  socketService.on('bingo:validated', (payload) => {
+    gameStore.setBingoValidated(payload.constraintIds, payload.slug);
+  });
 
   // Errors
   socketService.on('error', (message) => {

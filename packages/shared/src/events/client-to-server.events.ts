@@ -1,3 +1,6 @@
+import { GameMode, DriftObjective } from '../domain/enums';
+import { BingoConstraintId } from '../domain/bingo.types';
+
 export interface RoomCreatePayload {
   pseudo: string;
 }
@@ -13,9 +16,13 @@ export interface GameStartPayload {
 
 export interface GameConfirmChoicesPayload {
   roomCode: string;
+  mode?: GameMode;
   timeLimitSeconds: number | null;
+  clickLimit?: number | null;
   startSlug?: string;
   targetSlug?: string;
+  driftObjective?: DriftObjective;
+  bingoConstraintIds?: BingoConstraintId[];
 }
 
 export interface GameNavigatePayload {

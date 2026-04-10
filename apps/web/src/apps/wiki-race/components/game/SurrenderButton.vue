@@ -9,25 +9,19 @@
     >
       Abandonner
     </BaseButton>
-    <div
-      v-else
-      class="flex items-center gap-2"
-    >
+    <div v-else class="flex items-center gap-2">
       <span class="text-xs text-red-600 font-medium">Confirmer ?</span>
       <BaseButton
         variant="danger"
         size="sm"
-        @click="emit('surrender'); confirming = false"
+        @click="
+          emit('surrender');
+          confirming = false;
+        "
       >
         Oui
       </BaseButton>
-      <BaseButton
-        variant="ghost"
-        size="sm"
-        @click="confirming = false"
-      >
-        Non
-      </BaseButton>
+      <BaseButton variant="ghost" size="sm" @click="confirming = false"> Non </BaseButton>
     </div>
   </div>
 </template>

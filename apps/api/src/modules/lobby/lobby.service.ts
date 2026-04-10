@@ -35,7 +35,8 @@ export class LobbyService {
   joinRoom(roomCode: string, pseudo: string, socketId: string): Room {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
-    if (room.status === GameStatus.IN_PROGRESS || room.status === GameStatus.CHOOSING) throw new Error('GAME_IN_PROGRESS');
+    if (room.status === GameStatus.IN_PROGRESS || room.status === GameStatus.CHOOSING)
+      throw new Error('GAME_IN_PROGRESS');
 
     const players = Array.from(room.players.values());
     if (players.length >= MAX_PLAYERS) throw new Error('ROOM_FULL');
@@ -100,10 +101,7 @@ export class LobbyService {
     room.chooserSocketId = null;
     room.game = null;
     for (const player of room.players.values()) {
-      if (
-        player.status === PlayerStatus.FINISHED ||
-        player.status === PlayerStatus.SURRENDERED
-      ) {
+      if (player.status === PlayerStatus.FINISHED || player.status === PlayerStatus.SURRENDERED) {
         player.status = PlayerStatus.CONNECTED;
       }
       player.currentSlug = '';
@@ -141,6 +139,10 @@ export class LobbyService {
       currentSlug: '',
       history: [],
       lastNavigationAt: 0,
+      driftBestScore: null,
+      driftBestSlug: null,
+      bingoValidated: [],
+      bingoValidatedOnSlug: {},
     };
   }
 }

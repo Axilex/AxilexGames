@@ -47,10 +47,7 @@
         {{ decodeURIComponent(startSlug).replace(/_/g, ' ') }}
       </span>
       <!-- Steps -->
-      <template
-        v-for="(step, i) in history"
-        :key="i"
-      >
+      <template v-for="(step, i) in history" :key="i">
         <div class="flex items-center gap-1 pl-2">
           <svg
             class="h-3 w-3 text-stone-300 shrink-0"
@@ -69,17 +66,16 @@
         <span
           :class="[
             'text-xs px-2 py-1 rounded-md font-medium truncate',
-            i === history.length - 1 ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600',
+            i === history.length - 1
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-stone-100 text-stone-600',
           ]"
         >
           {{ decodeURIComponent(step.to).replace(/_/g, ' ') }}
         </span>
       </template>
 
-      <span
-        v-if="history.length === 0 && !startSlug"
-        class="text-xs text-stone-400 italic"
-      >
+      <span v-if="history.length === 0 && !startSlug" class="text-xs text-stone-400 italic">
         En attente...
       </span>
     </div>
@@ -100,6 +96,8 @@ async function copyPath() {
   const text = pages.map((s) => decodeURIComponent(s).replace(/_/g, ' ')).join(' → ');
   await navigator.clipboard.writeText(text);
   copied.value = true;
-  setTimeout(() => { copied.value = false; }, 2000);
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 }
 </script>

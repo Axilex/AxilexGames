@@ -1,5 +1,6 @@
-import { GameStatus, PlayerStatus } from './enums';
+import { GameStatus, PlayerStatus, GameMode, DriftObjective } from './enums';
 import { NavigationStep } from './wikipedia.types';
+import { BingoConstraintId } from './bingo.types';
 
 export interface Player {
   socketId: string;
@@ -9,6 +10,12 @@ export interface Player {
   history: NavigationStep[];
   lastNavigationAt: number;
   disconnectTimer?: ReturnType<typeof setTimeout>;
+  // Drift
+  driftBestScore: number | null;
+  driftBestSlug: string | null;
+  // Bingo
+  bingoValidated: BingoConstraintId[];
+  bingoValidatedOnSlug: Partial<Record<BingoConstraintId, string>>;
 }
 
 export interface Room {
@@ -21,11 +28,17 @@ export interface Room {
 }
 
 export interface GameSession {
+  mode: GameMode;
   startSlug: string;
-  targetSlug: string;
+  targetSlug: string | null; // null for DRIFT and BINGO
   startTime: number;
   endTime: number | null;
   timeLimitSeconds: number | null;
+  clickLimit: number | null; // null for CLASSIC and SPRINT
   winnerSocketId: string | null;
   timerHandle: ReturnType<typeof setTimeout> | null;
+  // Drift
+  driftObjective: DriftObjective | null;
+  // Bingo
+  bingoConstraintIds: BingoConstraintId[] | null;
 }

@@ -1,18 +1,9 @@
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex items-center gap-2">
-      <span
-        v-if="isWinner"
-        class="text-amber-500 text-lg"
-      >🏆</span>
-      <span
-        v-else-if="surrendered"
-        class="text-red-400 text-lg"
-      >✕</span>
-      <span
-        v-else
-        class="text-stone-300 text-lg"
-      >—</span>
+      <span v-if="isWinner" class="text-amber-500 text-lg">🏆</span>
+      <span v-else-if="surrendered" class="text-red-400 text-lg">✕</span>
+      <span v-else class="text-stone-300 text-lg">—</span>
       <span class="font-semibold text-stone-800">{{ pseudo }}</span>
       <span class="text-stone-400 text-sm">{{ hopCount }} clic{{ hopCount !== 1 ? 's' : '' }}</span>
       <button
@@ -56,22 +47,9 @@
       <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">
         {{ decodeURIComponent(startSlug).replace(/_/g, ' ') }}
       </span>
-      <template
-        v-for="(step, i) in path"
-        :key="i"
-      >
-        <svg
-          class="h-3 w-3 text-stone-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5l7 7-7 7"
-          />
+      <template v-for="(step, i) in path" :key="i">
+        <svg class="h-3 w-3 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
         <span
           :class="[
@@ -84,10 +62,7 @@
           {{ decodeURIComponent(step.to).replace(/_/g, ' ') }}
         </span>
       </template>
-      <span
-        v-if="path.length === 0"
-        class="text-stone-400 text-xs italic"
-      >N'a pas bougé</span>
+      <span v-if="path.length === 0" class="text-stone-400 text-xs italic">N'a pas bougé</span>
     </div>
   </div>
 </template>
@@ -113,6 +88,8 @@ async function copyPath() {
   const text = pages.map((s) => decodeURIComponent(s).replace(/_/g, ' ')).join(' → ');
   await navigator.clipboard.writeText(text);
   copied.value = true;
-  setTimeout(() => { copied.value = false; }, 2000);
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 }
 </script>

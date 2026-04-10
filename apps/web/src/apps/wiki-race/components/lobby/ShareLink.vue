@@ -1,8 +1,6 @@
 <template>
   <div class="flex flex-col gap-1.5">
-    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-      Lien de partage
-    </p>
+    <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Lien de partage</p>
     <div class="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2">
       <span class="flex-1 text-xs text-stone-500 font-mono truncate">{{ shareUrl }}</span>
       <button
@@ -10,13 +8,7 @@
         :title="copied ? 'Copié !' : 'Copier le lien'"
         @click="copy"
       >
-        <svg
-          v-if="!copied"
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg v-if="!copied" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -53,6 +45,8 @@ const shareUrl = computed(() => `${window.location.origin}/wikirace?code=${props
 async function copy() {
   await navigator.clipboard.writeText(shareUrl.value);
   copied.value = true;
-  setTimeout(() => { copied.value = false; }, 2000);
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
 }
 </script>
