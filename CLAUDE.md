@@ -30,6 +30,7 @@ All 7 phases + game modes implemented and passing:
 - `room:reset` event resets room to `WAITING` (host triggered from summary "Rejouer") — resets player statuses, clears history and `game` field
 - Win detection and slug comparison fully normalized via `normalizeSlug` (`decodeURIComponent`) on all incoming slugs before storage, cache lookup, and comparison
 - **5 game modes**: CLASSIC, SPRINT, LABYRINTH, DRIFT, BINGO — chooser selects mode + config during CHOOSING phase; ranked summaries for DRIFT and BINGO
+- **Live choosing preview**: non-chooser players see the chooser's selections in real-time via `choosing:preview` (C→S relayed S→C by the gateway). `emitPreview()` in `LobbyPage` sends only mode-relevant options (no cross-mode pollution); fires immediately when `isChooser` becomes true and on every subsequent change. `ChoosingPreviewPayload` / `ChoosingPreviewData` in shared events; `useLobbyStore.choosingPreview` holds the latest snapshot.
 
 ## Stack
 
@@ -214,6 +215,8 @@ The mode is selected by the **chooser** during the CHOOSING phase alongside star
 | `player:disconnected` | S→C | Player lost connection |
 | `player:reconnected` | S→C | Player reconnected |
 | `bingo:validated` | S→C | Unicast to navigating player — newly validated Bingo constraint IDs |
+| `choosing:preview` | C→S | Chooser broadcasts current selections (mode + options) during CHOOSING phase |
+| `choosing:preview` | S→C | Relayed to all other players in the room (gateway uses `client.broadcast.to(roomCode)`) |
 
 ## Key constraints
 
