@@ -24,7 +24,7 @@ spec:
               # Remplacer par ton domaine public (ex: axilex.games)
               # Caddy obtient le certificat TLS automatiquement via ACME.
               # Pour tester sans domaine, utiliser "localhost" (TLS auto-signé).
-              value: "your-domain.com"
+              value: "localhost"
           resources:
             requests:
               cpu: 50m
