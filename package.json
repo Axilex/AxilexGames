@@ -11,8 +11,8 @@
     "lint": "eslint \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\"",
     "format": "prettier --write \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\"",
     "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm version && node scripts/release.mjs"
+    "bump": "changeset version",
+    "release": "pnpm bump && node scripts/release.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

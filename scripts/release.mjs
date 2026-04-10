@@ -4,7 +4,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const pkg = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8'));
+const pkg = JSON.parse(readFileSync(resolve(__dirname, '../apps/api/package.json'), 'utf8'));
 const version = pkg.version;
 
 const run = (cmd) => execSync(cmd, { stdio: 'inherit' });
