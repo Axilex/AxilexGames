@@ -19,6 +19,7 @@ substitutions:
   _CLUSTER_NAME: axilex-games-cluster
   _REGION: europe-west1
   _REPO: axilex-games
+  _CORS_ORIGINS: http://localhost
 
 steps:
   # ── 1. Build image API ──────────────────────────────────────────
@@ -82,6 +83,7 @@ steps:
 
         export IMAGE_TAG=$TAG_NAME
         export GCR_HOST=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO
+        export CORS_ORIGINS=$_CORS_ORIGINS
 
         kubectl apply -f k8s/namespace.yaml
 

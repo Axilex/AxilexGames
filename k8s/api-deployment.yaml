@@ -24,8 +24,7 @@ spec:
             - name: PORT
               value: "3000"
             - name: CORS_ORIGINS
-              # Remplacer par l'URL publique du frontend (ex: https://axilex.games)
-              value: "localhost"
+              value: "${CORS_ORIGINS}"
           livenessProbe:
             httpGet:
               path: /health
