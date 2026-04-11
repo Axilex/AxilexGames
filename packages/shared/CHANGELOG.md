@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 0.2.4
+
+### Patch Changes
+
+- add domain config
+
 ## 0.2.3
 
 ### Patch Changes

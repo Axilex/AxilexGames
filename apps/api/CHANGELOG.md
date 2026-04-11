@@ -1,5 +1,13 @@
 # api
 
+## 0.2.4
+
+### Patch Changes
+
+- add domain config
+- Updated dependencies
+  - @wiki-race/shared@0.2.4
+
 ## 0.2.3
 
 ### Patch Changes
