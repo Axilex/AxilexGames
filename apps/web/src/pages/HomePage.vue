@@ -65,14 +65,15 @@ const games = [
     players: '2–8 joueurs',
   },
   {
-    name: '???',
-    description: 'Un nouveau défi arrive bientôt. Reste connecté.',
-    tags: ['Bientôt'],
-    gradient: 'from-stone-300 to-stone-400',
-    icon: 'soon',
-    to: null,
-    live: false,
-    players: null,
+    name: 'Surenchère',
+    description:
+      "Défiez-vous à coups d'enchères ! Citez plus que les autres… ou perdez des points.",
+    tags: ['Multijoueur', 'Culture', 'Rapidité'],
+    gradient: 'from-amber-400 to-orange-500',
+    icon: 'trophy',
+    to: '/surenchere',
+    live: true,
+    players: '2–8 joueurs',
   },
   {
     name: '???',
