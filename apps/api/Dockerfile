@@ -22,7 +22,7 @@ RUN pnpm --filter shared build
 RUN pnpm --filter api build
 
 # 4. pnpm deploy — crée un node_modules plat sans symlinks pnpm (résout le virtual store)
-RUN pnpm deploy --filter=api --prod /deploy
+RUN pnpm deploy --filter=api --prod --legacy /deploy
 
 # ── Stage 2: Production ──
 FROM node:24-slim AS production
