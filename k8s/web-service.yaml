@@ -13,8 +13,4 @@ spec:
     - name: https
       port: 443
       targetPort: 443
-    - name: https-udp
-      port: 443
-      targetPort: 443
-      protocol: UDP
   type: LoadBalancer
