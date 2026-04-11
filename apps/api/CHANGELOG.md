@@ -1,5 +1,13 @@
 # api
 
+## 0.2.1
+
+### Patch Changes
+
+- fix ports
+- Updated dependencies
+  - @wiki-race/shared@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
