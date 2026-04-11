@@ -1,8 +1,11 @@
 # ============================================================
 # WikiRace — Caddyfile
 # ============================================================
+# http:// force le HTTP pur (pas de redirection HTTPS).
+# Quand un vrai domaine DNS est configuré : remplacer "http://{$DOMAIN}"
+# par "{$DOMAIN}" — Caddy obtiendra le certificat TLS automatiquement.
 
-{$DOMAIN} {
+http://{$DOMAIN} {
 
 	encode zstd gzip
 
