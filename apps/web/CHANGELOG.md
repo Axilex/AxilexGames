@@ -1,5 +1,13 @@
 # web
 
+## 0.2.2
+
+### Patch Changes
+
+- fix config and api dockerfile
+- Updated dependencies
+  - @wiki-race/shared@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
