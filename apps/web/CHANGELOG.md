@@ -1,5 +1,16 @@
 # web
 
+## 0.3.0
+
+### Minor Changes
+
+- Add surenchere mode beta version
+
+### Patch Changes
+
+- Updated dependencies
+  - @wiki-race/shared@0.3.0
+
 ## 0.2.9
 
 ### Patch Changes
