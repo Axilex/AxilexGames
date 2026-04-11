@@ -13,10 +13,15 @@ ARG VITE_API_URL=""
 ENV VITE_API_URL=${VITE_API_URL}
 
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/web/package.json ./apps/web/
+
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
-RUN pnpm install --frozen-lockfile
 RUN pnpm --filter shared build && pnpm --filter web build
 
 # ── Stage 2: Caddy server ──
@@ -28,4 +33,4 @@ COPY --from=builder /app/apps/web/dist /srv/frontend
 # Caddyfile commun (racine du repo) — gère {$DOMAIN}, proxy /wiki/*, /socket.io/*
 COPY Caddyfile /etc/caddy/Caddyfile
 
-EXPOSE 80 443 443/udp
+EXPOSE 80 443

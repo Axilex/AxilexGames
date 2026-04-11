@@ -5,11 +5,19 @@ FROM node:24-slim AS builder
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 
+# 1. Manifests seulement — layer mis en cache tant que les package.json / lockfile ne changent pas
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/api/package.json ./apps/api/
+
+# 2. Install — cache du store pnpm entre les builds BuildKit
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# 3. Source + build
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-RUN pnpm install --frozen-lockfile
 RUN pnpm --filter shared build
 RUN pnpm --filter api build
 
