@@ -4,6 +4,7 @@ export * from './domain/room.types';
 export * from './domain/wikipedia.types';
 export * from './domain/game-summary.types';
 export * from './domain/bingo.types';
+export * from './domain/surenchere.types';
 
 // DTOs (wire format)
 export * from './dto/player.dto';

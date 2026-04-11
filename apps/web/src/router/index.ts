@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { wikiRaceRoutes } from '@/apps/wiki-race/router';
+import { surenchereRoutes } from '@/apps/surenchere/router';
 
 /**
  * Main application router.
@@ -19,6 +20,7 @@ const router = createRouter({
       component: () => import('@/pages/HomePage.vue'),
     },
     ...wikiRaceRoutes,
+    ...surenchereRoutes,
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',

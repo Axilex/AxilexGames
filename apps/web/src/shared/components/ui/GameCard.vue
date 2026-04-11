@@ -30,6 +30,22 @@
         />
       </svg>
 
+      <!-- Trophy icon -->
+      <svg
+        v-else-if="icon === 'trophy'"
+        class="relative z-10 h-9 w-9 text-white drop-shadow"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.75"
+          d="M8 21h8m-4 0v-4m-7-9V5h14v3a5 5 0 01-5 5h-4a5 5 0 01-5-5zm14 0h2a2 2 0 002-2V6h-4m-14 2H3a2 2 0 01-2-2V6h4"
+        />
+      </svg>
+
       <!-- Soon icon -->
       <svg
         v-else-if="icon === 'soon'"

@@ -45,6 +45,32 @@ export interface ChoosingPreviewPayload {
   bingoConstraintIds?: BingoConstraintId[];
 }
 
+export interface SurenchereCreatePayload {
+  pseudo: string;
+  settings?: Partial<{ totalRounds: number; startBid: number }>;
+}
+
+export interface SurenchereJoinPayload {
+  roomCode: string;
+  pseudo: string;
+}
+
+export interface SurenchereBidPayload {
+  amount: number;
+}
+
+export interface SurenchereVerdictPayload {
+  success: boolean;
+}
+
+export interface SurenchereChooseChallengePayload {
+  challengeId: string;
+}
+
+export interface SurenchereSubmitWordsPayload {
+  words: string[];
+}
+
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload) => void;
   'room:join': (payload: RoomJoinPayload) => void;
@@ -55,4 +81,15 @@ export interface ClientToServerEvents {
   'game:navigate': (payload: GameNavigatePayload) => void;
   'game:surrender': (payload: GameSurrenderPayload) => void;
   'choosing:preview': (payload: ChoosingPreviewPayload) => void;
+  'surenchere:create': (payload: SurenchereCreatePayload) => void;
+  'surenchere:join': (payload: SurenchereJoinPayload) => void;
+  'surenchere:leave': () => void;
+  'surenchere:start': () => void;
+  'surenchere:bid': (payload: SurenchereBidPayload) => void;
+  'surenchere:pass': () => void;
+  'surenchere:challenge': () => void;
+  'surenchere:verdict': (payload: SurenchereVerdictPayload) => void;
+  'surenchere:choose_challenge': (payload: SurenchereChooseChallengePayload) => void;
+  'surenchere:submit_words': (payload: SurenchereSubmitWordsPayload) => void;
+  'surenchere:reset': () => void;
 }
