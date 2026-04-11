@@ -49,6 +49,7 @@ spec:
               mountPath: /config
       volumes:
         - name: caddy-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: caddy-data
         - name: caddy-config
           emptyDir: {}

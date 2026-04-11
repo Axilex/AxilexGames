@@ -92,6 +92,7 @@ steps:
         export DOMAIN=$_DOMAIN
 
         kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/caddy-pvc.yaml
 
         for manifest in k8s/api-deployment.yaml k8s/api-service.yaml k8s/web-deployment.yaml k8s/web-service.yaml; do
           envsubst < "$$manifest" | kubectl apply -f -
