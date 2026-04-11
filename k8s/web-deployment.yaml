@@ -5,6 +5,8 @@ metadata:
   namespace: axilex-games
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: web
@@ -20,16 +22,14 @@ spec:
             - containerPort: 80
             - containerPort: 443
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 80
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 15
             failureThreshold: 3
           env:
