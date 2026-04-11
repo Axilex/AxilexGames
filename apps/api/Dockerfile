@@ -21,18 +21,19 @@ COPY apps/api/ ./apps/api/
 RUN pnpm --filter shared build
 RUN pnpm --filter api build
 
+# 4. pnpm deploy — crée un node_modules plat sans symlinks pnpm (résout le virtual store)
+RUN pnpm deploy --filter=api --prod /deploy
+
 # ── Stage 2: Production ──
 FROM node:24-slim AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
 
+# node_modules isolés par pnpm deploy (inclut @wiki-race/shared résolu)
+COPY --from=builder /deploy/node_modules ./node_modules
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-# node_modules/@wiki-race/shared is a pnpm symlink → packages/shared; copy the target so it resolves
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
 
 RUN groupadd -r wikirace && useradd -r -g wikirace wikirace
 USER wikirace
