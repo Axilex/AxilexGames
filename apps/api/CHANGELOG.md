@@ -1,5 +1,13 @@
 # api
 
+## 0.2.3
+
+### Patch Changes
+
+- add option
+- Updated dependencies
+  - @wiki-race/shared@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 0.2.3
+
+### Patch Changes
+
+- add option
+
 ## 0.2.2
 
 ### Patch Changes
