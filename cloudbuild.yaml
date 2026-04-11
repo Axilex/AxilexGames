@@ -25,6 +25,8 @@ steps:
   # ── 1. Build image API ──────────────────────────────────────────
   - id: build-api
     name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
     args:
       - build
       - --file=apps/api/Dockerfile
@@ -36,6 +38,8 @@ steps:
   # ── 2. Build image Web (Caddy + static Vue) ─────────────────────
   - id: build-web
     name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
     args:
       - build
       - --file=apps/web/Dockerfile.gke
