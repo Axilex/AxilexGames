@@ -66,9 +66,9 @@ describe('LobbyGateway (integration)', () => {
     const code = hostRoom.code;
 
     // Both should receive room:update when Bob joins
-    const hostUpdate = waitForEvent(host, 'room:update');
-    const guestUpdate = waitForEvent(guest, 'room:update');
-    guest.emit('room:join', { roomCode: code, pseudo: 'Bob' });
+    const hostUpdate = waitForEvent(host, 'wikirace:room:update');
+    const guestUpdate = waitForEvent(guest, 'wikirace:room:update');
+    guest.emit('wikirace:room:join', { roomCode: code, pseudo: 'Bob' });
 
     const [h, g] = await Promise.all([hostUpdate, guestUpdate]);
     expect(h.players).toHaveLength(2);
@@ -86,7 +86,7 @@ describe('LobbyGateway (integration)', () => {
     const hostRoom = await createRoom(host, 'Alice');
 
     const errorPromise = waitForEvent(guest, 'error');
-    guest.emit('room:join', { roomCode: hostRoom.code, pseudo: 'Alice' });
+    guest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Alice' });
     const err = await errorPromise;
     expect(err).toContain('PSEUDO_TAKEN');
 
@@ -98,7 +98,7 @@ describe('LobbyGateway (integration)', () => {
     await connectClient(client);
 
     const errorPromise = waitForEvent(client, 'error');
-    client.emit('room:join', { roomCode: 'XXXXXX', pseudo: 'Bob' });
+    client.emit('wikirace:room:join', { roomCode: 'XXXXXX', pseudo: 'Bob' });
     const err = await errorPromise;
     expect(err).toContain('ROOM_NOT_FOUND');
 
@@ -114,8 +114,8 @@ describe('LobbyGateway (integration)', () => {
     const hostRoom = await createRoom(host, 'Alice');
     await joinRoom(guest, hostRoom.code, 'Bob');
 
-    const updatePromise = waitForEvent(host, 'room:update');
-    guest.emit('room:leave', { roomCode: hostRoom.code });
+    const updatePromise = waitForEvent(host, 'wikirace:room:update');
+    guest.emit('wikirace:room:leave', { roomCode: hostRoom.code });
     const updated = await updatePromise;
 
     expect(updated.players).toHaveLength(1);
@@ -133,8 +133,8 @@ describe('LobbyGateway (integration)', () => {
     const hostRoom = await createRoom(host, 'Alice');
     await joinRoom(guest, hostRoom.code, 'Bob');
 
-    const updatePromise = waitForEvent(guest, 'room:update');
-    host.emit('room:leave', { roomCode: hostRoom.code });
+    const updatePromise = waitForEvent(guest, 'wikirace:room:update');
+    host.emit('wikirace:room:leave', { roomCode: hostRoom.code });
     const updated = await updatePromise;
 
     expect(updated.players).toHaveLength(1);

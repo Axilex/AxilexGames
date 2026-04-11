@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useSurenchereStore } from './useSurenchereStore';
-import type { SurenchereRoomDTO, SurenchereRoundResult } from '@wiki-race/shared';
+import { PlayerStatus, type SurenchereRoomDTO, type SurenchereRoundResult } from '@wiki-race/shared';
 
 function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO {
   return {
     code: 'ABCDEF',
     phase: 'BIDDING',
     players: [
-      { socketId: 's1', pseudo: 'Alice', score: 0, isHost: true, isConnected: true },
-      { socketId: 's2', pseudo: 'Bob', score: 0, isHost: false, isConnected: true },
-      { socketId: 's3', pseudo: 'Carol', score: 0, isHost: false, isConnected: true },
+      { socketId: 's1', pseudo: 'Alice', score: 0, isHost: true, status: PlayerStatus.CONNECTED },
+      { socketId: 's2', pseudo: 'Bob', score: 0, isHost: false, status: PlayerStatus.CONNECTED },
+      { socketId: 's3', pseudo: 'Carol', score: 0, isHost: false, status: PlayerStatus.CONNECTED },
     ],
     settings: { totalRounds: 5, startBid: 5 },
     currentRound: 1,

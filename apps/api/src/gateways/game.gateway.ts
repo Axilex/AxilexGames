@@ -27,26 +27,14 @@ import { LobbyService } from '../modules/lobby/lobby.service';
 import { GameService } from '../modules/game/game.service';
 import { GameStateService } from '../modules/game/game-state.service';
 import { WsExceptionFilter } from '../filters/ws-exception.filter';
+import { GAME_GATEWAY_CONFIG, RECONNECT_TIMEOUT_MS } from '../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
-const RECONNECT_TIMEOUT_MS = 30_000;
-
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
-@WebSocketGateway({
-  // Faster heartbeat: detect dead connections in ~15 s instead of the default ~45 s.
-  // This matters on Render free tier where idle connections can be silently dropped.
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  // Force WebSocket only — avoids HTTP long-polling which is heavier on CPU.
-  transports: ['websocket'],
-  cors: {
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
-    credentials: true,
-  },
-})
+@WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
@@ -65,14 +53,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = this.lobby.markDisconnected(client.id);
     if (!room) return;
 
-    this.server.to(room.code).emit('player:disconnected', this.getPlayerPseudo(client.id, room));
-    this.server.to(room.code).emit('room:update', this.lobby.toRoomDTO(room));
+    this.server
+      .to(room.code)
+      .emit('wikirace:player:disconnected', this.getPlayerPseudo(client.id, room));
+    this.server.to(room.code).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
 
     // Purge player after timeout if they don't reconnect
     this.gameState.startReconnectTimer(client.id, RECONNECT_TIMEOUT_MS, () => {
       const { room: updatedRoom, deleted } = this.lobby.leaveRoom(room.code, client.id);
       if (!deleted && updatedRoom) {
-        this.server.to(room.code).emit('room:update', this.lobby.toRoomDTO(updatedRoom));
+        this.server
+          .to(room.code)
+          .emit('wikirace:room:update', this.lobby.toRoomDTO(updatedRoom));
       }
     });
 
@@ -83,22 +75,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
       if (active.length === 0 && room.game) {
         const summary = this.game.buildSummaryPublic(room);
-        this.server.to(room.code).emit('game:finished', summary);
+        this.server.to(room.code).emit('wikirace:game:finished', summary);
       }
     }
   }
 
-  @SubscribeMessage('room:create')
+  @SubscribeMessage('wikirace:room:create')
   async handleRoomCreate(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: RoomCreatePayload,
   ): Promise<void> {
     const { room, code } = this.lobby.createRoom(payload.pseudo, client.id);
     await client.join(code);
-    this.server.to(code).emit('room:update', this.lobby.toRoomDTO(room));
+    this.server.to(code).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
   }
 
-  @SubscribeMessage('room:join')
+  @SubscribeMessage('wikirace:room:join')
   async handleRoomJoin(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: RoomJoinPayload,
@@ -108,31 +100,33 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (reconnected) {
       this.gameState.clearReconnectTimer(client.id);
       await client.join(payload.roomCode);
-      this.server.to(payload.roomCode).emit('player:reconnected', payload.pseudo);
-      this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(reconnected.room));
+      this.server.to(payload.roomCode).emit('wikirace:player:reconnected', payload.pseudo);
+      this.server
+        .to(payload.roomCode)
+        .emit('wikirace:room:update', this.lobby.toRoomDTO(reconnected.room));
       if (reconnected.room.status === 'IN_PROGRESS') {
         this.server
           .to(payload.roomCode)
-          .emit('game:state', this.game.toGameStateDTO(reconnected.room));
+          .emit('wikirace:game:state', this.game.toGameStateDTO(reconnected.room));
       }
       return;
     }
 
     const room = this.lobby.joinRoom(payload.roomCode, payload.pseudo, client.id);
     await client.join(payload.roomCode);
-    this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+    this.server.to(payload.roomCode).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
   }
 
-  @SubscribeMessage('room:reset')
+  @SubscribeMessage('wikirace:room:reset')
   handleRoomReset(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: { roomCode: string },
   ): void {
     const room = this.lobby.resetRoom(payload.roomCode, client.id);
-    this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+    this.server.to(payload.roomCode).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
   }
 
-  @SubscribeMessage('room:leave')
+  @SubscribeMessage('wikirace:room:leave')
   async handleRoomLeave(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: { roomCode: string },
@@ -140,29 +134,29 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { room, deleted } = this.lobby.leaveRoom(payload.roomCode, client.id);
     await client.leave(payload.roomCode);
     if (!deleted && room) {
-      this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+      this.server.to(payload.roomCode).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
     }
   }
 
-  @SubscribeMessage('game:start')
+  @SubscribeMessage('wikirace:game:start')
   handleGameStart(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameStartPayload,
   ): void {
     const room = this.lobby.startChoosing(payload.roomCode, client.id);
-    this.server.to(payload.roomCode).emit('room:update', this.lobby.toRoomDTO(room));
+    this.server.to(payload.roomCode).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
   }
 
-  @SubscribeMessage('choosing:preview')
+  @SubscribeMessage('wikirace:choosing:preview')
   handleChoosingPreview(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: ChoosingPreviewPayload,
   ): void {
     const { roomCode, ...data } = payload;
-    client.broadcast.to(roomCode).emit('choosing:preview', data);
+    client.broadcast.to(roomCode).emit('wikirace:choosing:preview', data);
   }
 
-  @SubscribeMessage('game:confirm_choices')
+  @SubscribeMessage('wikirace:game:confirm_choices')
   async handleGameConfirmChoices(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameConfirmChoicesPayload,
@@ -190,7 +184,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       mode,
       payload.timeLimitSeconds,
       (summary) => {
-        this.server.to(payload.roomCode).emit('game:finished', summary);
+        this.server.to(payload.roomCode).emit('wikirace:game:finished', summary);
       },
       payload.clickLimit,
       payload.startSlug,
@@ -199,11 +193,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       payload.bingoConstraintIds,
     );
 
-    this.server.to(payload.roomCode).emit('game:state', gameStateDTO);
-    this.server.to(payload.roomCode).emit('game:page', startPage);
+    this.server.to(payload.roomCode).emit('wikirace:game:state', gameStateDTO);
+    this.server.to(payload.roomCode).emit('wikirace:game:page', startPage);
   }
 
-  @SubscribeMessage('game:navigate')
+  @SubscribeMessage('wikirace:game:navigate')
   async handleGameNavigate(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameNavigatePayload,
@@ -211,25 +205,25 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const result = await this.game.navigate(payload.roomCode, client.id, payload.targetSlug);
 
     // Send new page only to the navigating player
-    client.emit('game:page', result.page);
+    client.emit('wikirace:game:page', result.page);
 
     // Broadcast progress update to the whole room
-    this.server.to(payload.roomCode).emit('player:progress', result.progress);
+    this.server.to(payload.roomCode).emit('wikirace:player:progress', result.progress);
 
     // Notify navigating player of newly validated Bingo constraints
     if (result.newlyValidated?.length) {
-      client.emit('bingo:validated', {
+      client.emit('wikirace:bingo:validated', {
         constraintIds: result.newlyValidated,
         slug: result.page.slug,
       });
     }
 
     if (result.finished && result.summary) {
-      this.server.to(payload.roomCode).emit('game:finished', result.summary);
+      this.server.to(payload.roomCode).emit('wikirace:game:finished', result.summary);
     }
   }
 
-  @SubscribeMessage('game:surrender')
+  @SubscribeMessage('wikirace:game:surrender')
   handleGameSurrender(
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: GameSurrenderPayload,
@@ -241,11 +235,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (player && room?.game) {
       this.server
         .to(payload.roomCode)
-        .emit('player:progress', this.game.toPlayerProgress(player, room.game));
+        .emit('wikirace:player:progress', this.game.toPlayerProgress(player, room.game));
     }
 
     if (result.allDone && result.summary) {
-      this.server.to(payload.roomCode).emit('game:finished', result.summary);
+      this.server.to(payload.roomCode).emit('wikirace:game:finished', result.summary);
     }
   }
 

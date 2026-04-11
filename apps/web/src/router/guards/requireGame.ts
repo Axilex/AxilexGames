@@ -1,15 +1,8 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
+import { createGameGuard } from '@/shared/router/createGuards';
 import { useGameStore } from '@/apps/wiki-race/stores/useGameStore';
 
-export function requireGame(
-  _to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext,
-): void {
-  const gameStore = useGameStore();
-  if (!gameStore.isInProgress) {
-    next({ name: 'lobby' });
-  } else {
-    next();
-  }
-}
+export const requireGame = createGameGuard(
+  () => useGameStore(),
+  (store) => store.isInProgress,
+  'lobby',
+);

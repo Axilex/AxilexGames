@@ -1,0 +1,56 @@
+import { BaseRoom } from './base-room.interface';
+
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE_LENGTH = 6;
+
+/**
+ * Generic room storage shared by every mini-game.
+ *
+ * Holds `Map<code, Room>` + `Map<socketId, code>` for O(1) lookup on disconnect,
+ * plus a unique-code generator. Subclasses add their own player CRUD on top.
+ */
+export abstract class BaseRoomRegistryService<R extends BaseRoom> {
+  protected readonly rooms = new Map<string, R>();
+  protected readonly socketToRoom = new Map<string, string>();
+
+  findRoom(code: string): R | undefined {
+    return this.rooms.get(code);
+  }
+
+  findRoomBySocketId(socketId: string): R | undefined {
+    const code = this.socketToRoom.get(socketId);
+    return code ? this.rooms.get(code) : undefined;
+  }
+
+  protected registerRoom(room: R): void {
+    this.rooms.set(room.code, room);
+  }
+
+  protected bindSocket(socketId: string, code: string): void {
+    this.socketToRoom.set(socketId, code);
+  }
+
+  protected unbindSocket(socketId: string): void {
+    this.socketToRoom.delete(socketId);
+  }
+
+  deleteRoom(code: string): void {
+    const room = this.rooms.get(code);
+    if (!room) return;
+    for (const [socketId, boundCode] of this.socketToRoom) {
+      if (boundCode === code) this.socketToRoom.delete(socketId);
+    }
+    this.rooms.delete(code);
+  }
+
+  generateCode(): string {
+    let code: string;
+    do {
+      code = Array.from(
+        { length: CODE_LENGTH },
+        () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)],
+      ).join('');
+    } while (this.rooms.has(code));
+    return code;
+  }
+}

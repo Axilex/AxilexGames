@@ -16,7 +16,7 @@ export interface ConfirmChoicesOptions {
 
 export const gameService = {
   startGame(roomCode: string): void {
-    socketService.emit('game:start', { roomCode });
+    socketService.emit('wikirace:game:start', { roomCode });
   },
 
   confirmChoices(
@@ -25,7 +25,7 @@ export const gameService = {
     timeLimitSeconds: number | null,
     options?: ConfirmChoicesOptions,
   ): void {
-    socketService.emit('game:confirm_choices', {
+    socketService.emit('wikirace:game:confirm_choices', {
       roomCode,
       mode,
       timeLimitSeconds,
@@ -34,14 +34,14 @@ export const gameService = {
   },
 
   previewChoices(payload: ChoosingPreviewPayload): void {
-    socketService.emit('choosing:preview', payload);
+    socketService.emit('wikirace:choosing:preview', payload);
   },
 
   navigate(roomCode: string, targetSlug: string): void {
-    socketService.emit('game:navigate', { roomCode, targetSlug });
+    socketService.emit('wikirace:game:navigate', { roomCode, targetSlug });
   },
 
   surrender(roomCode: string): void {
-    socketService.emit('game:surrender', { roomCode });
+    socketService.emit('wikirace:game:surrender', { roomCode });
   },
 };

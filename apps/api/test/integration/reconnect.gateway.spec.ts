@@ -52,7 +52,7 @@ describe('Reconnection flow (integration)', () => {
     const hostRoom = await createRoom(host, 'Alice');
     await joinRoom(guest, hostRoom.code, 'Bob');
 
-    const disconnectedPromise = waitForEvent(host, 'player:disconnected');
+    const disconnectedPromise = waitForEvent(host, 'wikirace:player:disconnected');
     guest.disconnect();
 
     const pseudo = await disconnectedPromise;
@@ -71,7 +71,7 @@ describe('Reconnection flow (integration)', () => {
     await joinRoom(guest, hostRoom.code, 'Bob');
 
     // Disconnect Bob
-    const disconnectedPromise = waitForEvent(host, 'player:disconnected');
+    const disconnectedPromise = waitForEvent(host, 'wikirace:player:disconnected');
     guest.disconnect();
     await disconnectedPromise;
 
@@ -79,10 +79,10 @@ describe('Reconnection flow (integration)', () => {
     const reconnectedGuest = createClient(port);
     await connectClient(reconnectedGuest);
 
-    const reconnectedPromise = waitForEvent(host, 'player:reconnected');
-    const roomUpdatePromise = waitForEvent(host, 'room:update');
+    const reconnectedPromise = waitForEvent(host, 'wikirace:player:reconnected');
+    const roomUpdatePromise = waitForEvent(host, 'wikirace:room:update');
 
-    reconnectedGuest.emit('room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
+    reconnectedGuest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
 
     const [pseudo, updatedRoom] = await Promise.all([reconnectedPromise, roomUpdatePromise]);
     expect(pseudo).toBe('Bob');
@@ -103,22 +103,22 @@ describe('Reconnection flow (integration)', () => {
     await joinRoom(guest, hostRoom.code, 'Bob');
 
     // Start game (two-step: host picks chooser, then chooser confirms)
-    const hostRoomUpdate = waitForEvent(host, 'room:update');
-    host.emit('game:start', { roomCode: hostRoom.code });
+    const hostRoomUpdate = waitForEvent(host, 'wikirace:room:update');
+    host.emit('wikirace:game:start', { roomCode: hostRoom.code });
     const updatedRoom = await hostRoomUpdate;
     const chooser = updatedRoom.chooserPseudo === 'Alice' ? host : guest;
 
     const allReady = Promise.all([
-      waitForEvent(host, 'game:state'),
-      waitForEvent(guest, 'game:state'),
-      waitForEvent(host, 'game:page'),
-      waitForEvent(guest, 'game:page'),
+      waitForEvent(host, 'wikirace:game:state'),
+      waitForEvent(guest, 'wikirace:game:state'),
+      waitForEvent(host, 'wikirace:game:page'),
+      waitForEvent(guest, 'wikirace:game:page'),
     ]);
-    chooser.emit('game:confirm_choices', { roomCode: hostRoom.code, timeLimitSeconds: null });
+    chooser.emit('wikirace:game:confirm_choices', { roomCode: hostRoom.code, timeLimitSeconds: null });
     await allReady;
 
     // Bob disconnects mid-game
-    const disconnectedPromise = waitForEvent(host, 'player:disconnected');
+    const disconnectedPromise = waitForEvent(host, 'wikirace:player:disconnected');
     guest.disconnect();
     await disconnectedPromise;
 
@@ -126,8 +126,8 @@ describe('Reconnection flow (integration)', () => {
     const reconnectedGuest = createClient(port);
     await connectClient(reconnectedGuest);
 
-    const gameStatePromise = waitForEvent(reconnectedGuest, 'game:state');
-    reconnectedGuest.emit('room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
+    const gameStatePromise = waitForEvent(reconnectedGuest, 'wikirace:game:state');
+    reconnectedGuest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
 
     const state = await gameStatePromise;
     expect(state.startSlug).toBe('France');

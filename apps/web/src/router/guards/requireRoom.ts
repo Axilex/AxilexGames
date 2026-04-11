@@ -1,15 +1,4 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
+import { createRoomGuard } from '@/shared/router/createGuards';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
 
-export function requireRoom(
-  _to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext,
-): void {
-  const sessionStore = useSessionStore();
-  if (!sessionStore.roomCode) {
-    next({ name: 'wikirace' });
-  } else {
-    next();
-  }
-}
+export const requireRoom = createRoomGuard(() => useSessionStore(), 'wikirace');

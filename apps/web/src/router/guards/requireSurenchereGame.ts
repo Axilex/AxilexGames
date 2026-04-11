@@ -1,15 +1,8 @@
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
+import { createGameGuard } from '@/shared/router/createGuards';
 import { useSurenchereStore } from '@/apps/surenchere/stores/useSurenchereStore';
 
-export function requireSurenchereGame(
-  _to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext,
-): void {
-  const store = useSurenchereStore();
-  if (store.phase === 'WAITING' || store.phase === 'FINISHED') {
-    next({ name: 'surenchere-lobby' });
-  } else {
-    next();
-  }
-}
+export const requireSurenchereGame = createGameGuard(
+  () => useSurenchereStore(),
+  (store) => store.phase !== 'WAITING' && store.phase !== 'FINISHED',
+  'surenchere-lobby',
+);

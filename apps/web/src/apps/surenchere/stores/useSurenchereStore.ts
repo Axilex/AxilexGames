@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type {
-  SurenchereRoomDTO,
-  SurenchereGamePhase,
-  SurenchereChallenge,
-  SurenchereRoundResult,
-  SurencherePlayer,
+import {
+  PlayerStatus,
+  type SurenchereRoomDTO,
+  type SurenchereGamePhase,
+  type SurenchereChallenge,
+  type SurenchereRoundResult,
+  type SurencherePlayer,
 } from '@wiki-race/shared';
 
 export const useSurenchereStore = defineStore('surenchere', () => {
@@ -48,7 +49,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
   const activeOthers = computed(() => {
     if (!room.value) return [] as SurencherePlayer[];
     return room.value.players.filter(
-      (p) => p.isConnected && p.socketId !== currentBidderSocketId.value,
+      (p) => p.status === PlayerStatus.CONNECTED && p.socketId !== currentBidderSocketId.value,
     );
   });
 

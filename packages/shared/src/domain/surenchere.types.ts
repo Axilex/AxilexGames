@@ -1,3 +1,5 @@
+import { PlayerStatus } from './enums';
+
 export type SurenchereGamePhase =
   | 'WAITING'
   | 'CHOOSING_CHALLENGE'
@@ -12,7 +14,7 @@ export interface SurencherePlayer {
   pseudo: string;
   score: number;
   isHost: boolean;
-  isConnected: boolean;
+  status: PlayerStatus;
 }
 
 export interface SurenchereChallenge {

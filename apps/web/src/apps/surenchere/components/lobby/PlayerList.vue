@@ -18,7 +18,7 @@
           <span
             :class="[
               'w-2 h-2 rounded-full',
-              p.isConnected ? 'bg-emerald-500' : 'bg-stone-300',
+              p.status === PlayerStatus.CONNECTED ? 'bg-emerald-500' : 'bg-stone-300',
             ]"
           />
           <span class="text-sm font-medium text-stone-900">{{ p.pseudo }}</span>
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SurencherePlayer } from '@wiki-race/shared';
+import { PlayerStatus, type SurencherePlayer } from '@wiki-race/shared';
 
 defineProps<{ players: SurencherePlayer[]; mySocketId: string }>();
 </script>
