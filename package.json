@@ -14,6 +14,10 @@
     "bump": "changeset version",
     "release": "pnpm bump && node scripts/release.mjs"
   },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
+  },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",

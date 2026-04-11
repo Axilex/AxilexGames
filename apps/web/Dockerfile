@@ -1,7 +1,7 @@
 # ── WikiRace Frontend — build static files ──
 # Output: /dist (copied to Caddy volume at runtime)
 
-FROM node:22-slim AS builder
+FROM node:24-slim AS builder
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 

@@ -1,7 +1,7 @@
 # ── WikiRace API — production multi-stage build ──
 
 # ── Stage 1: Build ──
-FROM node:22-slim AS builder
+FROM node:24-slim AS builder
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN pnpm --filter shared build
 RUN pnpm --filter api build
 
 # ── Stage 2: Production ──
-FROM node:22-slim AS production
+FROM node:24-slim AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
