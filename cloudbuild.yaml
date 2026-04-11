@@ -78,6 +78,8 @@ steps:
     args:
       - -c
       - |
+        apt-get install -y -q gettext-base
+
         export IMAGE_TAG=$TAG_NAME
         export GCR_HOST=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO
 
