@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 0.2.6
+
+### Patch Changes
+
+- add dns
+
 ## 0.2.5
 
 ### Patch Changes
