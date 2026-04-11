@@ -25,16 +25,16 @@ export interface BingoValidatedPayload {
 }
 
 export interface ServerToClientEvents {
-  'room:update': (room: RoomDTO) => void;
-  'game:state': (state: GameStateDTO) => void;
-  'game:page': (page: WikipediaPage) => void;
-  'player:progress': (progress: PlayerProgressDTO) => void;
-  'game:finished': (summary: GameSummary) => void;
-  'navigation:error': (error: NavigationErrorPayload) => void;
-  'player:disconnected': (pseudo: string) => void;
-  'player:reconnected': (pseudo: string) => void;
-  'bingo:validated': (payload: BingoValidatedPayload) => void;
-  'choosing:preview': (data: ChoosingPreviewData) => void;
+  'wikirace:room:update': (room: RoomDTO) => void;
+  'wikirace:game:state': (state: GameStateDTO) => void;
+  'wikirace:game:page': (page: WikipediaPage) => void;
+  'wikirace:player:progress': (progress: PlayerProgressDTO) => void;
+  'wikirace:game:finished': (summary: GameSummary) => void;
+  'wikirace:navigation:error': (error: NavigationErrorPayload) => void;
+  'wikirace:player:disconnected': (pseudo: string) => void;
+  'wikirace:player:reconnected': (pseudo: string) => void;
+  'wikirace:bingo:validated': (payload: BingoValidatedPayload) => void;
+  'wikirace:choosing:preview': (data: ChoosingPreviewData) => void;
   'surenchere:room:update': (room: SurenchereRoomDTO) => void;
   'surenchere:round:start': (payload: {
     round: number;

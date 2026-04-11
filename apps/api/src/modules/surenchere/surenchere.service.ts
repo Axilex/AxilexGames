@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  PlayerStatus,
   SurenchereRoom,
   SurencherePlayer,
   SurenchereRoundResult,
@@ -27,7 +28,7 @@ export class SurenchereService {
       pseudo,
       score: 0,
       isHost: true,
-      isConnected: true,
+      status: PlayerStatus.CONNECTED,
     };
     return this.registry.createRoom(
       code,
@@ -41,12 +42,12 @@ export class SurenchereService {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
-    const existing = room.players.find((p) => p.pseudo === pseudo && !p.isConnected);
+    const existing = room.players.find(
+      (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
+    );
     if (existing) {
-      this.registry.removePlayer(roomCode, existing.socketId);
-      existing.socketId = socketId;
-      existing.isConnected = true;
-      this.registry.addPlayer(roomCode, existing);
+      this.registry.rebindSocket(existing.socketId, socketId, roomCode);
+      existing.status = PlayerStatus.CONNECTED;
       return room;
     }
 
@@ -59,7 +60,7 @@ export class SurenchereService {
       pseudo,
       score: 0,
       isHost: false,
-      isConnected: true,
+      status: PlayerStatus.CONNECTED,
     };
     this.registry.addPlayer(roomCode, player);
     return room;
@@ -85,7 +86,7 @@ export class SurenchereService {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) return null;
     const player = room.players.find((p) => p.socketId === socketId);
-    if (player) player.isConnected = false;
+    if (player) player.status = PlayerStatus.DISCONNECTED;
     return room;
   }
 
@@ -153,7 +154,8 @@ export class SurenchereService {
     if (!room.passedSocketIds.includes(socketId)) room.passedSocketIds.push(socketId);
 
     const others = room.players.filter(
-      (p) => p.isConnected && p.socketId !== room.currentBidderSocketId,
+      (p) =>
+        p.status === PlayerStatus.CONNECTED && p.socketId !== room.currentBidderSocketId,
     );
     const allPassed =
       room.currentBidderSocketId !== null &&

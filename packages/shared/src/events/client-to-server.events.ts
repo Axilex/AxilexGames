@@ -72,15 +72,15 @@ export interface SurenchereSubmitWordsPayload {
 }
 
 export interface ClientToServerEvents {
-  'room:create': (payload: RoomCreatePayload) => void;
-  'room:join': (payload: RoomJoinPayload) => void;
-  'room:leave': (payload: { roomCode: string }) => void;
-  'room:reset': (payload: { roomCode: string }) => void;
-  'game:start': (payload: GameStartPayload) => void;
-  'game:confirm_choices': (payload: GameConfirmChoicesPayload) => void;
-  'game:navigate': (payload: GameNavigatePayload) => void;
-  'game:surrender': (payload: GameSurrenderPayload) => void;
-  'choosing:preview': (payload: ChoosingPreviewPayload) => void;
+  'wikirace:room:create': (payload: RoomCreatePayload) => void;
+  'wikirace:room:join': (payload: RoomJoinPayload) => void;
+  'wikirace:room:leave': (payload: { roomCode: string }) => void;
+  'wikirace:room:reset': (payload: { roomCode: string }) => void;
+  'wikirace:game:start': (payload: GameStartPayload) => void;
+  'wikirace:game:confirm_choices': (payload: GameConfirmChoicesPayload) => void;
+  'wikirace:game:navigate': (payload: GameNavigatePayload) => void;
+  'wikirace:game:surrender': (payload: GameSurrenderPayload) => void;
+  'wikirace:choosing:preview': (payload: ChoosingPreviewPayload) => void;
   'surenchere:create': (payload: SurenchereCreatePayload) => void;
   'surenchere:join': (payload: SurenchereJoinPayload) => void;
   'surenchere:leave': () => void;

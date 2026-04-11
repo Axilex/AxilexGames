@@ -21,6 +21,7 @@ import {
 import { SurenchereService } from './surenchere.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
+import { GAME_GATEWAY_CONFIG } from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -29,15 +30,7 @@ const NEXT_ROUND_DELAY_MS = 4000;
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
-@WebSocketGateway({
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  transports: ['websocket'],
-  cors: {
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
-    credentials: true,
-  },
-})
+@WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class SurenchereGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;

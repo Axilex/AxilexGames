@@ -64,19 +64,19 @@ async function startFullGame(
   code: string,
   hostPseudo: string,
 ): Promise<void> {
-  const hostRoomUpdate = waitForEvent(host, 'room:update');
-  host.emit('game:start', { roomCode: code });
+  const hostRoomUpdate = waitForEvent(host, 'wikirace:room:update');
+  host.emit('wikirace:game:start', { roomCode: code });
   const updatedRoom = await hostRoomUpdate;
 
   const chooser = updatedRoom.chooserPseudo === hostPseudo ? host : guest;
 
   const allReady = Promise.all([
-    waitForEvent(host, 'game:state'),
-    waitForEvent(guest, 'game:state'),
-    waitForEvent(host, 'game:page'),
-    waitForEvent(guest, 'game:page'),
+    waitForEvent(host, 'wikirace:game:state'),
+    waitForEvent(guest, 'wikirace:game:state'),
+    waitForEvent(host, 'wikirace:game:page'),
+    waitForEvent(guest, 'wikirace:game:page'),
   ]);
-  chooser.emit('game:confirm_choices', { roomCode: code, timeLimitSeconds: null });
+  chooser.emit('wikirace:game:confirm_choices', { roomCode: code, timeLimitSeconds: null });
   await allReady;
 }
 
@@ -112,8 +112,8 @@ describe('GameGateway — game flow (integration)', () => {
   it('game:start → picks a chooser and emits room:update with CHOOSING status', async () => {
     const { host, guest, code } = await setupGame(port);
 
-    const hostUpdate = waitForEvent(host, 'room:update');
-    host.emit('game:start', { roomCode: code });
+    const hostUpdate = waitForEvent(host, 'wikirace:room:update');
+    host.emit('wikirace:game:start', { roomCode: code });
     const room = await hostUpdate;
 
     expect(room.status).toBe('CHOOSING');
@@ -125,10 +125,10 @@ describe('GameGateway — game flow (integration)', () => {
   it('game:confirm_choices → emits game:state and game:page to all players', async () => {
     const { host, guest, code } = await setupGame(port);
 
-    const hostState = waitForEvent(host, 'game:state');
-    const guestState = waitForEvent(guest, 'game:state');
-    const hostPage = waitForEvent(host, 'game:page');
-    const guestPage = waitForEvent(guest, 'game:page');
+    const hostState = waitForEvent(host, 'wikirace:game:state');
+    const guestState = waitForEvent(guest, 'wikirace:game:state');
+    const hostPage = waitForEvent(host, 'wikirace:game:page');
+    const guestPage = waitForEvent(guest, 'wikirace:game:page');
 
     await startFullGame(host, guest, code, 'Alice');
 
@@ -145,7 +145,7 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
 
     const errorPromise = waitForEvent(guest, 'error');
-    guest.emit('game:start', { roomCode: code });
+    guest.emit('wikirace:game:start', { roomCode: code });
     const err = await errorPromise;
     expect(err).toContain('NOT_HOST');
 
@@ -156,11 +156,11 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
     await startFullGame(host, guest, code, 'Alice');
 
-    const hostPage = waitForEvent(host, 'game:page');
-    const hostProgress = waitForEvent(host, 'player:progress');
-    const guestProgress = waitForEvent(guest, 'player:progress');
+    const hostPage = waitForEvent(host, 'wikirace:game:page');
+    const hostProgress = waitForEvent(host, 'wikirace:player:progress');
+    const guestProgress = waitForEvent(guest, 'wikirace:player:progress');
 
-    host.emit('game:navigate', { roomCode: code, targetSlug: 'Paris' });
+    host.emit('wikirace:game:navigate', { roomCode: code, targetSlug: 'Paris' });
 
     const [page, progress] = await Promise.all([hostPage, hostProgress, guestProgress]);
     expect(page.slug).toBe('Paris');
@@ -177,7 +177,7 @@ describe('GameGateway — game flow (integration)', () => {
     await startFullGame(host, guest, code, 'Alice');
 
     const errorPromise = waitForEvent(host, 'error');
-    host.emit('game:navigate', { roomCode: code, targetSlug: 'Allemagne' });
+    host.emit('wikirace:game:navigate', { roomCode: code, targetSlug: 'Allemagne' });
     const err = await errorPromise;
     expect(err).toContain('INVALID_NAVIGATION');
 
@@ -188,10 +188,10 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
     await startFullGame(host, guest, code, 'Alice');
 
-    const hostFinished = waitForEvent(host, 'game:finished');
-    const guestFinished = waitForEvent(guest, 'game:finished');
+    const hostFinished = waitForEvent(host, 'wikirace:game:finished');
+    const guestFinished = waitForEvent(guest, 'wikirace:game:finished');
 
-    host.emit('game:navigate', { roomCode: code, targetSlug: 'Tour_Eiffel' });
+    host.emit('wikirace:game:navigate', { roomCode: code, targetSlug: 'Tour_Eiffel' });
 
     const [summary] = await Promise.all([hostFinished, guestFinished]);
     expect(summary.winnerPseudo).toBe('Alice');
@@ -204,10 +204,10 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
     await startFullGame(host, guest, code, 'Alice');
 
-    const hostProgress = waitForEvent(host, 'player:progress');
-    const guestProgress = waitForEvent(guest, 'player:progress');
+    const hostProgress = waitForEvent(host, 'wikirace:player:progress');
+    const guestProgress = waitForEvent(guest, 'wikirace:player:progress');
 
-    guest.emit('game:surrender', { roomCode: code });
+    guest.emit('wikirace:game:surrender', { roomCode: code });
 
     const [progress] = await Promise.all([hostProgress, guestProgress]);
     expect(progress.pseudo).toBe('Bob');
@@ -220,14 +220,14 @@ describe('GameGateway — game flow (integration)', () => {
     const { host, guest, code } = await setupGame(port);
     await startFullGame(host, guest, code, 'Alice');
 
-    const p1 = waitForEvent(host, 'player:progress');
-    const p2 = waitForEvent(guest, 'player:progress');
-    host.emit('game:surrender', { roomCode: code });
+    const p1 = waitForEvent(host, 'wikirace:player:progress');
+    const p2 = waitForEvent(guest, 'wikirace:player:progress');
+    host.emit('wikirace:game:surrender', { roomCode: code });
     await Promise.all([p1, p2]);
 
-    const hostFinished = waitForEvent(host, 'game:finished');
-    const guestFinished = waitForEvent(guest, 'game:finished');
-    guest.emit('game:surrender', { roomCode: code });
+    const hostFinished = waitForEvent(host, 'wikirace:game:finished');
+    const guestFinished = waitForEvent(guest, 'wikirace:game:finished');
+    guest.emit('wikirace:game:surrender', { roomCode: code });
 
     const [summary] = await Promise.all([hostFinished, guestFinished]);
     expect(summary.winnerPseudo).toBeNull();

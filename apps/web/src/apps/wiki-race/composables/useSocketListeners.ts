@@ -29,37 +29,37 @@ export function useSocketListeners() {
   });
 
   // Lobby
-  socketService.on('room:update', (room) => {
+  socketService.on('wikirace:room:update', (room) => {
     lobbyStore.setRoom(room);
     if (room.code) sessionStore.setSession(sessionStore.pseudo, room.code);
   });
 
   // Game lifecycle
-  socketService.on('game:state', (state) => {
+  socketService.on('wikirace:game:state', (state) => {
     gameStore.setGameState(state);
     if (router.currentRoute.value.name !== 'game') {
       router.push({ name: 'game' });
     }
   });
-  socketService.on('game:page', (page) => {
+  socketService.on('wikirace:game:page', (page) => {
     gameStore.setCurrentPage(page);
   });
-  socketService.on('player:progress', (progress) => {
+  socketService.on('wikirace:player:progress', (progress) => {
     gameStore.updatePlayerProgress(progress);
   });
-  socketService.on('game:finished', (summary) => {
+  socketService.on('wikirace:game:finished', (summary) => {
     gameStore.setFinished(summary);
     router.push({ name: 'summary' });
   });
-  socketService.on('navigation:error', (error) => {
+  socketService.on('wikirace:navigation:error', (error) => {
     gameStore.setNavigationError(error.message);
   });
-  socketService.on('bingo:validated', (payload) => {
+  socketService.on('wikirace:bingo:validated', (payload) => {
     gameStore.setBingoValidated(payload.constraintIds, payload.slug);
   });
 
   // Choosing phase live preview (for non-chooser players)
-  socketService.on('choosing:preview', (data) => {
+  socketService.on('wikirace:choosing:preview', (data) => {
     lobbyStore.setChoosingPreview(data);
   });
 
