@@ -12,7 +12,7 @@
     "format": "prettier --write \"apps/**/*.{ts,vue}\" \"packages/**/*.ts\"",
     "changeset": "changeset",
     "bump": "changeset version",
-    "release": "pnpm bump && node scripts/release.mjs"
+    "release": "node scripts/release.mjs"
   },
   "engines": {
     "node": ">=24",
