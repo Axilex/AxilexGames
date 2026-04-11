@@ -1,5 +1,12 @@
 # @wiki-race/shared
 
+## 0.2.9
+
+### Patch Changes
+
+- - refactor: update socket event names and restructure reconnection logic
+  - feat(surenchere): add Surenchère game functionality
+
 ## 0.2.8
 
 ### Patch Changes
