@@ -1,5 +1,11 @@
 # @wiki-race/shared
 
+## 0.2.7
+
+### Patch Changes
+
+- set up volume
+
 ## 0.2.6
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # api
 
+## 0.2.7
+
+### Patch Changes
+
+- set up volume
+- Updated dependencies
+  - @wiki-race/shared@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes
