@@ -143,6 +143,10 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     error.value = msg;
   }
 
+  function clearError(): void {
+    error.value = '';
+  }
+
   function setMySocketId(id: string): void {
     mySocketId.value = id;
   }
@@ -197,6 +201,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     addRoundResult,
     setFinished,
     setError,
+    clearError,
     setMySocketId,
     reset,
   };

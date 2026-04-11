@@ -58,9 +58,14 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereJoinPayload,
   ): Promise<void> {
-    const room = this.surenchere.joinRoom(client.id, payload.roomCode, payload.pseudo);
-    await client.join(payload.roomCode);
-    this.server.to(payload.roomCode).emit('surenchere:room:update', room);
+    try {
+      const room = this.surenchere.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      await client.join(payload.roomCode);
+      this.server.to(payload.roomCode).emit('surenchere:room:update', room);
+    } catch (err) {
+      const code = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
+      client.emit('surenchere:error', { code, message: code });
+    }
   }
 
   @SubscribeMessage('surenchere:leave')

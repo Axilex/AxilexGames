@@ -67,12 +67,13 @@ export function useSurenchereListeners(): void {
   });
 
   socketService.on('surenchere:error', (payload) => {
-    if (payload.code === 'ROOM_NOT_FOUND') {
+    if (payload.code === 'ROOM_NOT_FOUND' && !store.room) {
+      // Stale session — room no longer exists, clear and go back to entry page
       session.clearSession();
       store.reset();
       router.push({ name: 'surenchere' });
     } else {
-      store.setError(payload.message);
+      store.setError(payload.code);
     }
   });
 }
