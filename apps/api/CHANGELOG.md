@@ -1,5 +1,14 @@
 # api
 
+## 0.2.8
+
+### Patch Changes
+
+- - fix: update web deployment strategy and probe configurations
+  - chore: remove obsolete deployment and setup documentation files
+- Updated dependencies
+  - @wiki-race/shared@0.2.8
+
 ## 0.2.7
 
 ### Patch Changes
