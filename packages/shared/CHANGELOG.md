@@ -1,5 +1,12 @@
 # @wiki-race/shared
 
+## 0.2.0
+
+### Minor Changes
+
+- config env variable
+- Config ip
+
 ## 0.1.0
 
 ### Minor Changes

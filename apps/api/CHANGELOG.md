@@ -1,5 +1,18 @@
 # api
 
+## 0.2.0
+
+### Minor Changes
+
+- config env variable
+- Config ip
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @wiki-race/shared@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
