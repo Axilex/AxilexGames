@@ -13,7 +13,7 @@
         v-if="showVoting"
         class="text-xs font-semibold bg-stone-100 text-stone-600 rounded-full px-3 py-1"
       >
-        {{ votingProgress.voted }}/{{ votingProgress.total }} ont voté
+        {{ votingProgress?.voted }}/{{ votingProgress?.total }} ont voté
       </span>
     </div>
 

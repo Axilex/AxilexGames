@@ -32,6 +32,7 @@ function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO
     passedSocketIds: [],
     currentWords: null,
     wasForced: false,
+    wordVotes: {},
     roundStarterIndex: 0,
     lastRoundResult: null,
     ...overrides,
@@ -130,6 +131,7 @@ describe('useSurenchereStore', () => {
       success: true,
       pointsDelta: 7,
       words: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+      wordVerdicts: [true, true, true, true, true, true, true],
       wasForced: false,
     };
     store.addRoundResult(result, { Alice: 7, Bob: 0, Carol: 0 });
