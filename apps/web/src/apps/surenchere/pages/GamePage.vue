@@ -31,7 +31,6 @@
             :current-bidder="store.currentBidder?.pseudo ?? null"
             :phase="store.phase"
             :was-forced="store.wasForced"
-            :forced-bonus="store.passedSocketIds.length"
           />
 
           <!-- BIDDING -->
@@ -56,30 +55,19 @@
             @submit="onSubmitWords"
           />
 
-          <!-- VERDICT -->
-          <template v-else-if="store.phase === 'VERDICT'">
-            <WordsDisplay
-              :words="store.currentWords"
-              :bidder-name="store.currentBidder?.pseudo ?? null"
-            />
-            <div
-              v-if="store.isHost"
-              class="bg-white rounded-2xl border border-stone-200 p-6 flex gap-2"
-            >
-              <BaseButton variant="secondary" class="flex-1" @click="onVerdict(true)">
-                ✅ Réussi
-              </BaseButton>
-              <BaseButton variant="danger" class="flex-1" @click="onVerdict(false)">
-                ❌ Raté
-              </BaseButton>
-            </div>
-            <div
-              v-else
-              class="bg-white rounded-2xl border border-stone-200 p-6 text-sm text-stone-500 text-center"
-            >
-              En attente du verdict…
-            </div>
-          </template>
+          <!-- VOTING -->
+          <WordsDisplay
+            v-else-if="store.phase === 'VOTING'"
+            :words="store.currentWords"
+            :bidder-name="store.currentBidder?.pseudo ?? null"
+            :show-voting="true"
+            :can-vote="store.canVote"
+            :word-votes="store.wordVotes"
+            :voting-progress="store.votingProgress"
+            :has-voted-on-word="store.hasVotedOnWord"
+            :my-vote-on-word="store.myVoteOnWord"
+            @vote="onVote"
+          />
 
           <!-- ROUND_END -->
           <div
@@ -91,8 +79,9 @@
         </template>
       </div>
 
-      <div class="md:col-span-1">
+      <div class="md:col-span-1 flex flex-col gap-4">
         <RoundHistory :history="store.roundHistory" />
+        <RulesCard />
       </div>
     </main>
   </div>
@@ -106,13 +95,17 @@ import WordsInput from '../components/game/WordsInput.vue';
 import WordsDisplay from '../components/game/WordsDisplay.vue';
 import ScoresBand from '../components/game/ScoresBand.vue';
 import RoundHistory from '../components/game/RoundHistory.vue';
-import BaseButton from '@/shared/components/ui/BaseButton.vue';
+import RulesCard from '../components/RulesCard.vue';
 import { useSurenchereStore } from '../stores/useSurenchereStore';
 import { surenchereSocket } from '../services/surenchere.service';
 
 const store = useSurenchereStore();
 
-function onChooseChallenge(options: { challengeId?: string; customPhrase?: string }): void {
+function onChooseChallenge(options: {
+  challengeId?: string;
+  customPhrase?: string;
+  letter: string;
+}): void {
   surenchereSocket.chooseChallenge(options);
 }
 function onBid(amount: number): void {
@@ -127,7 +120,7 @@ function onChallenge(): void {
 function onSubmitWords(words: string[]): void {
   surenchereSocket.submitWords(words);
 }
-function onVerdict(success: boolean): void {
-  surenchereSocket.verdict(success);
+function onVote(payload: { wordIndex: number; valid: boolean }): void {
+  surenchereSocket.voteWord(payload.wordIndex, payload.valid);
 }
 </script>

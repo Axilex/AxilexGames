@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  Player,
-  GameSession,
-  Room,
-  PlayerStatus,
-  GameMode,
-} from '@wiki-race/shared';
+import { Player, GameSession, Room, PlayerStatus, GameMode } from '@wiki-race/shared';
 import { BingoConstraintId } from '@wiki-race/shared';
 
 export type PageCategory =

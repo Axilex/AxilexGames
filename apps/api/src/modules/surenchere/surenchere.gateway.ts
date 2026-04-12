@@ -14,7 +14,7 @@ import {
   SurenchereCreatePayload,
   SurenchereJoinPayload,
   SurenchereBidPayload,
-  SurenchereVerdictPayload,
+  SurenchereVoteWordPayload,
   SurenchereChooseChallengePayload,
   SurenchereSubmitWordsPayload,
 } from '@wiki-race/shared';
@@ -41,6 +41,14 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const room = this.surenchere.markDisconnected(client.id);
     if (!room) return;
     this.server.to(room.code).emit('surenchere:room:update', room);
+
+    // If a voter disconnects during VOTING, check if remaining votes are complete
+    if (room.phase === 'VOTING') {
+      const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(room);
+      if (resolved && result && scores !== undefined) {
+        this.emitRoundEnd(room, result, finished ?? false, scores, client.id);
+      }
+    }
   }
 
   @SubscribeMessage('surenchere:create')
@@ -95,6 +103,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const room = this.surenchere.chooseChallenge(client.id, {
       challengeId: payload.challengeId,
       customPhrase: payload.customPhrase,
+      letter: payload.letter,
     });
     this.server.to(room.code).emit('surenchere:room:update', room);
   }
@@ -132,22 +141,32 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   ): void {
     const room = this.surenchere.submitWords(client.id, payload.words);
     this.server.to(room.code).emit('surenchere:room:update', room);
-    if (room.currentChallenge && room.currentBidderSocketId) {
-      this.server.to(room.code).emit('surenchere:verdict:start', {
-        bidderSocketId: room.currentBidderSocketId,
-        bid: room.currentBid,
-        challenge: room.currentChallenge,
-      });
+  }
+
+  @SubscribeMessage('surenchere:vote_word')
+  handleVoteWord(
+    @ConnectedSocket() client: TypedSocket,
+    @MessageBody() payload: SurenchereVoteWordPayload,
+  ): void {
+    const { room, resolved, result, finished, scores } = this.surenchere.voteWord(
+      client.id,
+      payload.wordIndex,
+      payload.valid,
+    );
+    this.server.to(room.code).emit('surenchere:room:update', room);
+
+    if (resolved && result && scores !== undefined) {
+      this.emitRoundEnd(room, result, finished ?? false, scores, client.id);
     }
   }
 
-  @SubscribeMessage('surenchere:verdict')
-  handleVerdict(
-    @ConnectedSocket() client: TypedSocket,
-    @MessageBody() payload: SurenchereVerdictPayload,
+  private emitRoundEnd(
+    room: import('@wiki-race/shared').SurenchereRoom,
+    result: import('@wiki-race/shared').SurenchereRoundResult,
+    finished: boolean,
+    scores: Record<string, number>,
+    hostId: string,
   ): void {
-    const { room, result, finished } = this.surenchere.resolveVerdict(client.id, payload.success);
-    const scores = this.surenchere.toScores(room);
     this.server.to(room.code).emit('surenchere:round:end', { result, scores });
     this.server.to(room.code).emit('surenchere:room:update', room);
 
@@ -159,7 +178,6 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       return;
     }
 
-    const hostId = client.id;
     setTimeout(() => {
       try {
         const nextRoom = this.surenchere.nextRound(hostId);
@@ -169,7 +187,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
         });
       } catch {
-        // host left, ignore
+        // player left, ignore
       }
     }, NEXT_ROUND_DELAY_MS);
   }

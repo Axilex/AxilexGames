@@ -1,69 +1,10 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-    <div class="px-4 py-2.5 border-b border-stone-100 flex items-center gap-2">
-      <span class="text-sm">📖</span>
-      <span class="text-[10px] font-semibold text-stone-500 uppercase tracking-widest">Règles</span>
-    </div>
-
-    <div class="px-4 py-3 flex flex-col gap-3">
-      <!-- Modes -->
-      <div class="flex flex-col gap-1.5">
-        <p class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Modes</p>
-        <div v-for="m in modes" :key="m.value" class="flex gap-1.5 items-start">
-          <span class="shrink-0 text-xs leading-tight mt-px">{{ m.icon }}</span>
-          <div class="text-[10px] leading-tight">
-            <span class="font-semibold text-stone-700">{{ m.label }}</span>
-            <span class="text-stone-400"> — {{ m.description }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bingo constraints -->
-      <div class="flex flex-col gap-1.5">
-        <p class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">
-          Contraintes Bingo
-        </p>
-        <div v-for="c in constraints" :key="c.id" class="flex gap-1.5 items-start">
-          <span class="shrink-0 text-xs leading-tight mt-px">{{ c.icon }}</span>
-          <div class="text-[10px] leading-tight">
-            <span class="font-semibold text-stone-700">{{ c.label }}</span>
-            <span class="text-stone-400"> — {{ c.description }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- General rules -->
-      <div class="flex flex-col gap-1.5">
-        <p class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Général</p>
-        <ul class="text-[10px] text-stone-500 flex flex-col gap-0.5 list-disc list-inside">
-          <li>Seuls les liens dans le texte comptent.</li>
-          <li>Les notes [1] ne sont pas cliquables.</li>
-          <li>Ctrl+F désactivé en jeu.</li>
-          <li>Abandonner vous marque comme éliminé.</li>
-          <li>Seul l'hôte peut relancer une partie.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+  <SharedRulesCard :sections="sections" />
 </template>
 
 <script setup lang="ts">
-import { GameMode, BINGO_CONSTRAINTS } from '@wiki-race/shared';
-
-const modes = [
-  {
-    value: GameMode.CLASSIC,
-    icon: '🏁',
-    label: 'Classique',
-    description: 'Premier à la cible gagne.',
-  },
-  {
-    value: GameMode.BINGO,
-    icon: '🎯',
-    label: 'Bingo Wiki',
-    description: 'Validez toutes les contraintes.',
-  },
-];
+import { BINGO_CONSTRAINTS } from '@wiki-race/shared';
+import SharedRulesCard, { type RuleSection } from '@/shared/components/ui/RulesCard.vue';
 
 const CONSTRAINT_ICONS: Record<string, string> = {
   year_in_title: '📅',
@@ -91,10 +32,31 @@ const CONSTRAINT_DESCRIPTIONS: Record<string, string> = {
   science: "Discipline scientifique mentionnée dans l'intro.",
 };
 
-const constraints = BINGO_CONSTRAINTS.map((c) => ({
-  id: c.id,
-  label: c.label,
-  icon: CONSTRAINT_ICONS[c.id] ?? '•',
-  description: CONSTRAINT_DESCRIPTIONS[c.id] ?? '',
-}));
+const sections: RuleSection[] = [
+  {
+    title: 'Modes',
+    items: [
+      { icon: '🏁', label: 'Classique', description: 'Premier à la cible gagne.' },
+      { icon: '🎯', label: 'Bingo Wiki', description: 'Validez toutes les contraintes.' },
+    ],
+  },
+  {
+    title: 'Contraintes Bingo',
+    items: BINGO_CONSTRAINTS.map((c) => ({
+      icon: CONSTRAINT_ICONS[c.id] ?? '•',
+      label: c.label,
+      description: CONSTRAINT_DESCRIPTIONS[c.id] ?? '',
+    })),
+  },
+  {
+    title: 'Général',
+    bullets: [
+      'Seuls les liens dans le texte comptent.',
+      'Les notes [1] ne sont pas cliquables.',
+      'Ctrl+F désactivé en jeu.',
+      'Abandonner vous marque comme éliminé.',
+      "Seul l'hôte peut relancer une partie.",
+    ],
+  },
+];
 </script>

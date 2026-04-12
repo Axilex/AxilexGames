@@ -87,7 +87,9 @@ describe('ModeService — detectPageCategory', () => {
   });
 
   it('CITY when table has class commune', () => {
-    expect(service.detectPageCategory('<table class="commune"><tr><td>Lyon</td></tr></table>')).toBe('CITY');
+    expect(
+      service.detectPageCategory('<table class="commune"><tr><td>Lyon</td></tr></table>'),
+    ).toBe('CITY');
   });
 
   it('CITY when infobox has Code postal row', () => {
@@ -108,7 +110,7 @@ describe('ModeService — detectPageCategory', () => {
   });
 
   it('SCIENCE when first paragraph mentions discipline even with unrelated infobox', () => {
-    const html = '<p>La <b>chimie</b> est l\'étude des substances.</p>' + infoboxWith('Auteur');
+    const html = "<p>La <b>chimie</b> est l'étude des substances.</p>" + infoboxWith('Auteur');
     expect(service.detectPageCategory(html)).toBe('SCIENCE');
   });
 
@@ -233,8 +235,7 @@ describe('ModeService — Bingo', () => {
   });
 
   it('checkConstraints - city matches Code postal in infobox', () => {
-    const html =
-      '<table class="infobox"><tr><th>Code postal</th><td>75001</td></tr></table>';
+    const html = '<table class="infobox"><tr><th>Code postal</th><td>75001</td></tr></table>';
     const validated = service.checkConstraints(['city'], 'any', html);
     expect(validated).toContain('city');
   });
@@ -260,8 +261,7 @@ describe('ModeService — Bingo', () => {
   });
 
   it('checkConstraints - film_or_series finds Réalisation in infobox', () => {
-    const html =
-      '<table class="infobox"><tr><th>Réalisation</th><td>Spielberg</td></tr></table>';
+    const html = '<table class="infobox"><tr><th>Réalisation</th><td>Spielberg</td></tr></table>';
     const validated = service.checkConstraints(['film_or_series'], 'any', html);
     expect(validated).toContain('film_or_series');
   });

@@ -31,39 +31,85 @@
           placeholder="ex : Alice"
           :maxlength="20"
           :error="pseudoError"
+          size="lg"
           @enter="handleJoin"
         />
 
         <!-- Join room (first) -->
-        <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4">
-          <h2 class="text-base font-semibold text-stone-800">Rejoindre une room</h2>
+        <div
+          :class="[
+            'rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
+            hasInviteCode
+              ? 'bg-amber-50 border-amber-300 shadow-amber-100'
+              : 'bg-white border-stone-200',
+          ]"
+        >
+          <div class="flex items-center gap-2">
+            <span v-if="hasInviteCode" class="text-lg leading-none">🎉</span>
+            <h2
+              :class="[
+                'text-base font-semibold',
+                hasInviteCode ? 'text-amber-900' : 'text-stone-800',
+              ]"
+            >
+              {{ hasInviteCode ? 'Vous avez été invité !' : 'Rejoindre une room' }}
+            </h2>
+          </div>
+
+          <!-- Prominent code display when arriving via invite link -->
+          <div
+            v-if="hasInviteCode"
+            class="bg-white rounded-xl border border-amber-200 px-4 py-3 text-center"
+          >
+            <span class="text-2xl font-bold tracking-[0.3em] font-mono text-stone-900">
+              {{ joinCode }}
+            </span>
+          </div>
+
           <BaseInput
             v-model="joinCode"
-            label="Code de la room"
+            :label="hasInviteCode ? 'Modifier le code' : 'Code de la room'"
             placeholder="ex : ABCDEF"
             :maxlength="6"
             :error="joinCodeError"
             class="font-mono uppercase"
             @enter="handleJoin"
           />
-          <BaseButton variant="secondary" :loading="joining" class="w-full" @click="handleJoin">
+          <BaseButton
+            :variant="hasInviteCode ? 'primary' : 'secondary'"
+            :loading="joining"
+            class="w-full"
+            @click="handleJoin"
+          >
             Rejoindre →
           </BaseButton>
         </div>
 
-        <!-- Divider -->
-        <div class="flex items-center gap-3">
+        <!-- Divider — hidden when arriving via invite (create is just a text link) -->
+        <div v-if="!hasInviteCode" class="flex items-center gap-3">
           <div class="flex-1 h-px bg-stone-200" />
           <span class="text-xs text-stone-400 font-medium">ou</span>
           <div class="flex-1 h-px bg-stone-200" />
         </div>
 
-        <!-- Create room (second) -->
-        <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4">
+        <!-- Create room (second) — collapsed when arriving via invite link -->
+        <div
+          v-if="!hasInviteCode"
+          class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4"
+        >
           <h2 class="text-base font-semibold text-stone-800">Créer une room</h2>
           <BaseButton :loading="creating" class="w-full" @click="handleCreate">
             Créer une room →
           </BaseButton>
+        </div>
+        <div v-else class="text-center">
+          <button
+            class="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors"
+            :disabled="creating"
+            @click="handleCreate"
+          >
+            {{ creating ? 'Création…' : 'ou créer une nouvelle room' }}
+          </button>
         </div>
       </div>
     </div>
@@ -93,6 +139,7 @@ const joining = ref(false);
 
 const urlCode = new URLSearchParams(window.location.search).get('code');
 if (urlCode) joinCode.value = urlCode.toUpperCase();
+const hasInviteCode = !!urlCode;
 
 watch(
   () => lobbyStore.room,

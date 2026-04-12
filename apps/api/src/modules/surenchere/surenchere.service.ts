@@ -117,23 +117,28 @@ export class SurenchereService {
     room.passedSocketIds = [];
     room.currentWords = null;
     room.wasForced = false;
+    room.wordVotes = {};
     room.phase = 'CHOOSING_CHALLENGE';
   }
 
   chooseChallenge(
     socketId: string,
-    options: { challengeId?: string; customPhrase?: string },
+    options: { challengeId?: string; customPhrase?: string; letter?: string },
   ): SurenchereRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
     if (room.challengeChooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
 
+    const letter =
+      options.letter && LETTERS.includes(options.letter)
+        ? options.letter
+        : LETTERS[Math.floor(Math.random() * LETTERS.length)];
+
     if (options.customPhrase !== undefined) {
       const phrase = options.customPhrase.trim();
       if (phrase.length < 5) throw new Error('CUSTOM_PHRASE_TOO_SHORT');
       if (phrase.length > 200) throw new Error('CUSTOM_PHRASE_TOO_LONG');
-      const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
       room.currentChallenge = {
         id: randomUUID(),
         category: '✏️ Défi custom',
@@ -144,7 +149,7 @@ export class SurenchereService {
     } else if (options.challengeId !== undefined) {
       const picked = room.challengeOptions.find((c) => c.id === options.challengeId);
       if (!picked) throw new Error('CHALLENGE_NOT_FOUND');
-      room.currentChallenge = picked;
+      room.currentChallenge = { ...picked, letter };
     } else {
       throw new Error('MISSING_CHALLENGE_OPTION');
     }
@@ -176,8 +181,7 @@ export class SurenchereService {
     if (!room.passedSocketIds.includes(socketId)) room.passedSocketIds.push(socketId);
 
     const others = room.players.filter(
-      (p) =>
-        p.status === PlayerStatus.CONNECTED && p.socketId !== room.currentBidderSocketId,
+      (p) => p.status === PlayerStatus.CONNECTED && p.socketId !== room.currentBidderSocketId,
     );
     const allPassed =
       room.currentBidderSocketId !== null &&
@@ -185,9 +189,29 @@ export class SurenchereService {
       others.every((p) => room.passedSocketIds.includes(p.socketId));
 
     if (allPassed) {
-      room.wasForced = true;
+      // Only mark as forced when 2+ opponents all passed — 1 passer is just normal play
+      room.wasForced = others.length >= 2;
       room.phase = 'WORDS';
+      return { room, allPassed };
     }
+
+    // No bidder yet but every connected player has passed → last passer is forced
+    if (!room.currentBidderSocketId) {
+      const allConnected = room.players.filter((p) => p.status === PlayerStatus.CONNECTED);
+      const everyonePassed =
+        allConnected.length > 0 &&
+        allConnected.every((p) => room.passedSocketIds.includes(p.socketId));
+
+      if (everyonePassed) {
+        room.currentBid = room.settings.startBid;
+        room.currentBidderSocketId = socketId;
+        room.passedSocketIds = room.passedSocketIds.filter((id) => id !== socketId);
+        room.wasForced = true;
+        room.phase = 'WORDS';
+        return { room, allPassed: true };
+      }
+    }
+
     return { room, allPassed };
   }
 
@@ -209,29 +233,93 @@ export class SurenchereService {
     const cleaned = words.map((w) => w.trim()).filter((w) => w.length > 0);
     if (cleaned.length < room.currentBid) throw new Error('NOT_ENOUGH_WORDS');
     room.currentWords = cleaned;
-    room.phase = 'VERDICT';
+    room.wordVotes = {};
+    room.phase = 'VOTING';
     return room;
   }
 
-  resolveVerdict(
+  voteWord(
     socketId: string,
-    success: boolean,
-  ): { room: SurenchereRoom; result: SurenchereRoundResult; finished: boolean } {
+    wordIndex: number,
+    valid: boolean,
+  ): {
+    room: SurenchereRoom;
+    resolved: boolean;
+    result?: SurenchereRoundResult;
+    finished?: boolean;
+    scores?: Record<string, number>;
+  } {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
-    const caller = room.players.find((p) => p.socketId === socketId);
-    if (!caller?.isHost) throw new Error('NOT_HOST');
-    if (room.phase !== 'VERDICT') throw new Error('NOT_IN_VERDICT');
+    if (room.phase !== 'VOTING') throw new Error('NOT_VOTING');
+    if (socketId === room.currentBidderSocketId) throw new Error('BIDDER_CANNOT_VOTE');
+    if (!room.currentWords || wordIndex < 0 || wordIndex >= room.currentWords.length) {
+      throw new Error('INVALID_WORD_INDEX');
+    }
+
+    if (!room.wordVotes[wordIndex]) {
+      room.wordVotes[wordIndex] = { valid: [], invalid: [] };
+    }
+    const slot = room.wordVotes[wordIndex];
+    if (slot.valid.includes(socketId) || slot.invalid.includes(socketId)) {
+      throw new Error('ALREADY_VOTED');
+    }
+    (valid ? slot.valid : slot.invalid).push(socketId);
+
+    return this.tryResolveVoting(room);
+  }
+
+  tryResolveVoting(room: SurenchereRoom): {
+    room: SurenchereRoom;
+    resolved: boolean;
+    result?: SurenchereRoundResult;
+    finished?: boolean;
+    scores?: Record<string, number>;
+  } {
+    if (room.phase !== 'VOTING' || !room.currentWords) return { room, resolved: false };
+
+    const eligibleVoters = room.players.filter(
+      (p) => p.status === PlayerStatus.CONNECTED && p.socketId !== room.currentBidderSocketId,
+    );
+
+    // If no eligible voters remain, auto-resolve with all words rejected
+    const allVoted =
+      eligibleVoters.length === 0 ||
+      room.currentWords.every((_, i) => {
+        const slot = room.wordVotes[i];
+        if (!slot) return false;
+        return eligibleVoters.every(
+          (p) => slot.valid.includes(p.socketId) || slot.invalid.includes(p.socketId),
+        );
+      });
+
+    if (!allVoted) return { room, resolved: false };
+
+    const wordVerdicts = room.currentWords.map((_, i) => {
+      const slot = room.wordVotes[i] ?? { valid: [], invalid: [] };
+      return slot.valid.length > slot.invalid.length;
+    });
+
+    const acceptedCount = wordVerdicts.filter(Boolean).length;
+    const success = acceptedCount >= room.currentBid;
+    const { result, finished } = this.applyVerdictResult(room, success, wordVerdicts);
+    const scores = this.toScores(room);
+    return { room, resolved: true, result, finished, scores };
+  }
+
+  private applyVerdictResult(
+    room: SurenchereRoom,
+    success: boolean,
+    wordVerdicts: boolean[],
+  ): { result: SurenchereRoundResult; finished: boolean } {
     if (!room.currentChallenge || !room.currentBidderSocketId) {
       throw new Error('INVALID_STATE');
     }
-
     const bidder = room.players.find((p) => p.socketId === room.currentBidderSocketId);
     if (!bidder) throw new Error('BIDDER_NOT_FOUND');
 
-    const forcedBonus = success && room.wasForced ? room.passedSocketIds.length : 0;
-    const delta = success ? room.currentBid + forcedBonus : -room.currentBid;
-    bidder.score += delta;
+    const acceptedCount = wordVerdicts.filter(Boolean).length;
+    bidder.score += acceptedCount;
 
     const result: SurenchereRoundResult = {
       bidderSocketId: bidder.socketId,
@@ -239,18 +327,17 @@ export class SurenchereService {
       challenge: room.currentChallenge,
       bid: room.currentBid,
       success,
-      pointsDelta: delta,
+      pointsDelta: acceptedCount,
       words: room.currentWords ? [...room.currentWords] : [],
-      forcedBonus,
+      wordVerdicts,
+      wasForced: room.wasForced,
     };
     room.lastRoundResult = result;
     room.phase = 'ROUND_END';
 
     const finished = room.currentRound >= room.settings.totalRounds;
-    if (finished) {
-      room.phase = 'FINISHED';
-    }
-    return { room, result, finished };
+    if (finished) room.phase = 'FINISHED';
+    return { result, finished };
   }
 
   nextRound(socketId: string): SurenchereRoom {
@@ -278,6 +365,7 @@ export class SurenchereService {
     room.passedSocketIds = [];
     room.currentWords = null;
     room.wasForced = false;
+    room.wordVotes = {};
     room.roundStarterIndex = 0;
     room.lastRoundResult = null;
     for (const p of room.players) p.score = 0;

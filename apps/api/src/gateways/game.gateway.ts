@@ -62,9 +62,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameState.startReconnectTimer(client.id, RECONNECT_TIMEOUT_MS, () => {
       const { room: updatedRoom, deleted } = this.lobby.leaveRoom(room.code, client.id);
       if (!deleted && updatedRoom) {
-        this.server
-          .to(room.code)
-          .emit('wikirace:room:update', this.lobby.toRoomDTO(updatedRoom));
+        this.server.to(room.code).emit('wikirace:room:update', this.lobby.toRoomDTO(updatedRoom));
       }
     });
 

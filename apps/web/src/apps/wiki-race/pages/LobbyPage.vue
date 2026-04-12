@@ -17,10 +17,8 @@
     <div class="flex-1 max-w-4xl mx-auto w-full p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Left: room info + actions -->
       <div class="flex flex-col gap-5">
-        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5 flex flex-col gap-4">
-          <RoomCodeDisplay :code="room.code" />
-          <ShareLink :room-code="room.code" />
-        </div>
+        <RoomCodeDisplay :code="room.code" />
+        <ShareLink :share-url="wikiRaceShareUrl" />
 
         <!-- WAITING phase -->
         <template v-if="room.status === 'WAITING'">
@@ -245,8 +243,8 @@ import { gameService } from '../services/game.service';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import LoadingSpinner from '@/shared/components/ui/LoadingSpinner.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
-import RoomCodeDisplay from '../components/lobby/RoomCodeDisplay.vue';
-import ShareLink from '../components/lobby/ShareLink.vue';
+import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
+import ShareLink from '@/shared/components/ui/ShareLink.vue';
 import PlayerList from '../components/lobby/PlayerList.vue';
 import TimeLimitSelector from '../components/lobby/TimeLimitSelector.vue';
 import WikiPageSearch from '../components/lobby/WikiPageSearch.vue';
@@ -276,6 +274,9 @@ const startPage = ref<WikiResult | null>(null);
 const targetPage = ref<WikiResult | null>(null);
 
 const room = computed(() => lobbyStore.room!);
+const wikiRaceShareUrl = computed(
+  () => `${window.location.origin}/wikirace?code=${room.value?.code ?? ''}`,
+);
 const isHost = computed(() => room.value?.hostPseudo === sessionStore.pseudo);
 const isChooser = computed(() => room.value?.chooserPseudo === sessionStore.pseudo);
 

@@ -27,17 +27,10 @@
     </div>
 
     <div
-      v-if="wasForced && (phase === 'WORDS' || phase === 'VERDICT')"
+      v-if="wasForced && (phase === 'WORDS' || phase === 'VOTING')"
       class="bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-sm text-red-800 font-semibold text-center"
     >
-      🔥 Joueur forcé — bonus +{{ forcedBonus }} en cas de réussite
-    </div>
-
-    <div
-      v-else-if="phase === 'VERDICT'"
-      class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm text-amber-800 font-semibold text-center"
-    >
-      {{ currentBidder }} doit relever le défi !
+      🔥 Joueur forcé
     </div>
   </div>
 </template>
@@ -51,6 +44,5 @@ defineProps<{
   currentBidder: string | null;
   phase: SurenchereGamePhase;
   wasForced?: boolean;
-  forcedBonus?: number;
 }>();
 </script>

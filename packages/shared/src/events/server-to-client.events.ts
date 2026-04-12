@@ -7,7 +7,6 @@ import { BingoConstraintId } from '../domain/bingo.types';
 import { ChoosingPreviewPayload } from './client-to-server.events';
 import {
   SurenchereRoomDTO,
-  SurenchereChallenge,
   SurenchereRoundResult,
   SurencherePlayer,
 } from '../domain/surenchere.types';
@@ -36,17 +35,9 @@ export interface ServerToClientEvents {
   'wikirace:bingo:validated': (payload: BingoValidatedPayload) => void;
   'wikirace:choosing:preview': (data: ChoosingPreviewData) => void;
   'surenchere:room:update': (room: SurenchereRoomDTO) => void;
-  'surenchere:round:start': (payload: {
-    round: number;
-    firstBidderSocketId: string;
-  }) => void;
+  'surenchere:round:start': (payload: { round: number; firstBidderSocketId: string }) => void;
   'surenchere:bid:update': (payload: { bidderSocketId: string; amount: number }) => void;
   'surenchere:pass:update': (payload: { socketId: string }) => void;
-  'surenchere:verdict:start': (payload: {
-    bidderSocketId: string;
-    bid: number;
-    challenge: SurenchereChallenge;
-  }) => void;
   'surenchere:round:end': (payload: {
     result: SurenchereRoundResult;
     scores: Record<string, number>;

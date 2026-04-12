@@ -29,7 +29,7 @@ export function useSurenchereListeners(): void {
       room.phase === 'CHOOSING_CHALLENGE' ||
       room.phase === 'BIDDING' ||
       room.phase === 'WORDS' ||
-      room.phase === 'VERDICT' ||
+      room.phase === 'VOTING' ||
       room.phase === 'ROUND_END'
     ) {
       if (router.currentRoute.value.name !== 'surenchere-game') {
@@ -51,10 +51,6 @@ export function useSurenchereListeners(): void {
 
   socketService.on('surenchere:pass:update', (payload) => {
     store.addPass(payload.socketId);
-  });
-
-  socketService.on('surenchere:verdict:start', () => {
-    // room:update already carries phase=VERDICT, this event is informational
   });
 
   socketService.on('surenchere:round:end', (payload) => {

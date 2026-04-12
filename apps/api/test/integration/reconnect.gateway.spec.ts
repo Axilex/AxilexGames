@@ -114,7 +114,10 @@ describe('Reconnection flow (integration)', () => {
       waitForEvent(host, 'wikirace:game:page'),
       waitForEvent(guest, 'wikirace:game:page'),
     ]);
-    chooser.emit('wikirace:game:confirm_choices', { roomCode: hostRoom.code, timeLimitSeconds: null });
+    chooser.emit('wikirace:game:confirm_choices', {
+      roomCode: hostRoom.code,
+      timeLimitSeconds: null,
+    });
     await allReady;
 
     // Bob disconnects mid-game

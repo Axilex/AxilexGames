@@ -24,6 +24,7 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
       passedSocketIds: [],
       currentWords: null,
       wasForced: false,
+      wordVotes: {},
       roundStarterIndex: 0,
       lastRoundResult: null,
     };

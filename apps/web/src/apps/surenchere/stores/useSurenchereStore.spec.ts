@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useSurenchereStore } from './useSurenchereStore';
-import { PlayerStatus, type SurenchereRoomDTO, type SurenchereRoundResult } from '@wiki-race/shared';
+import {
+  PlayerStatus,
+  type SurenchereRoomDTO,
+  type SurenchereRoundResult,
+} from '@wiki-race/shared';
 
 function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO {
   return {
@@ -14,7 +18,13 @@ function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO
     ],
     settings: { totalRounds: 5, startBid: 5 },
     currentRound: 1,
-    currentChallenge: { id: 'c1', category: 'Test', prompt: 'p', letter: 'A', source: 'predefined' },
+    currentChallenge: {
+      id: 'c1',
+      category: 'Test',
+      prompt: 'p',
+      letter: 'A',
+      source: 'predefined',
+    },
     challengeOptions: [],
     challengeChooserSocketId: null,
     currentBid: 0,
@@ -36,9 +46,7 @@ describe('useSurenchereStore', () => {
   it('canBid true when I am not the current bidder and have not passed', () => {
     const store = useSurenchereStore();
     store.setMySocketId('s2');
-    store.setRoom(
-      makeRoom({ currentBidderSocketId: 's1', currentBid: 5, passedSocketIds: [] }),
-    );
+    store.setRoom(makeRoom({ currentBidderSocketId: 's1', currentBid: 5, passedSocketIds: [] }));
     expect(store.canBid).toBe(true);
   });
 
@@ -70,9 +78,7 @@ describe('useSurenchereStore', () => {
   it('addPass appends socketId and allPassed flips when complete', () => {
     const store = useSurenchereStore();
     store.setMySocketId('s1');
-    store.setRoom(
-      makeRoom({ currentBidderSocketId: 's1', currentBid: 5, passedSocketIds: [] }),
-    );
+    store.setRoom(makeRoom({ currentBidderSocketId: 's1', currentBid: 5, passedSocketIds: [] }));
     store.addPass('s2');
     expect(store.allPassed).toBe(false);
     store.addPass('s3');
@@ -124,7 +130,7 @@ describe('useSurenchereStore', () => {
       success: true,
       pointsDelta: 7,
       words: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-      forcedBonus: 0,
+      wasForced: false,
     };
     store.addRoundResult(result, { Alice: 7, Bob: 0, Carol: 0 });
     expect(store.roundHistory).toHaveLength(1);

@@ -17,24 +17,31 @@
                 : 'bg-red-50 text-red-700 border border-red-200',
             ]"
           >
-            {{ r.success ? '+' : '' }}{{ r.pointsDelta }}
+            +{{ r.pointsDelta }}
           </span>
         </div>
         <span class="text-xs text-stone-500 truncate">
           {{ r.challenge.category }} — « {{ r.challenge.letter }} » × {{ r.bid }}
         </span>
-        <div v-if="r.forcedBonus && r.forcedBonus > 0" class="flex">
+        <div v-if="r.wasForced" class="flex">
           <span
             class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200"
           >
-            🔥 Forcé +{{ r.forcedBonus }}
+            🔥 Forcé
           </span>
         </div>
         <div v-if="r.words && r.words.length" class="flex flex-wrap gap-1">
           <span
             v-for="(w, wi) in r.words.slice(0, 5)"
             :key="wi"
-            class="text-[11px] bg-white border border-stone-200 rounded px-1.5 py-0.5 text-stone-700"
+            :class="[
+              'text-[11px] rounded px-1.5 py-0.5',
+              r.wordVerdicts?.[wi] === true
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                : r.wordVerdicts?.[wi] === false
+                  ? 'bg-red-50 border border-red-200 text-red-700 line-through'
+                  : 'bg-white border border-stone-200 text-stone-700',
+            ]"
           >
             {{ w }}
           </span>

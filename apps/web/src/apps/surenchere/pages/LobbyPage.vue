@@ -10,6 +10,7 @@
     <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="md:col-span-2 flex flex-col gap-4">
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
+        <ShareLink :share-url="shareUrl" />
         <PlayerList :players="store.room?.players ?? []" :my-socket-id="store.mySocketId" />
       </div>
 
@@ -26,6 +27,7 @@
         >
           En attente du host…
         </div>
+        <RulesCard />
       </div>
     </main>
   </div>
@@ -35,18 +37,23 @@
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
-import RoomCodeDisplay from '../components/lobby/RoomCodeDisplay.vue';
+import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
+import ShareLink from '@/shared/components/ui/ShareLink.vue';
 import PlayerList from '../components/lobby/PlayerList.vue';
 import GameSettings from '../components/lobby/GameSettings.vue';
 import { useSurenchereStore } from '../stores/useSurenchereStore';
 import { useSurenchereSessionStore } from '@/shared/stores/useSurenchereSessionStore';
 import { surenchereSocket } from '../services/surenchere.service';
+import RulesCard from '../components/RulesCard.vue';
 
 const router = useRouter();
 const store = useSurenchereStore();
 const session = useSurenchereSessionStore();
 
 const canStart = computed(() => (store.room?.players.length ?? 0) >= 2);
+const shareUrl = computed(
+  () => `${window.location.origin}/surenchere?code=${store.room?.code ?? ''}`,
+);
 
 onMounted(() => {
   // If we have a stored session but no room loaded, try to (re)join.

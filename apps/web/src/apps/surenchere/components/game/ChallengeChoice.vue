@@ -1,32 +1,33 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-4">
+  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-5">
+    <!-- Header -->
     <div class="flex flex-col gap-1">
       <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
-        {{ isChooser ? 'À toi de choisir' : `${chooserName ?? 'Quelqu\'un'} choisit…` }}
+        {{ isChooser ? 'À toi de choisir' : `${chooserName ?? "Quelqu'un"} choisit…` }}
       </span>
       <h2 class="text-xl font-bold text-stone-900">Choisis un défi</h2>
     </div>
 
+    <!-- Challenge cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <button
         v-for="opt in options"
         :key="opt.id"
-        :disabled="!isChooser || !!customPhrase.trim()"
+        :disabled="!isChooser || hasCustomPhrase"
         class="flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition"
         :class="
-          isChooser && !customPhrase.trim()
-            ? 'border-stone-200 bg-stone-50 hover:border-amber-500 hover:bg-amber-50 cursor-pointer'
-            : 'border-stone-100 bg-stone-50 opacity-40 cursor-not-allowed'
+          !isChooser || hasCustomPhrase
+            ? 'border-stone-100 bg-stone-50 opacity-40 cursor-not-allowed'
+            : selectedId === opt.id
+              ? 'border-amber-500 bg-amber-50 cursor-pointer'
+              : 'border-stone-200 bg-stone-50 hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
         "
-        @click="pick(opt.id)"
+        @click="selectChallenge(opt.id, opt.letter)"
       >
         <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
           {{ opt.category }}
         </span>
-        <span class="text-sm text-stone-700 leading-snug">
-          {{ opt.prompt }}
-        </span>
-        <span class="text-2xl font-extrabold text-stone-900">« {{ opt.letter }} »</span>
+        <span class="text-sm text-stone-700 leading-snug">{{ opt.prompt }}</span>
       </button>
     </div>
 
@@ -39,39 +40,68 @@
       </div>
       <div class="flex flex-col gap-2">
         <label class="text-xs font-semibold text-stone-500">Écris ton propre défi…</label>
-        <div class="flex gap-2">
-          <input
-            v-model="customPhrase"
-            type="text"
-            maxlength="200"
-            placeholder="Ex: Citer des animaux qui commencent par..."
-            class="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
-          />
-          <button
-            type="button"
-            :disabled="customPhrase.trim().length < 5"
-            class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-            :class="
-              customPhrase.trim().length >= 5
-                ? 'bg-amber-600 text-white hover:bg-amber-700'
-                : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-            "
-            @click="pickCustom"
-          >
-            Valider
-          </button>
-        </div>
-        <p v-if="customPhrase.trim().length > 0 && customPhrase.trim().length < 5" class="text-xs text-red-500">
+        <input
+          v-model="customPhrase"
+          type="text"
+          maxlength="200"
+          placeholder="Ex: Citer des animaux qui commencent par..."
+          class="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          @input="onCustomPhraseInput"
+        />
+        <p
+          v-if="customPhrase.trim().length > 0 && customPhrase.trim().length < 5"
+          class="text-xs text-red-500"
+        >
           Le défi doit faire au moins 5 caractères.
         </p>
       </div>
+    </template>
+
+    <!-- Letter picker — shown once a challenge or phrase is selected (chooser only) -->
+    <template v-if="isChooser && hasSelection">
+      <div class="flex flex-col gap-2 border-t border-stone-100 pt-4">
+        <label class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+          Choisis la lettre
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="l in LETTERS"
+            :key="l"
+            class="w-9 h-9 rounded-lg text-sm font-bold transition border"
+            :class="
+              selectedLetter === l
+                ? 'bg-amber-600 text-white border-amber-600'
+                : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-amber-400 hover:bg-amber-50'
+            "
+            @click="selectedLetter = l"
+          >
+            {{ l }}
+          </button>
+        </div>
+      </div>
+
+      <button
+        :disabled="!canConfirm"
+        class="self-end rounded-xl px-6 py-2.5 text-sm font-semibold transition"
+        :class="
+          canConfirm
+            ? 'bg-amber-600 text-white hover:bg-amber-700'
+            : 'bg-stone-100 text-stone-400 cursor-not-allowed'
+        "
+        @click="confirm"
+      >
+        Confirmer →
+      </button>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { SurenchereChallenge } from '@wiki-race/shared';
+
+// Same set as the backend LETTERS constant
+const LETTERS = 'ABCDEFGHIJLMNOPRSTV'.split('');
 
 const props = defineProps<{
   options: SurenchereChallenge[];
@@ -80,17 +110,38 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  choose: [options: { challengeId?: string; customPhrase?: string }];
+  choose: [options: { challengeId?: string; customPhrase?: string; letter: string }];
 }>();
 
+const selectedId = ref<string | null>(null);
 const customPhrase = ref('');
+const selectedLetter = ref<string | null>(null);
 
-function pick(id: string): void {
-  if (props.isChooser && !customPhrase.value.trim()) emit('choose', { challengeId: id });
+const hasCustomPhrase = computed(() => customPhrase.value.trim().length >= 5);
+const hasSelection = computed(() => !!selectedId.value || hasCustomPhrase.value);
+const canConfirm = computed(() => hasSelection.value && !!selectedLetter.value);
+
+function selectChallenge(id: string, suggestedLetter: string): void {
+  if (!props.isChooser || hasCustomPhrase.value) return;
+  selectedId.value = id;
+  // Pre-fill with the challenge's suggested letter if nothing chosen yet
+  if (!selectedLetter.value) selectedLetter.value = suggestedLetter;
 }
 
-function pickCustom(): void {
-  const phrase = customPhrase.value.trim();
-  if (props.isChooser && phrase.length >= 5) emit('choose', { customPhrase: phrase });
+function onCustomPhraseInput(): void {
+  if (hasCustomPhrase.value) {
+    selectedId.value = null;
+    // Clear letter pre-fill when switching to custom
+    if (!LETTERS.includes(selectedLetter.value ?? '')) selectedLetter.value = null;
+  }
+}
+
+function confirm(): void {
+  if (!canConfirm.value || !selectedLetter.value) return;
+  if (hasCustomPhrase.value) {
+    emit('choose', { customPhrase: customPhrase.value.trim(), letter: selectedLetter.value });
+  } else if (selectedId.value) {
+    emit('choose', { challengeId: selectedId.value, letter: selectedLetter.value });
+  }
 }
 </script>

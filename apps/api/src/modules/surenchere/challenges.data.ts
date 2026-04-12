@@ -24,7 +24,10 @@ export const CHALLENGES: Omit<SurenchereChallenge, 'id' | 'letter' | 'source'>[]
   { category: '🌊 Fleuves', prompt: 'citer des fleuves avec la lettre' },
   { category: '🎮 Jeux vidéo', prompt: 'citer des jeux vidéo avec la lettre' },
   { category: '📺 Séries TV', prompt: 'citer des séries télévisées avec la lettre' },
-  { category: '⚔️ Personnages historiques', prompt: 'citer des personnages historiques avec la lettre' },
+  {
+    category: '⚔️ Personnages historiques',
+    prompt: 'citer des personnages historiques avec la lettre',
+  },
   { category: '🎸 Groupes de musique', prompt: 'citer des groupes de musique avec la lettre' },
   { category: '🧪 Sciences', prompt: 'citer des termes scientifiques avec la lettre' },
   { category: '🏛️ Villes françaises', prompt: 'citer des villes françaises avec la lettre' },

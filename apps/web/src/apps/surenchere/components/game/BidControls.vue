@@ -60,9 +60,7 @@ defineEmits<{
   challenge: [];
 }>();
 
-const minAmount = computed(() =>
-  props.currentBid > 0 ? props.currentBid + 1 : props.startBid,
-);
+const minAmount = computed(() => (props.currentBid > 0 ? props.currentBid + 1 : props.startBid));
 const amount = ref(minAmount.value);
 
 watch(minAmount, (v) => {

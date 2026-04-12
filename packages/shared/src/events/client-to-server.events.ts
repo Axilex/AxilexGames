@@ -57,13 +57,15 @@ export interface SurenchereBidPayload {
   amount: number;
 }
 
-export interface SurenchereVerdictPayload {
-  success: boolean;
+export interface SurenchereVoteWordPayload {
+  wordIndex: number;
+  valid: boolean;
 }
 
 export interface SurenchereChooseChallengePayload {
   challengeId?: string;
   customPhrase?: string;
+  letter?: string;
 }
 
 export interface SurenchereSubmitWordsPayload {
@@ -87,7 +89,7 @@ export interface ClientToServerEvents {
   'surenchere:bid': (payload: SurenchereBidPayload) => void;
   'surenchere:pass': () => void;
   'surenchere:challenge': () => void;
-  'surenchere:verdict': (payload: SurenchereVerdictPayload) => void;
+  'surenchere:vote_word': (payload: SurenchereVoteWordPayload) => void;
   'surenchere:choose_challenge': (payload: SurenchereChooseChallengePayload) => void;
   'surenchere:submit_words': (payload: SurenchereSubmitWordsPayload) => void;
   'surenchere:reset': () => void;

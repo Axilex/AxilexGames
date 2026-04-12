@@ -12,9 +12,7 @@
       </div>
     </div>
     <BaseButton :disabled="disabled" @click="$emit('start')">Lancer la partie</BaseButton>
-    <p v-if="disabled" class="text-xs text-stone-400 text-center">
-      Il faut au moins 2 joueurs.
-    </p>
+    <p v-if="disabled" class="text-xs text-stone-400 text-center">Il faut au moins 2 joueurs.</p>
   </div>
 </template>
 

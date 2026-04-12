@@ -11,7 +11,8 @@
       :disabled="disabled"
       :type="type"
       :class="[
-        'bg-white border rounded-lg px-3 py-2 text-stone-900 placeholder-stone-400 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
+        'bg-white border rounded-lg text-stone-900 placeholder-stone-400 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
+        size === 'lg' ? 'px-4 py-3 text-base' : 'px-3 py-2 text-sm',
         error ? 'border-red-400 bg-red-50' : 'border-stone-300 hover:border-stone-400',
         disabled && 'opacity-50 cursor-not-allowed bg-stone-50',
       ]"
@@ -35,6 +36,7 @@ withDefaults(
     disabled?: boolean;
     type?: string;
     id?: string;
+    size?: 'sm' | 'md' | 'lg';
   }>(),
   {
     type: 'text',
@@ -44,6 +46,7 @@ withDefaults(
     error: undefined,
     maxlength: undefined,
     id: undefined,
+    size: 'md',
   },
 );
 

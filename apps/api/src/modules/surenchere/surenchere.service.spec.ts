@@ -118,9 +118,9 @@ describe('SurenchereService', () => {
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.startGame('s1');
-    expect(() =>
-      service.chooseChallenge('s1', { customPhrase: 'a'.repeat(201) }),
-    ).toThrow('CUSTOM_PHRASE_TOO_LONG');
+    expect(() => service.chooseChallenge('s1', { customPhrase: 'a'.repeat(201) })).toThrow(
+      'CUSTOM_PHRASE_TOO_LONG',
+    );
   });
 
   it('chooseChallenge rejects when neither challengeId nor customPhrase provided', async () => {
@@ -201,7 +201,7 @@ describe('SurenchereService', () => {
     expect(() => service.submitWords('s1', ['a', 'b'])).toThrow('NOT_ENOUGH_WORDS');
   });
 
-  it('submitWords cleans words and moves to VERDICT', async () => {
+  it('submitWords cleans words and moves to VOTING', async () => {
     const { service } = await setup();
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
@@ -210,26 +210,79 @@ describe('SurenchereService', () => {
     service.placeBid('s1', 2);
     service.triggerChallenge('s1');
     const after = service.submitWords('s1', [' foo ', '', 'bar', '  ']);
-    expect(after.phase).toBe('VERDICT');
+    expect(after.phase).toBe('VOTING');
     expect(after.currentWords).toEqual(['foo', 'bar']);
+    expect(after.wordVotes).toEqual({});
   });
 
-  it('resolveVerdict success non-forced → score += bid', async () => {
+  it('voteWord rejects the bidder voting on their own words', async () => {
     const { service } = await setup();
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
-    service.placeBid('s1', 7);
+    service.placeBid('s1', 1);
     service.triggerChallenge('s1');
-    service.submitWords('s1', ['a', 'b', 'c', 'd', 'e', 'f', 'g']);
-    const { room: r, result } = service.resolveVerdict('s1', true);
-    expect(r.players.find((p) => p.socketId === 's1')!.score).toBe(7);
-    expect(result.forcedBonus).toBe(0);
-    expect(result.words).toHaveLength(7);
+    service.submitWords('s1', ['apple']);
+    expect(() => service.voteWord('s1', 0, true)).toThrow('BIDDER_CANNOT_VOTE');
   });
 
-  it('resolveVerdict success forced → score += bid + passCount bonus', async () => {
+  it('voteWord rejects double vote on same word', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.joinRoom('s3', room.code, 'Carol'); // need 2 voters so first vote doesn't resolve
+    const started = service.startGame('s1');
+    pickFirstChallenge(service, started, 's1');
+    service.placeBid('s1', 1);
+    service.triggerChallenge('s1');
+    service.submitWords('s1', ['apple']);
+    service.voteWord('s2', 0, true); // doesn't resolve yet (s3 hasn't voted)
+    expect(() => service.voteWord('s2', 0, false)).toThrow('ALREADY_VOTED');
+  });
+
+  it('voteWord resolves when all voters have voted all words (success)', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    const started = service.startGame('s1');
+    pickFirstChallenge(service, started, 's1');
+    service.placeBid('s1', 2);
+    service.triggerChallenge('s1');
+    service.submitWords('s1', ['apple', 'banana']);
+    // s2 is the only voter
+    const r1 = service.voteWord('s2', 0, true);
+    expect(r1.resolved).toBe(false);
+    const r2 = service.voteWord('s2', 1, true);
+    expect(r2.resolved).toBe(true);
+    expect(r2.result?.success).toBe(true);
+    expect(r2.result?.wordVerdicts).toEqual([true, true]);
+    expect(r2.room.players.find((p) => p.socketId === 's1')!.score).toBe(2);
+    expect(r2.room.phase).toBe('ROUND_END');
+  });
+
+  it('voteWord resolves as failure when majority rejects words', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.joinRoom('s3', room.code, 'Carol');
+    const started = service.startGame('s1');
+    pickFirstChallenge(service, started, 's1');
+    service.placeBid('s1', 2);
+    service.triggerChallenge('s1');
+    service.submitWords('s1', ['apple', 'banana']);
+    // Both voters reject both words
+    service.voteWord('s2', 0, false);
+    service.voteWord('s2', 1, false);
+    service.voteWord('s3', 0, false);
+    const { resolved, result } = service.voteWord('s3', 1, false);
+    expect(resolved).toBe(true);
+    expect(result?.success).toBe(false);
+    expect(result?.wordVerdicts).toEqual([false, false]);
+    expect(result?.pointsDelta).toBe(0);
+  });
+
+  it('voteWord success forced → score = accepted word count (no bonus)', async () => {
     const { service } = await setup();
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
@@ -237,44 +290,45 @@ describe('SurenchereService', () => {
     service.joinRoom('s4', room.code, 'Dave');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
-    service.placeBid('s1', 5);
+    service.placeBid('s1', 1);
     service.pass('s2');
     service.pass('s3');
     service.pass('s4');
-    // now room.phase === WORDS, wasForced=true, 3 passes
-    service.submitWords('s1', ['a', 'b', 'c', 'd', 'e']);
-    const { room: r, result } = service.resolveVerdict('s1', true);
-    expect(result.forcedBonus).toBe(3);
-    expect(r.players.find((p) => p.socketId === 's1')!.score).toBe(8);
+    // wasForced=true, 3 passes
+    service.submitWords('s1', ['apple']);
+    // s2, s3, s4 are voters (all 3 vote valid)
+    service.voteWord('s2', 0, true);
+    service.voteWord('s3', 0, true);
+    const { resolved, result } = service.voteWord('s4', 0, true);
+    expect(resolved).toBe(true);
+    expect(result?.wasForced).toBe(true);
+    expect(result?.success).toBe(true);
+    // 1 valid word → score = 1
+    expect(room.players.find((p) => p.socketId === 's1')!.score).toBe(1);
   });
 
-  it('resolveVerdict failure forced → no negative bonus (delta = -bid)', async () => {
+  it('voteWord resolves with partial majority (tie = rejected)', async () => {
     const { service } = await setup();
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
-    service.placeBid('s2', 6);
-    service.pass('s1');
-    service.pass('s3');
-    service.submitWords('s2', ['a', 'b', 'c', 'd', 'e', 'f']);
-    const { room: r, result } = service.resolveVerdict('s1', false);
-    expect(result.forcedBonus).toBe(0);
-    expect(r.players.find((p) => p.socketId === 's2')!.score).toBe(-6);
-  });
-
-  it('resolveVerdict failure → score -= bid (negative allowed)', async () => {
-    const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
-    service.joinRoom('s2', room.code, 'Bob');
-    const started = service.startGame('s1');
-    pickFirstChallenge(service, started, 's1');
-    service.placeBid('s2', 10);
-    service.triggerChallenge('s2');
-    service.submitWords('s2', ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']);
-    const { room: r } = service.resolveVerdict('s1', false);
-    expect(r.players.find((p) => p.socketId === 's2')!.score).toBe(-10);
+    service.placeBid('s1', 2);
+    service.triggerChallenge('s1');
+    service.submitWords('s1', ['apple', 'banana']);
+    // s2 votes: apple valid, banana invalid
+    // s3 votes: apple valid, banana valid
+    // apple: 2 valid / 0 invalid = accepted
+    // banana: 1 valid / 1 invalid = tie = rejected
+    service.voteWord('s2', 0, true);
+    service.voteWord('s2', 1, false);
+    service.voteWord('s3', 0, true);
+    const { resolved, result } = service.voteWord('s3', 1, true);
+    expect(resolved).toBe(true);
+    // 1 accepted word < bid of 2 → failure
+    expect(result?.success).toBe(false);
+    expect(result?.wordVerdicts).toEqual([true, false]);
   });
 
   it('game finishes after totalRounds', async () => {
@@ -283,12 +337,13 @@ describe('SurenchereService', () => {
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
-    service.placeBid('s1', 3);
+    service.placeBid('s1', 1);
     service.triggerChallenge('s1');
-    service.submitWords('s1', ['a', 'b', 'c']);
-    const res = service.resolveVerdict('s1', true);
-    expect(res.finished).toBe(true);
-    expect(res.room.phase).toBe('FINISHED');
+    service.submitWords('s1', ['apple']);
+    const { resolved, finished } = service.voteWord('s2', 0, true);
+    expect(resolved).toBe(true);
+    expect(finished).toBe(true);
+    expect(room.phase).toBe('FINISHED');
   });
 
   it('resetRoom refuses non-host and clears scores', async () => {
@@ -297,15 +352,16 @@ describe('SurenchereService', () => {
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
-    service.placeBid('s1', 4);
+    service.placeBid('s1', 1);
     service.triggerChallenge('s1');
-    service.submitWords('s1', ['a', 'b', 'c', 'd']);
-    service.resolveVerdict('s1', true);
+    service.submitWords('s1', ['apple']);
+    service.voteWord('s2', 0, true); // resolve
     expect(() => service.resetRoom('s2')).toThrow('NOT_HOST');
     const r = service.resetRoom('s1');
     expect(r.phase).toBe('WAITING');
     expect(r.players.every((p) => p.score === 0)).toBe(true);
     expect(r.challengeOptions).toHaveLength(0);
     expect(r.wasForced).toBe(false);
+    expect(r.wordVotes).toEqual({});
   });
 });

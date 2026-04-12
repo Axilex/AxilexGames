@@ -5,9 +5,14 @@ export type SurenchereGamePhase =
   | 'CHOOSING_CHALLENGE'
   | 'BIDDING'
   | 'WORDS'
-  | 'VERDICT'
+  | 'VOTING'
   | 'ROUND_END'
   | 'FINISHED';
+
+export interface WordVotes {
+  valid: string[]; // socketIds who voted valid
+  invalid: string[]; // socketIds who voted invalid
+}
 
 export interface SurencherePlayer {
   socketId: string;
@@ -46,6 +51,7 @@ export interface SurenchereRoom {
   passedSocketIds: string[];
   currentWords: string[] | null;
   wasForced: boolean;
+  wordVotes: Record<number, WordVotes>;
   roundStarterIndex: number;
   lastRoundResult: SurenchereRoundResult | null;
 }
@@ -56,9 +62,10 @@ export interface SurenchereRoundResult {
   challenge: SurenchereChallenge;
   bid: number;
   success: boolean;
-  pointsDelta: number;
+  pointsDelta: number; // = number of valid words (always >= 0)
   words: string[];
-  forcedBonus: number;
+  wordVerdicts: boolean[]; // per-word: true if accepted by majority vote
+  wasForced: boolean;
 }
 
 export type SurenchereRoomDTO = SurenchereRoom;

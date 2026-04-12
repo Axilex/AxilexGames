@@ -22,14 +22,14 @@ export const surenchereSocket = {
   challenge(): void {
     socketService.emit('surenchere:challenge', undefined as never);
   },
-  chooseChallenge(options: { challengeId?: string; customPhrase?: string }): void {
+  chooseChallenge(options: { challengeId?: string; customPhrase?: string; letter: string }): void {
     socketService.emit('surenchere:choose_challenge', options);
   },
   submitWords(words: string[]): void {
     socketService.emit('surenchere:submit_words', { words });
   },
-  verdict(success: boolean): void {
-    socketService.emit('surenchere:verdict', { success });
+  voteWord(wordIndex: number, valid: boolean): void {
+    socketService.emit('surenchere:vote_word', { wordIndex, valid });
   },
   reset(): void {
     socketService.emit('surenchere:reset', undefined as never);

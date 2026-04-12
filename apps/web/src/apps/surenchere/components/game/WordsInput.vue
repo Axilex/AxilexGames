@@ -22,9 +22,7 @@
       </div>
       <BaseButton :disabled="!isValid" @click="submit">Valider mes mots</BaseButton>
     </template>
-    <p v-else class="text-sm text-stone-500 text-center py-4">
-      En attente de la saisie…
-    </p>
+    <p v-else class="text-sm text-stone-500 text-center py-4">En attente de la saisie…</p>
   </div>
 </template>
 
