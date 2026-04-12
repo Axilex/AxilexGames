@@ -17,11 +17,14 @@ export interface SurencherePlayer {
   status: PlayerStatus;
 }
 
+export type ChallengeSource = 'predefined' | 'custom';
+
 export interface SurenchereChallenge {
   id: string;
   category: string;
   prompt: string;
   letter: string;
+  source: ChallengeSource;
 }
 
 export interface SurenchereRoomSettings {

@@ -163,12 +163,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     const mode = payload.mode ?? GameMode.CLASSIC;
 
-    // Validate Sprint: timer required
-    if (mode === GameMode.SPRINT && !payload.timeLimitSeconds) {
-      client.emit('error', 'SPRINT_REQUIRES_TIME_LIMIT');
-      return;
-    }
-
     // Validate Bingo: 4–6 constraints required
     if (mode === GameMode.BINGO) {
       const n = payload.bingoConstraintIds?.length ?? 0;
@@ -189,7 +183,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       payload.clickLimit,
       payload.startSlug,
       payload.targetSlug,
-      payload.driftObjective,
       payload.bingoConstraintIds,
     );
 

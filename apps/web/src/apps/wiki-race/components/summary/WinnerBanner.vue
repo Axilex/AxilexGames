@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { GameSummary } from '@wiki-race/shared';
-import { GameMode, DriftObjective } from '@wiki-race/shared';
+import { GameMode } from '@wiki-race/shared';
 
 const props = defineProps<{ summary: GameSummary }>();
 
@@ -34,16 +34,12 @@ const winner = computed(() => props.summary.players.find((p) => p.isWinner));
 const modeEmoji = computed(() => {
   const emojis: Record<GameMode, string> = {
     [GameMode.CLASSIC]: '🏆',
-    [GameMode.SPRINT]: '⚡',
-    [GameMode.LABYRINTH]: '🧩',
-    [GameMode.DRIFT]: '🌊',
     [GameMode.BINGO]: '🎯',
   };
   return emojis[props.summary.mode] ?? '🏆';
 });
 
 const winLabel = computed(() => {
-  if (props.summary.mode === GameMode.DRIFT) return 'remporte le drift !';
   if (props.summary.mode === GameMode.BINGO) return 'remporte le bingo !';
   return 'a gagné !';
 });
@@ -58,18 +54,6 @@ const formattedTime = computed(() => {
 const subline = computed(() => {
   const w = winner.value;
   if (!w) return '';
-
-  if (props.summary.mode === GameMode.DRIFT) {
-    const score = w.driftBestScore;
-    const obj = props.summary.driftObjective;
-    if (score === null) return `En ${formattedTime.value}`;
-    let scoreLabel = String(score);
-    if (obj === DriftObjective.OLDEST_TITLE_YEAR)
-      scoreLabel = score === 9999 ? '(aucune année)' : `année ${score}`;
-    else if (obj === DriftObjective.SHORTEST) scoreLabel = `${score} mots`;
-    else if (obj === DriftObjective.MOST_IMAGES) scoreLabel = `${score} images`;
-    return `${scoreLabel} · ${formattedTime.value}`;
-  }
 
   if (props.summary.mode === GameMode.BINGO) {
     return `${w.bingoValidated.length} contrainte${w.bingoValidated.length !== 1 ? 's' : ''} validée${w.bingoValidated.length !== 1 ? 's' : ''} · ${formattedTime.value}`;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { SurenchereChallenge } from '@wiki-race/shared';
 
-export const CHALLENGES: Omit<SurenchereChallenge, 'id' | 'letter'>[] = [
+export const CHALLENGES: Omit<SurenchereChallenge, 'id' | 'letter' | 'source'>[] = [
   { category: '⚽ Football', prompt: 'citer des joueurs de foot avec la lettre' },
   { category: '🎾 Tennis', prompt: 'citer des joueurs de tennis avec la lettre' },
   { category: '🏀 Basketball', prompt: 'citer des joueurs de basket avec la lettre' },
@@ -22,14 +22,21 @@ export const CHALLENGES: Omit<SurenchereChallenge, 'id' | 'letter'>[] = [
   { category: '🌐 Langues', prompt: 'citer des langues parlées dans le monde avec la lettre' },
   { category: '🏔️ Montagnes', prompt: 'citer des chaînes de montagnes avec la lettre' },
   { category: '🌊 Fleuves', prompt: 'citer des fleuves avec la lettre' },
+  { category: '🎮 Jeux vidéo', prompt: 'citer des jeux vidéo avec la lettre' },
+  { category: '📺 Séries TV', prompt: 'citer des séries télévisées avec la lettre' },
+  { category: '⚔️ Personnages historiques', prompt: 'citer des personnages historiques avec la lettre' },
+  { category: '🎸 Groupes de musique', prompt: 'citer des groupes de musique avec la lettre' },
+  { category: '🧪 Sciences', prompt: 'citer des termes scientifiques avec la lettre' },
+  { category: '🏛️ Villes françaises', prompt: 'citer des villes françaises avec la lettre' },
+  { category: '🎤 Rappeurs', prompt: 'citer des rappeurs/rappeuses avec la lettre' },
 ];
 
-const LETTERS = 'ABCDEFGHIJLMNOPRSTV'.split('');
+export const LETTERS = 'ABCDEFGHIJLMNOPRSTV'.split('');
 
 export function pickRandomChallenge(): SurenchereChallenge {
   const base = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
   const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-  return { ...base, id: randomUUID(), letter };
+  return { ...base, id: randomUUID(), letter, source: 'predefined' };
 }
 
 export function pickRandomChallenges(n: number): SurenchereChallenge[] {

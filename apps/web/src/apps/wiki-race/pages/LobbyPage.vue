@@ -68,41 +68,12 @@
             <!-- Mode selector -->
             <ModeSelector v-model="selectedMode" />
 
-            <!-- Classic / Sprint: target article + time limit -->
+            <!-- Classic: target article + time limit -->
             <template v-if="needsTarget">
               <TimeLimitSelector v-model="timeLimitSeconds" />
               <div class="flex flex-col gap-3">
                 <WikiPageSearch label="Page de départ" @select="startPage = $event" />
                 <WikiPageSearch label="Page d'arrivée" @select="targetPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
-              </div>
-            </template>
-
-            <!-- Labyrinth: target + click limit -->
-            <template v-else-if="selectedMode === 'LABYRINTH'">
-              <ClickLimitSelector
-                v-model="clickLimit"
-                :options="[4, 5, 6]"
-                label="Nombre de clics maximum"
-              />
-              <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
-                <WikiPageSearch label="Page d'arrivée" @select="targetPage = $event" />
-                <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
-              </div>
-            </template>
-
-            <!-- WikiDrift: objective + click limit + start only -->
-            <template v-else-if="selectedMode === 'DRIFT'">
-              <DriftObjectiveSelector v-model="driftObjective" />
-              <ClickLimitSelector
-                v-model="clickLimit"
-                :options="[5, 6, 8, 10]"
-                :allow-infinite="true"
-                label="Clics maximum par joueur"
-              />
-              <div class="flex flex-col gap-3">
-                <WikiPageSearch label="Page de départ" @select="startPage = $event" />
                 <p class="text-xs text-stone-400">Laisser vide = sélection aléatoire</p>
               </div>
             </template>
@@ -174,11 +145,7 @@
                   </span>
                 </div>
                 <div
-                  v-if="
-                    lobbyStore.choosingPreview.mode === 'CLASSIC' ||
-                    lobbyStore.choosingPreview.mode === 'SPRINT' ||
-                    lobbyStore.choosingPreview.mode === 'LABYRINTH'
-                  "
+                  v-if="lobbyStore.choosingPreview.mode === 'CLASSIC'"
                   class="flex items-center gap-2 text-xs"
                 >
                   <span class="w-14 text-stone-400 shrink-0">Arrivée</span>
@@ -188,13 +155,8 @@
                 </div>
               </div>
 
-              <!-- CLASSIC / SPRINT: timer -->
-              <template
-                v-if="
-                  lobbyStore.choosingPreview.mode === 'CLASSIC' ||
-                  lobbyStore.choosingPreview.mode === 'SPRINT'
-                "
-              >
+              <!-- CLASSIC: timer -->
+              <template v-if="lobbyStore.choosingPreview.mode === 'CLASSIC'">
                 <div class="flex flex-wrap gap-2">
                   <span
                     v-if="lobbyStore.choosingPreview.timeLimitSeconds"
@@ -203,7 +165,7 @@
                     ⏱ {{ lobbyStore.choosingPreview.timeLimitSeconds / 60 }} min
                   </span>
                   <span
-                    v-else-if="lobbyStore.choosingPreview.mode === 'CLASSIC'"
+                    v-else
                     class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs text-stone-400"
                   >
                     ⏱ Sans limite
@@ -211,14 +173,8 @@
                 </div>
               </template>
 
-              <!-- LABYRINTH / DRIFT / BINGO: clics -->
-              <template
-                v-else-if="
-                  lobbyStore.choosingPreview.mode === 'LABYRINTH' ||
-                  lobbyStore.choosingPreview.mode === 'DRIFT' ||
-                  lobbyStore.choosingPreview.mode === 'BINGO'
-                "
-              >
+              <!-- BINGO: clics + contraintes -->
+              <template v-else-if="lobbyStore.choosingPreview.mode === 'BINGO'">
                 <div class="flex flex-wrap gap-2">
                   <span
                     v-if="
@@ -235,23 +191,9 @@
                   >
                     🖱 ∞ Illimité
                   </span>
-                  <!-- DRIFT: objectif -->
-                  <span
-                    v-if="
-                      lobbyStore.choosingPreview.mode === 'DRIFT' &&
-                      lobbyStore.choosingPreview.driftObjective
-                    "
-                    class="inline-flex items-center gap-1 rounded-full bg-stone-100 border border-stone-200 px-2.5 py-0.5 text-xs font-medium text-stone-600"
-                  >
-                    {{ driftObjectiveLabel(lobbyStore.choosingPreview.driftObjective) }}
-                  </span>
                 </div>
-                <!-- BINGO: contraintes -->
                 <div
-                  v-if="
-                    lobbyStore.choosingPreview.mode === 'BINGO' &&
-                    lobbyStore.choosingPreview.bingoConstraintIds?.length
-                  "
+                  v-if="lobbyStore.choosingPreview.bingoConstraintIds?.length"
                   class="flex flex-col gap-1"
                 >
                   <span class="text-xs text-stone-400">
@@ -293,7 +235,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { GameMode, DriftObjective, BINGO_CONSTRAINTS } from '@wiki-race/shared';
+import { GameMode, BINGO_CONSTRAINTS } from '@wiki-race/shared';
 import type { BingoConstraintId } from '@wiki-race/shared';
 import { useLobbyStore } from '../stores/useLobbyStore';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
@@ -310,7 +252,6 @@ import TimeLimitSelector from '../components/lobby/TimeLimitSelector.vue';
 import WikiPageSearch from '../components/lobby/WikiPageSearch.vue';
 import ModeSelector from '../components/lobby/ModeSelector.vue';
 import ClickLimitSelector from '../components/lobby/ClickLimitSelector.vue';
-import DriftObjectiveSelector from '../components/lobby/DriftObjectiveSelector.vue';
 import BingoConstraintPicker from '../components/lobby/BingoConstraintPicker.vue';
 import RulesCard from '../components/RulesCard.vue';
 
@@ -325,7 +266,6 @@ const confirming = ref(false);
 const selectedMode = ref<GameMode>(GameMode.CLASSIC);
 const timeLimitSeconds = ref<number | null>(null);
 const clickLimit = ref<number | null>(6);
-const driftObjective = ref<DriftObjective>(DriftObjective.OLDEST_TITLE_YEAR);
 const selectedConstraints = ref<BingoConstraintId[]>([]);
 
 interface WikiResult {
@@ -339,12 +279,9 @@ const room = computed(() => lobbyStore.room!);
 const isHost = computed(() => room.value?.hostPseudo === sessionStore.pseudo);
 const isChooser = computed(() => room.value?.chooserPseudo === sessionStore.pseudo);
 
-const needsTarget = computed(
-  () => selectedMode.value === GameMode.CLASSIC || selectedMode.value === GameMode.SPRINT,
-);
+const needsTarget = computed(() => selectedMode.value === GameMode.CLASSIC);
 
 const canConfirm = computed(() => {
-  if (selectedMode.value === GameMode.SPRINT && !timeLimitSeconds.value) return false;
   if (selectedMode.value === GameMode.BINGO) {
     return selectedConstraints.value.length >= 4 && selectedConstraints.value.length <= 6;
   }
@@ -360,22 +297,10 @@ function handleConfirm() {
   confirming.value = true;
   const mode = selectedMode.value;
 
-  if (mode === GameMode.CLASSIC || mode === GameMode.SPRINT) {
+  if (mode === GameMode.CLASSIC) {
     confirmChoices(mode, timeLimitSeconds.value, {
       startSlug: startPage.value?.slug,
       targetSlug: targetPage.value?.slug,
-    });
-  } else if (mode === GameMode.LABYRINTH) {
-    confirmChoices(mode, null, {
-      clickLimit: clickLimit.value,
-      startSlug: startPage.value?.slug,
-      targetSlug: targetPage.value?.slug,
-    });
-  } else if (mode === GameMode.DRIFT) {
-    confirmChoices(mode, null, {
-      clickLimit: clickLimit.value,
-      startSlug: startPage.value?.slug,
-      driftObjective: driftObjective.value,
     });
   } else if (mode === GameMode.BINGO) {
     confirmChoices(mode, null, {
@@ -395,15 +320,9 @@ function emitPreview() {
     mode,
     startTitle: startPage.value?.title,
   };
-  if (mode === GameMode.CLASSIC || mode === GameMode.SPRINT) {
+  if (mode === GameMode.CLASSIC) {
     payload.targetTitle = targetPage.value?.title;
     payload.timeLimitSeconds = timeLimitSeconds.value;
-  } else if (mode === GameMode.LABYRINTH) {
-    payload.targetTitle = targetPage.value?.title;
-    payload.clickLimit = clickLimit.value;
-  } else if (mode === GameMode.DRIFT) {
-    payload.clickLimit = clickLimit.value;
-    payload.driftObjective = driftObjective.value;
   } else if (mode === GameMode.BINGO) {
     payload.clickLimit = clickLimit.value;
     payload.bingoConstraintIds = selectedConstraints.value;
@@ -422,15 +341,7 @@ watch(
 
 // Re-emit whenever any option changes
 watch(
-  [
-    selectedMode,
-    timeLimitSeconds,
-    clickLimit,
-    driftObjective,
-    selectedConstraints,
-    startPage,
-    targetPage,
-  ],
+  [selectedMode, timeLimitSeconds, clickLimit, selectedConstraints, startPage, targetPage],
   emitPreview,
   { deep: true },
 );
@@ -441,21 +352,6 @@ const MODE_META: Record<GameMode, { icon: string; label: string; description: st
     icon: '🏁',
     label: 'Classique',
     description: 'Premier à atteindre la page cible gagne.',
-  },
-  [GameMode.SPRINT]: {
-    icon: '⚡',
-    label: 'Sprint',
-    description: 'Même but, mais avec un timer court.',
-  },
-  [GameMode.LABYRINTH]: {
-    icon: '🧩',
-    label: 'Labyrinthe',
-    description: 'Nombre de clics limité. Réfléchissez avant de cliquer !',
-  },
-  [GameMode.DRIFT]: {
-    icon: '🌊',
-    label: 'WikiDrift',
-    description: 'Explorez Wikipedia selon un objectif secret.',
   },
   [GameMode.BINGO]: {
     icon: '🎯',
@@ -472,11 +368,6 @@ function modeLabel(mode: GameMode): string {
 }
 function modeDescription(mode: GameMode): string {
   return MODE_META[mode]?.description ?? '';
-}
-function driftObjectiveLabel(obj: DriftObjective): string {
-  if (obj === DriftObjective.OLDEST_TITLE_YEAR) return '📜 Plus ancienne';
-  if (obj === DriftObjective.SHORTEST) return '📄 Plus courte';
-  return "🖼 Plus d'images";
 }
 function constraintLabel(id: BingoConstraintId): string {
   return BINGO_CONSTRAINTS.find((c) => c.id === id)?.label ?? id;

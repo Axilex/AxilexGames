@@ -42,24 +42,6 @@ const modes = [
     description: 'Premier à atteindre la page cible gagne.',
   },
   {
-    value: GameMode.SPRINT,
-    icon: '⚡',
-    label: 'Sprint',
-    description: 'Même but, mais avec un timer court. Atteignez la cible avant la fin !',
-  },
-  {
-    value: GameMode.LABYRINTH,
-    icon: '🧩',
-    label: 'Labyrinthe',
-    description: 'Nombre de clics limité. Réfléchissez avant de cliquer !',
-  },
-  {
-    value: GameMode.DRIFT,
-    icon: '🌊',
-    label: 'WikiDrift',
-    description: 'Pas de cible — explorez Wikipedia selon un objectif secret.',
-  },
-  {
     value: GameMode.BINGO,
     icon: '🎯',
     label: 'Bingo Wiki',

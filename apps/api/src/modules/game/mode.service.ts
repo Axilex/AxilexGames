@@ -4,10 +4,19 @@ import {
   GameSession,
   Room,
   PlayerStatus,
-  DriftObjective,
   GameMode,
 } from '@wiki-race/shared';
 import { BingoConstraintId } from '@wiki-race/shared';
+
+export type PageCategory =
+  | 'PERSON'
+  | 'COUNTRY'
+  | 'CITY'
+  | 'SPORTSPERSON'
+  | 'ARTIST'
+  | 'FILM_SERIES'
+  | 'SCIENCE'
+  | 'UNKNOWN';
 
 function normalizeSlug(slug: string): string {
   try {
@@ -26,106 +35,67 @@ function stripHtml(html: string): string {
 
 @Injectable()
 export class ModeService {
-  // ─── Drift ───────────────────────────────────────────────────────────────
-
-  computeDriftScore(objective: DriftObjective, html: string, slug: string): number {
-    switch (objective) {
-      case DriftObjective.OLDEST_TITLE_YEAR: {
-        const title = normalizeSlug(slug);
-        const matches = title.match(/\b\d{4}\b/g);
-        if (!matches) return 9999;
-        return Math.min(...matches.map(Number));
-      }
-      case DriftObjective.SHORTEST: {
-        const text = stripHtml(html);
-        if (!text) return 0;
-        return text.split(' ').length;
-      }
-      case DriftObjective.MOST_IMAGES: {
-        return (html.match(/<img/g) ?? []).length;
-      }
-    }
-  }
-
-  isBetterDriftScore(
-    objective: DriftObjective,
-    candidate: number,
-    current: number | null,
-  ): boolean {
-    if (current === null) return true;
-    switch (objective) {
-      case DriftObjective.OLDEST_TITLE_YEAR:
-        return candidate < current;
-      case DriftObjective.SHORTEST:
-        return candidate < current;
-      case DriftObjective.MOST_IMAGES:
-        return candidate > current;
-    }
-  }
-
-  updatePlayerDriftScore(
-    player: Player,
-    score: number,
-    slug: string,
-    objective: DriftObjective,
-  ): void {
-    if (this.isBetterDriftScore(objective, score, player.driftBestScore)) {
-      player.driftBestScore = score;
-      player.driftBestSlug = slug;
-    }
-  }
-
-  rankDriftPlayers(players: Player[], objective: DriftObjective): Player[] {
-    return [...players].sort((a, b) => {
-      // null scores go last
-      if (a.driftBestScore === null && b.driftBestScore === null) return 0;
-      if (a.driftBestScore === null) return 1;
-      if (b.driftBestScore === null) return -1;
-
-      switch (objective) {
-        case DriftObjective.OLDEST_TITLE_YEAR:
-        case DriftObjective.SHORTEST:
-          // lower is better
-          if (a.driftBestScore !== b.driftBestScore) return a.driftBestScore - b.driftBestScore;
-          break;
-        case DriftObjective.MOST_IMAGES:
-          // higher is better
-          if (a.driftBestScore !== b.driftBestScore) return b.driftBestScore - a.driftBestScore;
-          break;
-      }
-      // tie-break: fewer hops = explored more directly
-      return a.history.length - b.history.length;
-    });
-  }
-
   // ─── Bingo ───────────────────────────────────────────────────────────────
 
   checkConstraints(ids: BingoConstraintId[], slug: string, html: string): BingoConstraintId[] {
-    return ids.filter((id) => this.checkOne(id, slug, html));
+    const category = this.detectPageCategory(html);
+    return ids.filter((id) => this.checkOne(id, slug, html, category));
   }
 
-  private checkOne(id: BingoConstraintId, slug: string, html: string): boolean {
+  /**
+   * Classifies a Wikipedia page by reading infobox `<th>` row headers.
+   * Checks from most specific to least specific so that, e.g., a footballer
+   * whose infobox also has "Naissance" is returned as SPORTSPERSON, not PERSON.
+   */
+  detectPageCategory(html: string): PageCategory {
+    // French commune infoboxes use class="commune", not class="infobox"
+    if (/<table[^>]*class="[^"]*\bcommune\b[^"]*"/i.test(html)) return 'CITY';
+
+    if (!this.hasInfobox(html)) {
+      return this.isSciencePage(html) ? 'SCIENCE' : 'UNKNOWN';
+    }
+
+    // Most specific sub-types of PERSON first
+    if (/<th[^>]*>\s*Sport\s*<\/th>/i.test(html)) return 'SPORTSPERSON';
+    if (this.isArtistInfobox(html)) return 'ARTIST';
+    if (/<th[^>]*>\s*Naissance\s*<\/th>/i.test(html)) return 'PERSON';
+
+    if (/<th[^>]*>\s*(Capitale|Gentilé)\s*<\/th>/i.test(html)) return 'COUNTRY';
+    if (/<th[^>]*>\s*Code postal\s*<\/th>/i.test(html)) return 'CITY';
+    if (/<th[^>]*>\s*(Réalisation|Réalisateur|Chaîne|Créateur)\s*<\/th>/i.test(html))
+      return 'FILM_SERIES';
+    if (this.isSciencePage(html)) return 'SCIENCE';
+
+    return 'UNKNOWN';
+  }
+
+  private checkOne(
+    id: BingoConstraintId,
+    slug: string,
+    html: string,
+    category: PageCategory,
+  ): boolean {
     switch (id) {
       case 'year_in_title':
         return this.checkYearInTitle(slug);
       case 'biographical':
-        return this.checkBiographical(html);
+        return category === 'PERSON' || category === 'ARTIST' || category === 'SPORTSPERSON';
       case 'country':
-        return this.checkCountry(html);
+        return category === 'COUNTRY';
       case 'has_main_image':
         return this.checkHasMainImage(html);
       case 'artist':
-        return this.checkArtist(html);
+        return category === 'ARTIST';
       case 'sportsperson':
-        return this.checkSportsperson(html);
+        return category === 'SPORTSPERSON';
       case 'city':
-        return this.checkCity(html);
+        return category === 'CITY';
       case 'many_images':
         return this.checkManyImages(html);
       case 'film_or_series':
-        return this.checkFilmOrSeries(html);
+        return category === 'FILM_SERIES';
       case 'science':
-        return this.checkScience(html);
+        return category === 'SCIENCE';
     }
   }
 
@@ -147,18 +117,30 @@ export class ModeService {
     return html.slice(idx, idx + 6000);
   }
 
+  /**
+   * True when the infobox has an "Activité" or "Profession" row AND the
+   * infobox area contains an artist-related keyword.
+   */
+  private isArtistInfobox(html: string): boolean {
+    if (!/<th[^>]*>\s*(Activité|Profession)\s*<\/th>/i.test(html)) return false;
+    return /\b(chanteur|chanteuse|musicien|musicienne|acteur|actrice|peintre|compositeur|compositrice|artiste)\b/i.test(
+      stripHtml(this.infoboxArea(html)),
+    );
+  }
+
+  /**
+   * True when the first paragraph mentions a scientific discipline.
+   * Scoping to the lede avoids flagging biographies of scientists.
+   */
+  private isSciencePage(html: string): boolean {
+    const firstP = html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[0] ?? '';
+    return /\b(mathématiques|physique|chimie|biologie|astronomie|géologie|mécanique|thermodynamique)\b/i.test(
+      stripHtml(firstP),
+    );
+  }
+
   private checkYearInTitle(slug: string): boolean {
     return /\b\d{4}\b/.test(normalizeSlug(slug));
-  }
-
-  /** Biographical page: infobox must have a "Naissance" row header. */
-  private checkBiographical(html: string): boolean {
-    return this.hasInfobox(html) && /<th[^>]*>\s*Naissance\s*<\/th>/i.test(html);
-  }
-
-  /** Country page: infobox must have a "Capitale" or "Gentilé" row header. */
-  private checkCountry(html: string): boolean {
-    return this.hasInfobox(html) && /<th[^>]*>\s*(Capitale|Gentilé)\s*<\/th>/i.test(html);
   }
 
   /** Main image: a Wikimedia thumbnail must appear inside the infobox area. */
@@ -166,54 +148,9 @@ export class ModeService {
     return /<img[^>]+src="[^"]*\/thumb\/[^"]*"/i.test(this.infoboxArea(html));
   }
 
-  /**
-   * Artist page: infobox has an "Activité" or "Profession" row AND the
-   * infobox area contains an artist-related keyword.
-   */
-  private checkArtist(html: string): boolean {
-    if (!this.hasInfobox(html)) return false;
-    if (!/<th[^>]*>\s*(Activité|Profession)\s*<\/th>/i.test(html)) return false;
-    return /\b(chanteur|chanteuse|musicien|musicienne|acteur|actrice|peintre|compositeur|compositrice|artiste)\b/i.test(
-      stripHtml(this.infoboxArea(html)),
-    );
-  }
-
-  /** Sportsperson: infobox has a "Sport" row header (universal on French WP athlete pages). */
-  private checkSportsperson(html: string): boolean {
-    return this.hasInfobox(html) && /<th[^>]*>\s*Sport\s*<\/th>/i.test(html);
-  }
-
-  /**
-   * City / commune: the table carries the CSS class "commune" (French WP standard),
-   * or the infobox has a "Code postal" row header as fallback.
-   */
-  private checkCity(html: string): boolean {
-    if (/<table[^>]*class="[^"]*\bcommune\b[^"]*"/i.test(html)) return true;
-    return this.hasInfobox(html) && /<th[^>]*>\s*Code postal\s*<\/th>/i.test(html);
-  }
-
-  /** 10+ Wikimedia thumbnail images (excludes small icons and flags). */
+  /** 5+ Wikimedia thumbnail images (excludes small icons and flags). */
   private checkManyImages(html: string): boolean {
-    return (html.match(/<img[^>]+src="[^"]*\/thumb\/[^"]*"/gi) ?? []).length >= 10;
-  }
-
-  /** Film or series: infobox has a "Réalisation", "Réalisateur", "Chaîne" or "Créateur" row. */
-  private checkFilmOrSeries(html: string): boolean {
-    return (
-      this.hasInfobox(html) &&
-      /<th[^>]*>\s*(Réalisation|Réalisateur|Chaîne|Créateur)\s*<\/th>/i.test(html)
-    );
-  }
-
-  /**
-   * Science article: the first paragraph's text mentions a scientific discipline.
-   * Using only the lede avoids matching biographies of scientists.
-   */
-  private checkScience(html: string): boolean {
-    const firstP = html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[0] ?? '';
-    return /\b(mathématiques|physique|chimie|biologie|astronomie|géologie|mécanique|thermodynamique)\b/i.test(
-      stripHtml(firstP),
-    );
+    return (html.match(/<img[^>]+src="[^"]*\/thumb\/[^"]*"/gi) ?? []).length >= 5;
   }
 
   checkBingoWin(player: Player, game: GameSession): boolean {

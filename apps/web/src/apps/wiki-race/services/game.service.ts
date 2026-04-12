@@ -1,7 +1,6 @@
 import { socketService } from '@/shared/services/socket.service';
 import type {
   GameMode,
-  DriftObjective,
   BingoConstraintId,
   ChoosingPreviewPayload,
 } from '@wiki-race/shared';
@@ -10,7 +9,6 @@ export interface ConfirmChoicesOptions {
   clickLimit?: number | null;
   startSlug?: string;
   targetSlug?: string;
-  driftObjective?: DriftObjective;
   bingoConstraintIds?: BingoConstraintId[];
 }
 

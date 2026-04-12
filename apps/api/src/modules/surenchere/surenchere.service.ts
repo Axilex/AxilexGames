@@ -5,8 +5,9 @@ import {
   SurencherePlayer,
   SurenchereRoundResult,
 } from '@wiki-race/shared';
+import { randomUUID } from 'crypto';
 import { SurenchereRegistryService } from './surenchere-registry.service';
-import { pickRandomChallenges } from './challenges.data';
+import { pickRandomChallenges, LETTERS } from './challenges.data';
 
 const MAX_PLAYERS = 8;
 const DEFAULT_ROUNDS = 5;
@@ -119,14 +120,35 @@ export class SurenchereService {
     room.phase = 'CHOOSING_CHALLENGE';
   }
 
-  chooseChallenge(socketId: string, challengeId: string): SurenchereRoom {
+  chooseChallenge(
+    socketId: string,
+    options: { challengeId?: string; customPhrase?: string },
+  ): SurenchereRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
     if (room.challengeChooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
-    const picked = room.challengeOptions.find((c) => c.id === challengeId);
-    if (!picked) throw new Error('CHALLENGE_NOT_FOUND');
-    room.currentChallenge = picked;
+
+    if (options.customPhrase !== undefined) {
+      const phrase = options.customPhrase.trim();
+      if (phrase.length < 5) throw new Error('CUSTOM_PHRASE_TOO_SHORT');
+      if (phrase.length > 200) throw new Error('CUSTOM_PHRASE_TOO_LONG');
+      const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+      room.currentChallenge = {
+        id: randomUUID(),
+        category: '✏️ Défi custom',
+        prompt: phrase,
+        letter,
+        source: 'custom',
+      };
+    } else if (options.challengeId !== undefined) {
+      const picked = room.challengeOptions.find((c) => c.id === options.challengeId);
+      if (!picked) throw new Error('CHALLENGE_NOT_FOUND');
+      room.currentChallenge = picked;
+    } else {
+      throw new Error('MISSING_CHALLENGE_OPTION');
+    }
+
     room.challengeOptions = [];
     room.phase = 'BIDDING';
     return room;

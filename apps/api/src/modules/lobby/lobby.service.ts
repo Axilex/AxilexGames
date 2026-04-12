@@ -139,8 +139,6 @@ export class LobbyService {
       currentSlug: '',
       history: [],
       lastNavigationAt: 0,
-      driftBestScore: null,
-      driftBestSlug: null,
       bingoValidated: [],
       bingoValidatedOnSlug: {},
     };

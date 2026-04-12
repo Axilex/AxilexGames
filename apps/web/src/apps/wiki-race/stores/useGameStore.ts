@@ -7,7 +7,7 @@ import type {
   PlayerProgressDTO,
   NavigationStep,
 } from '@wiki-race/shared';
-import { GameMode, DriftObjective } from '@wiki-race/shared';
+import { GameMode } from '@wiki-race/shared';
 import type { BingoConstraintId } from '@wiki-race/shared';
 
 export const useGameStore = defineStore('game', () => {
@@ -24,7 +24,6 @@ export const useGameStore = defineStore('game', () => {
   const startSlug = computed(() => gameState.value?.startSlug ?? '');
   const mode = computed(() => gameState.value?.mode ?? GameMode.CLASSIC);
   const clickLimit = computed(() => gameState.value?.clickLimit ?? null);
-  const driftObjective = computed(() => gameState.value?.driftObjective ?? null);
   const bingoConstraints = computed(() => gameState.value?.bingoConstraints ?? null);
 
   function setGameState(state: GameStateDTO): void {
@@ -96,7 +95,6 @@ export const useGameStore = defineStore('game', () => {
     startSlug,
     mode,
     clickLimit,
-    driftObjective,
     bingoConstraints,
     setGameState,
     setCurrentPage,
@@ -108,6 +106,5 @@ export const useGameStore = defineStore('game', () => {
     reset,
     // Re-export enums for template use
     GameMode,
-    DriftObjective,
   };
 });

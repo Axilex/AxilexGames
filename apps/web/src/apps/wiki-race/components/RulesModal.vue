@@ -119,27 +119,6 @@ const modes = [
     description: 'Premier à atteindre la page cible gagne. Une limite de temps est optionnelle.',
   },
   {
-    value: GameMode.SPRINT,
-    icon: '⚡',
-    label: 'Sprint',
-    description:
-      "Même objectif que Classique, mais avec un timer obligatoire. Si le temps s'écoule, la partie se termine sans gagnant.",
-  },
-  {
-    value: GameMode.LABYRINTH,
-    icon: '🧩',
-    label: 'Labyrinthe',
-    description:
-      'Atteindre la cible avec un nombre de clics limité. Épuiser ses clics = élimination. Le dernier joueur restant ou le premier à la cible gagne.',
-  },
-  {
-    value: GameMode.DRIFT,
-    icon: '🌊',
-    label: 'WikiDrift',
-    description:
-      "Pas de cible ! Chaque joueur navigue librement pour optimiser un score selon l'objectif (page la plus ancienne, la plus courte ou avec le plus d'images). Gagne le meilleur score à épuisement des clics.",
-  },
-  {
     value: GameMode.BINGO,
     icon: '🎯',
     label: 'Bingo Wiki',
@@ -169,7 +148,7 @@ const CONSTRAINT_DESCRIPTIONS: Record<string, string> = {
   artist: "Page sur un artiste — l'infobox indique chanteur, musicien, acteur, peintre ou artiste.",
   sportsperson: "Page sur un sportif — l'infobox indique son sport.",
   city: 'Page sur une commune ou ville — classe infobox "commune" ou code postal présent.',
-  many_images: 'La page contient au moins 10 images réelles (miniatures Wikimedia).',
+  many_images: 'La page contient au moins 5 images réelles (miniatures Wikimedia).',
   film_or_series:
     "Page sur un film ou une série — l'infobox mentionne un réalisateur ou une chaîne TV.",
   science:

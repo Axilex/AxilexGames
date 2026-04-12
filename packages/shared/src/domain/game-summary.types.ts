@@ -1,5 +1,5 @@
 import { NavigationStep } from './wikipedia.types';
-import { GameMode, DriftObjective } from './enums';
+import { GameMode } from './enums';
 import { BingoConstraintId, BingoCardEntry } from './bingo.types';
 
 export interface PlayerSummary {
@@ -9,8 +9,6 @@ export interface PlayerSummary {
   hopCount: number;
   path: NavigationStep[];
   rank: number | null;
-  driftBestScore: number | null;
-  driftBestSlug: string | null;
   bingoValidated: BingoConstraintId[];
   bingoCardEntries: BingoCardEntry[];
 }
@@ -25,7 +23,6 @@ export interface GameSummary {
   timeLimitSeconds: number | null;
   clickLimit: number | null;
   winnerPseudo: string | null;
-  driftObjective: DriftObjective | null;
   bingoConstraintIds: BingoConstraintId[] | null;
   players: PlayerSummary[];
 }

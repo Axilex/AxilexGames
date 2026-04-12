@@ -14,7 +14,7 @@ function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO
     ],
     settings: { totalRounds: 5, startBid: 5 },
     currentRound: 1,
-    currentChallenge: { id: 'c1', category: 'Test', prompt: 'p', letter: 'A' },
+    currentChallenge: { id: 'c1', category: 'Test', prompt: 'p', letter: 'A', source: 'predefined' },
     challengeOptions: [],
     challengeChooserSocketId: null,
     currentBid: 0,
@@ -87,9 +87,9 @@ describe('useSurenchereStore', () => {
         phase: 'CHOOSING_CHALLENGE',
         challengeChooserSocketId: 's1',
         challengeOptions: [
-          { id: 'a', category: 'X', prompt: 'p', letter: 'A' },
-          { id: 'b', category: 'Y', prompt: 'p', letter: 'B' },
-          { id: 'c', category: 'Z', prompt: 'p', letter: 'C' },
+          { id: 'a', category: 'X', prompt: 'p', letter: 'A', source: 'predefined' },
+          { id: 'b', category: 'Y', prompt: 'p', letter: 'B', source: 'predefined' },
+          { id: 'c', category: 'Z', prompt: 'p', letter: 'C', source: 'predefined' },
         ],
       }),
     );
@@ -119,7 +119,7 @@ describe('useSurenchereStore', () => {
     const result: SurenchereRoundResult = {
       bidderSocketId: 's1',
       bidderPseudo: 'Alice',
-      challenge: { id: 'c1', category: 'Test', prompt: 'p', letter: 'A' },
+      challenge: { id: 'c1', category: 'Test', prompt: 'p', letter: 'A', source: 'predefined' },
       bid: 7,
       success: true,
       pointsDelta: 7,

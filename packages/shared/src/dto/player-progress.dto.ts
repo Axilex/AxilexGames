@@ -7,7 +7,5 @@ export interface PlayerProgressDTO {
   hopCount: number;
   currentSlug: string;
   clicksLeft: number | null;
-  driftBestScore: number | null;
-  driftBestSlug: string | null;
   bingoValidated: BingoConstraintId[];
 }

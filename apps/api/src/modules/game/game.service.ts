@@ -6,7 +6,6 @@ import {
   GameStatus,
   PlayerStatus,
   GameMode,
-  DriftObjective,
   GameStateDTO,
   PlayerProgressDTO,
   GameSummary,
@@ -47,7 +46,6 @@ export class GameService {
     clickLimit?: number | null,
     chosenStartSlug?: string,
     chosenTargetSlug?: string,
-    driftObjective?: DriftObjective,
     bingoConstraintIds?: BingoConstraintId[],
   ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
     const room = this.getRoom(roomCode);
@@ -61,7 +59,6 @@ export class GameService {
       clickLimit,
       chosenStartSlug,
       chosenTargetSlug,
-      driftObjective,
       bingoConstraintIds,
     );
   }
@@ -74,7 +71,6 @@ export class GameService {
     clickLimit?: number | null,
     chosenStartSlug?: string,
     chosenTargetSlug?: string,
-    driftObjective?: DriftObjective,
     bingoConstraintIds?: BingoConstraintId[],
   ): Promise<{ gameStateDTO: GameStateDTO; startPage: WikipediaPage }> {
     // Reset players from previous game
@@ -84,8 +80,7 @@ export class GameService {
       }
     }
 
-    const needsTarget =
-      mode === GameMode.CLASSIC || mode === GameMode.SPRINT || mode === GameMode.LABYRINTH;
+    const needsTarget = mode === GameMode.CLASSIC;
     const random = this.wikipedia.selectStartAndTarget();
     const start = normalizeSlug(chosenStartSlug ?? random.start);
     const target = needsTarget ? normalizeSlug(chosenTargetSlug ?? random.target) : null;
@@ -104,7 +99,6 @@ export class GameService {
       clickLimit: clickLimit ?? null,
       winnerSocketId: null,
       timerHandle: null,
-      driftObjective: driftObjective ?? null,
       bingoConstraintIds: bingoConstraintIds ?? null,
     };
 
@@ -114,8 +108,6 @@ export class GameService {
         player.currentSlug = start;
         player.history = [];
         player.lastNavigationAt = 0;
-        player.driftBestScore = null;
-        player.driftBestSlug = null;
         player.bingoValidated = [];
         player.bingoValidatedOnSlug = {};
       }
@@ -167,58 +159,12 @@ export class GameService {
     const game = room.game!;
 
     switch (game.mode) {
-      case GameMode.CLASSIC:
-      case GameMode.SPRINT: {
+      case GameMode.CLASSIC: {
         if (normalizedTarget === game.targetSlug) {
           player.status = PlayerStatus.FINISHED;
           const summary = this.buildSummary(room, socketId);
           this.endGame(room, socketId);
           return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
-        }
-        break;
-      }
-
-      case GameMode.LABYRINTH: {
-        if (normalizedTarget === game.targetSlug) {
-          player.status = PlayerStatus.FINISHED;
-          const summary = this.buildSummary(room, socketId);
-          this.endGame(room, socketId);
-          return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
-        }
-        if (game.clickLimit !== null && player.history.length >= game.clickLimit) {
-          player.status = PlayerStatus.FINISHED;
-          if (this.modeService.allPlayersFinished(room)) {
-            const summary = this.buildSummary(room, null);
-            this.endGame(room, null);
-            return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
-          }
-          return { page, progress: this.toPlayerProgress(player, game), finished: true };
-        }
-        break;
-      }
-
-      case GameMode.DRIFT: {
-        if (game.driftObjective) {
-          const score = this.modeService.computeDriftScore(
-            game.driftObjective,
-            page.htmlContent,
-            normalizedTarget,
-          );
-          this.modeService.updatePlayerDriftScore(
-            player,
-            score,
-            normalizedTarget,
-            game.driftObjective,
-          );
-        }
-        if (game.clickLimit !== null && player.history.length >= game.clickLimit) {
-          player.status = PlayerStatus.FINISHED;
-          if (this.modeService.allPlayersFinished(room)) {
-            const summary = this.buildSummary(room, null);
-            this.endGame(room, null);
-            return { page, progress: this.toPlayerProgress(player, game), finished: true, summary };
-          }
-          return { page, progress: this.toPlayerProgress(player, game), finished: true };
         }
         break;
       }
@@ -313,7 +259,6 @@ export class GameService {
       startTime: game.startTime,
       timeLimitSeconds: game.timeLimitSeconds,
       clickLimit: game.clickLimit,
-      driftObjective: game.driftObjective,
       bingoConstraints: game.bingoConstraintIds,
       playerStatuses: Array.from(room.players.values()).map((p) => this.toPlayerProgress(p, game)),
     };
@@ -328,8 +273,6 @@ export class GameService {
       hopCount: player.history.length,
       currentSlug: player.currentSlug,
       clicksLeft,
-      driftBestScore: player.driftBestScore,
-      driftBestSlug: player.driftBestSlug,
       bingoValidated: player.bingoValidated,
     };
   }
@@ -359,8 +302,6 @@ export class GameService {
         hopCount: p.history.length,
         path: p.history,
         rank: null,
-        driftBestScore: p.driftBestScore,
-        driftBestSlug: p.driftBestSlug,
         bingoValidated: p.bingoValidated,
         bingoCardEntries,
       };
@@ -369,22 +310,6 @@ export class GameService {
     let resolvedWinnerPseudo: string | null = winnerId
       ? (room.players.get(winnerId)?.pseudo ?? null)
       : null;
-
-    // Ranked modes: compute ranks and override winnerPseudo
-    if (game.mode === GameMode.DRIFT && game.driftObjective) {
-      const ranked = this.modeService.rankDriftPlayers(
-        Array.from(room.players.values()),
-        game.driftObjective,
-      );
-      ranked.forEach((p, idx) => {
-        const summary = players.find((ps) => ps.pseudo === p.pseudo);
-        if (summary) summary.rank = idx + 1;
-      });
-      resolvedWinnerPseudo = ranked[0]?.pseudo ?? null;
-      players.forEach((p) => {
-        p.isWinner = p.pseudo === resolvedWinnerPseudo;
-      });
-    }
 
     if (game.mode === GameMode.BINGO) {
       const ranked = [...players].sort((a, b) => {
@@ -410,7 +335,6 @@ export class GameService {
       timeLimitSeconds: game.timeLimitSeconds,
       clickLimit: game.clickLimit,
       winnerPseudo: resolvedWinnerPseudo,
-      driftObjective: game.driftObjective,
       bingoConstraintIds: game.bingoConstraintIds,
       players,
     };

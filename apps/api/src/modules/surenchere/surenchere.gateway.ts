@@ -92,7 +92,10 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereChooseChallengePayload,
   ): void {
-    const room = this.surenchere.chooseChallenge(client.id, payload.challengeId);
+    const room = this.surenchere.chooseChallenge(client.id, {
+      challengeId: payload.challengeId,
+      customPhrase: payload.customPhrase,
+    });
     this.server.to(room.code).emit('surenchere:room:update', room);
   }
 

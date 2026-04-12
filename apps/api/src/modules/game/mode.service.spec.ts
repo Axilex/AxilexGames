@@ -1,7 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModeService } from './mode.service';
-import { DriftObjective, GameMode, PlayerStatus } from '@wiki-race/shared';
+import { GameMode, PlayerStatus } from '@wiki-race/shared';
 import type { Player, GameSession } from '@wiki-race/shared';
+
+// ─── HTML helpers ────────────────────────────────────────────────────────────
+function infoboxWith(...rows: string[]): string {
+  const thRows = rows.map((r) => `<tr><th>${r}</th><td>value</td></tr>`).join('');
+  return `<table class="infobox">${thRows}</table>`;
+}
+function infoboxWithContent(rows: string[], extraContent: string): string {
+  const thRows = rows.map((r) => `<tr><th>${r}</th><td>${extraContent}</td></tr>`).join('');
+  return `<table class="infobox">${thRows}</table>`;
+}
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
@@ -11,8 +21,6 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     currentSlug: 'France',
     history: [],
     lastNavigationAt: 0,
-    driftBestScore: null,
-    driftBestSlug: null,
     bingoValidated: [],
     bingoValidatedOnSlug: {},
     ...overrides,
@@ -21,7 +29,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 
 function makeGame(overrides: Partial<GameSession> = {}): GameSession {
   return {
-    mode: GameMode.DRIFT,
+    mode: GameMode.BINGO,
     startSlug: 'France',
     targetSlug: null,
     startTime: Date.now(),
@@ -30,13 +38,12 @@ function makeGame(overrides: Partial<GameSession> = {}): GameSession {
     clickLimit: 6,
     winnerSocketId: null,
     timerHandle: null,
-    driftObjective: DriftObjective.OLDEST_TITLE_YEAR,
     bingoConstraintIds: null,
     ...overrides,
   };
 }
 
-describe('ModeService — Drift', () => {
+describe('ModeService — detectPageCategory', () => {
   let service: ModeService;
 
   beforeEach(async () => {
@@ -46,65 +53,76 @@ describe('ModeService — Drift', () => {
     service = module.get<ModeService>(ModeService);
   });
 
-  it('computeDriftScore OLDEST_TITLE_YEAR extracts lowest year from slug', () => {
-    const score = service.computeDriftScore(
-      DriftObjective.OLDEST_TITLE_YEAR,
-      '',
-      'Guerre_1914_1918',
-    );
-    expect(score).toBe(1914);
+  it('SPORTSPERSON when infobox has Sport row', () => {
+    expect(service.detectPageCategory(infoboxWith('Sport'))).toBe('SPORTSPERSON');
   });
 
-  it('computeDriftScore OLDEST_TITLE_YEAR returns 9999 when no year', () => {
-    const score = service.computeDriftScore(DriftObjective.OLDEST_TITLE_YEAR, '', 'Paris');
-    expect(score).toBe(9999);
+  it('SPORTSPERSON takes priority over PERSON when both Sport and Naissance present', () => {
+    expect(service.detectPageCategory(infoboxWith('Sport', 'Naissance'))).toBe('SPORTSPERSON');
   });
 
-  it('computeDriftScore SHORTEST counts words in HTML text', () => {
-    const html = '<p>Hello world foo</p>';
-    const score = service.computeDriftScore(DriftObjective.SHORTEST, html, 'any');
-    expect(score).toBe(3);
+  it('ARTIST when infobox has Activité row + artist keyword in content', () => {
+    const html = infoboxWithContent(['Activité'], 'chanteur, compositeur');
+    expect(service.detectPageCategory(html)).toBe('ARTIST');
   });
 
-  it('computeDriftScore MOST_IMAGES counts img tags', () => {
-    const html = '<img src="a"/><img src="b"/><p>no image</p><img src="c"/>';
-    const score = service.computeDriftScore(DriftObjective.MOST_IMAGES, html, 'any');
-    expect(score).toBe(3);
+  it('ARTIST takes priority over PERSON when Activité+keyword and Naissance present', () => {
+    const html = `<table class="infobox">
+      <tr><th>Naissance</th><td>1980</td></tr>
+      <tr><th>Activité</th><td>actrice</td></tr>
+    </table>`;
+    expect(service.detectPageCategory(html)).toBe('ARTIST');
   });
 
-  it('isBetterDriftScore OLDEST_TITLE_YEAR: lower year wins', () => {
-    expect(service.isBetterDriftScore(DriftObjective.OLDEST_TITLE_YEAR, 1900, 1950)).toBe(true);
-    expect(service.isBetterDriftScore(DriftObjective.OLDEST_TITLE_YEAR, 2000, 1950)).toBe(false);
+  it('PERSON when infobox has Naissance row (no Sport, no artist keyword)', () => {
+    expect(service.detectPageCategory(infoboxWith('Naissance'))).toBe('PERSON');
   });
 
-  it('isBetterDriftScore SHORTEST: lower count wins', () => {
-    expect(service.isBetterDriftScore(DriftObjective.SHORTEST, 10, 50)).toBe(true);
-    expect(service.isBetterDriftScore(DriftObjective.SHORTEST, 100, 50)).toBe(false);
+  it('COUNTRY when infobox has Capitale row', () => {
+    expect(service.detectPageCategory(infoboxWith('Capitale'))).toBe('COUNTRY');
   });
 
-  it('isBetterDriftScore MOST_IMAGES: higher count wins', () => {
-    expect(service.isBetterDriftScore(DriftObjective.MOST_IMAGES, 10, 5)).toBe(true);
-    expect(service.isBetterDriftScore(DriftObjective.MOST_IMAGES, 2, 5)).toBe(false);
+  it('COUNTRY when infobox has Gentilé row', () => {
+    expect(service.detectPageCategory(infoboxWith('Gentilé'))).toBe('COUNTRY');
   });
 
-  it('isBetterDriftScore returns true when current is null', () => {
-    expect(service.isBetterDriftScore(DriftObjective.OLDEST_TITLE_YEAR, 1800, null)).toBe(true);
+  it('CITY when table has class commune', () => {
+    expect(service.detectPageCategory('<table class="commune"><tr><td>Lyon</td></tr></table>')).toBe('CITY');
   });
 
-  it('rankDriftPlayers sorts by score correctly (OLDEST_TITLE_YEAR)', () => {
-    const p1 = makePlayer({ pseudo: 'Alice', driftBestScore: 1800 });
-    const p2 = makePlayer({ pseudo: 'Bob', driftBestScore: 1950 });
-    const p3 = makePlayer({ pseudo: 'Carl', driftBestScore: null });
-    const ranked = service.rankDriftPlayers([p2, p3, p1], DriftObjective.OLDEST_TITLE_YEAR);
-    expect(ranked.map((p) => p.pseudo)).toEqual(['Alice', 'Bob', 'Carl']);
+  it('CITY when infobox has Code postal row', () => {
+    expect(service.detectPageCategory(infoboxWith('Code postal'))).toBe('CITY');
   });
 
-  it('rankDriftPlayers places null scores last', () => {
-    const p1 = makePlayer({ pseudo: 'Alice', driftBestScore: null });
-    const p2 = makePlayer({ pseudo: 'Bob', driftBestScore: 2000 });
-    const ranked = service.rankDriftPlayers([p1, p2], DriftObjective.OLDEST_TITLE_YEAR);
-    expect(ranked[0].pseudo).toBe('Bob');
-    expect(ranked[1].pseudo).toBe('Alice');
+  it('FILM_SERIES when infobox has Réalisation row', () => {
+    expect(service.detectPageCategory(infoboxWith('Réalisation'))).toBe('FILM_SERIES');
+  });
+
+  it('FILM_SERIES when infobox has Chaîne row', () => {
+    expect(service.detectPageCategory(infoboxWith('Chaîne'))).toBe('FILM_SERIES');
+  });
+
+  it('SCIENCE when first paragraph mentions a scientific discipline (no infobox)', () => {
+    const html = '<p>La <b>physique</b> est une science fondamentale.</p>';
+    expect(service.detectPageCategory(html)).toBe('SCIENCE');
+  });
+
+  it('SCIENCE when first paragraph mentions discipline even with unrelated infobox', () => {
+    const html = '<p>La <b>chimie</b> est l\'étude des substances.</p>' + infoboxWith('Auteur');
+    expect(service.detectPageCategory(html)).toBe('SCIENCE');
+  });
+
+  it('UNKNOWN when no recognizable signals', () => {
+    expect(service.detectPageCategory(infoboxWith('Auteur', 'Éditeur'))).toBe('UNKNOWN');
+  });
+
+  it('UNKNOWN when no infobox and no science keyword', () => {
+    expect(service.detectPageCategory('<p>Un article quelconque.</p>')).toBe('UNKNOWN');
+  });
+
+  it('does not return ARTIST for Activité row without artist keyword', () => {
+    const html = infoboxWithContent(['Activité'], 'ingénieur civil');
+    expect(service.detectPageCategory(html)).toBe('UNKNOWN');
   });
 });
 
@@ -143,23 +161,142 @@ describe('ModeService — Bingo', () => {
     expect(validated).not.toContain('biographical');
   });
 
-  it('checkConstraints - many_images counts 10+ thumbnail img tags', () => {
+  it('checkConstraints - country finds Capitale in infobox', () => {
+    const html = '<table class="infobox"><tr><th>Capitale</th><td>Paris</td></tr></table>';
+    const validated = service.checkConstraints(['country'], 'any', html);
+    expect(validated).toContain('country');
+  });
+
+  it('checkConstraints - country finds Gentilé in infobox', () => {
+    const html = '<table class="infobox"><tr><th>Gentilé</th><td>Français</td></tr></table>';
+    const validated = service.checkConstraints(['country'], 'any', html);
+    expect(validated).toContain('country');
+  });
+
+  it('checkConstraints - country does not match without infobox', () => {
+    const validated = service.checkConstraints(['country'], 'any', '<p>La France est grande.</p>');
+    expect(validated).not.toContain('country');
+  });
+
+  it('checkConstraints - has_main_image finds thumb img in infobox', () => {
+    const html =
+      '<table class="infobox"><tr><td><img src="https://upload.wikimedia.org/thumb/photo.jpg"/></td></tr></table>';
+    const validated = service.checkConstraints(['has_main_image'], 'any', html);
+    expect(validated).toContain('has_main_image');
+  });
+
+  it('checkConstraints - has_main_image does not match without infobox', () => {
+    const html = '<p><img src="https://upload.wikimedia.org/thumb/photo.jpg"/></p>';
+    const validated = service.checkConstraints(['has_main_image'], 'any', html);
+    expect(validated).not.toContain('has_main_image');
+  });
+
+  it('checkConstraints - artist matches Activité + artist keyword', () => {
+    const html =
+      '<table class="infobox"><tr><th>Activité</th><td>chanteur, compositeur</td></tr></table>';
+    const validated = service.checkConstraints(['artist'], 'any', html);
+    expect(validated).toContain('artist');
+  });
+
+  it('checkConstraints - artist does not match without artist keyword', () => {
+    const html =
+      '<table class="infobox"><tr><th>Activité</th><td>ingénieur civil</td></tr></table>';
+    const validated = service.checkConstraints(['artist'], 'any', html);
+    expect(validated).not.toContain('artist');
+  });
+
+  it('checkConstraints - artist does not match without infobox', () => {
+    const validated = service.checkConstraints(
+      ['artist'],
+      'any',
+      '<p>Il est chanteur professionnel.</p>',
+    );
+    expect(validated).not.toContain('artist');
+  });
+
+  it('checkConstraints - sportsperson finds Sport in infobox', () => {
+    const html = '<table class="infobox"><tr><th>Sport</th><td>Football</td></tr></table>';
+    const validated = service.checkConstraints(['sportsperson'], 'any', html);
+    expect(validated).toContain('sportsperson');
+  });
+
+  it('checkConstraints - sportsperson does not match without Sport row', () => {
+    const html = '<table class="infobox"><tr><th>Naissance</th><td>1990</td></tr></table>';
+    const validated = service.checkConstraints(['sportsperson'], 'any', html);
+    expect(validated).not.toContain('sportsperson');
+  });
+
+  it('checkConstraints - city matches commune class', () => {
+    const html = '<table class="commune"><tr><td>Lyon</td></tr></table>';
+    const validated = service.checkConstraints(['city'], 'any', html);
+    expect(validated).toContain('city');
+  });
+
+  it('checkConstraints - city matches Code postal in infobox', () => {
+    const html =
+      '<table class="infobox"><tr><th>Code postal</th><td>75001</td></tr></table>';
+    const validated = service.checkConstraints(['city'], 'any', html);
+    expect(validated).toContain('city');
+  });
+
+  it('checkConstraints - city does not match without commune or Code postal', () => {
+    const html = '<table class="infobox"><tr><th>Population</th><td>1M</td></tr></table>';
+    const validated = service.checkConstraints(['city'], 'any', html);
+    expect(validated).not.toContain('city');
+  });
+
+  it('checkConstraints - many_images counts 5+ thumbnail img tags', () => {
     const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
-    const html = img.repeat(10);
+    const html = img.repeat(5);
     const validated = service.checkConstraints(['many_images'], 'any', html);
     expect(validated).toContain('many_images');
   });
 
-  it('checkConstraints - many_images false when < 10 thumbnail images', () => {
+  it('checkConstraints - many_images false when < 5 thumbnail images', () => {
     const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
-    const html = img.repeat(5);
+    const html = img.repeat(4);
     const validated = service.checkConstraints(['many_images'], 'any', html);
     expect(validated).not.toContain('many_images');
   });
 
+  it('checkConstraints - film_or_series finds Réalisation in infobox', () => {
+    const html =
+      '<table class="infobox"><tr><th>Réalisation</th><td>Spielberg</td></tr></table>';
+    const validated = service.checkConstraints(['film_or_series'], 'any', html);
+    expect(validated).toContain('film_or_series');
+  });
+
+  it('checkConstraints - film_or_series finds Chaîne in infobox', () => {
+    const html = '<table class="infobox"><tr><th>Chaîne</th><td>TF1</td></tr></table>';
+    const validated = service.checkConstraints(['film_or_series'], 'any', html);
+    expect(validated).toContain('film_or_series');
+  });
+
+  it('checkConstraints - film_or_series does not match without infobox', () => {
+    const validated = service.checkConstraints(
+      ['film_or_series'],
+      'any',
+      '<p>Réalisation exceptionnelle.</p>',
+    );
+    expect(validated).not.toContain('film_or_series');
+  });
+
+  it('checkConstraints - science finds discipline in first paragraph', () => {
+    const html = '<p>La <b>physique</b> est une science fondamentale.</p>';
+    const validated = service.checkConstraints(['science'], 'any', html);
+    expect(validated).toContain('science');
+  });
+
+  it('checkConstraints - science does not match when discipline only in body', () => {
+    const html =
+      '<p>Albert Einstein est un scientifique célèbre.</p><p>Il a travaillé en physique.</p>';
+    const validated = service.checkConstraints(['science'], 'any', html);
+    expect(validated).not.toContain('science');
+  });
+
   it('checkConstraints - returns only matching constraints from given subset', () => {
     const img = '<img src="https://upload.wikimedia.org/thumb/a.jpg"/>';
-    const html = img.repeat(10);
+    const html = img.repeat(5);
     const validated = service.checkConstraints(['many_images', 'biographical'], 'any', html);
     expect(validated).toContain('many_images');
     expect(validated).not.toContain('biographical');

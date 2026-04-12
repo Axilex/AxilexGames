@@ -112,8 +112,8 @@ import { surenchereSocket } from '../services/surenchere.service';
 
 const store = useSurenchereStore();
 
-function onChooseChallenge(challengeId: string): void {
-  surenchereSocket.chooseChallenge(challengeId);
+function onChooseChallenge(options: { challengeId?: string; customPhrase?: string }): void {
+  surenchereSocket.chooseChallenge(options);
 }
 function onBid(amount: number): void {
   surenchereSocket.bid(amount);

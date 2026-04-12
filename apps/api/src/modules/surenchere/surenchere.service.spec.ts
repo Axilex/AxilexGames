@@ -12,7 +12,7 @@ async function setup() {
 
 function pickFirstChallenge(service: SurenchereService, room: SurenchereRoom, socketId: string) {
   const opt = room.challengeOptions[0];
-  return service.chooseChallenge(socketId, opt.id);
+  return service.chooseChallenge(socketId, { challengeId: opt.id });
 }
 
 describe('SurenchereService', () => {
@@ -74,9 +74,9 @@ describe('SurenchereService', () => {
     const room = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
-    expect(() => service.chooseChallenge('s2', started.challengeOptions[0].id)).toThrow(
-      'NOT_CHOOSER',
-    );
+    expect(() =>
+      service.chooseChallenge('s2', { challengeId: started.challengeOptions[0].id }),
+    ).toThrow('NOT_CHOOSER');
   });
 
   it('chooseChallenge fixes the challenge and moves to BIDDING', async () => {
@@ -85,10 +85,50 @@ describe('SurenchereService', () => {
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     const picked = started.challengeOptions[1];
-    const after = service.chooseChallenge('s1', picked.id);
+    const after = service.chooseChallenge('s1', { challengeId: picked.id });
     expect(after.phase).toBe('BIDDING');
     expect(after.currentChallenge?.id).toBe(picked.id);
     expect(after.challengeOptions).toHaveLength(0);
+  });
+
+  it('chooseChallenge accepts a valid custom phrase', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.startGame('s1');
+    const after = service.chooseChallenge('s1', { customPhrase: 'Citer des animaux marins' });
+    expect(after.phase).toBe('BIDDING');
+    expect(after.currentChallenge?.source).toBe('custom');
+    expect(after.currentChallenge?.prompt).toBe('Citer des animaux marins');
+    expect(after.currentChallenge?.letter).toBeTruthy();
+  });
+
+  it('chooseChallenge rejects custom phrase shorter than 5 chars', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.startGame('s1');
+    expect(() => service.chooseChallenge('s1', { customPhrase: 'abc' })).toThrow(
+      'CUSTOM_PHRASE_TOO_SHORT',
+    );
+  });
+
+  it('chooseChallenge rejects custom phrase longer than 200 chars', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.startGame('s1');
+    expect(() =>
+      service.chooseChallenge('s1', { customPhrase: 'a'.repeat(201) }),
+    ).toThrow('CUSTOM_PHRASE_TOO_LONG');
+  });
+
+  it('chooseChallenge rejects when neither challengeId nor customPhrase provided', async () => {
+    const { service } = await setup();
+    const room = service.createRoom('s1', 'Alice');
+    service.joinRoom('s2', room.code, 'Bob');
+    service.startGame('s1');
+    expect(() => service.chooseChallenge('s1', {})).toThrow('MISSING_CHALLENGE_OPTION');
   });
 
   it('placeBid refuses amount ≤ currentBid', async () => {

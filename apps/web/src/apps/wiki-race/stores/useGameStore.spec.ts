@@ -15,8 +15,6 @@ const mockPlayerProgress = (pseudo: string): PlayerProgressDTO => ({
   hopCount: 0,
   currentSlug: 'France',
   clicksLeft: null,
-  driftBestScore: null,
-  driftBestSlug: null,
   bingoValidated: [],
 });
 
@@ -28,7 +26,6 @@ const mockState: GameStateDTO = {
   startTime: Date.now(),
   timeLimitSeconds: null,
   clickLimit: null,
-  driftObjective: null,
   bingoConstraints: null,
   playerStatuses: [mockPlayerProgress('Alice'), mockPlayerProgress('Bob')],
 };
@@ -62,8 +59,8 @@ describe('useGameStore', () => {
 
   it('setGameState exposes mode and clickLimit', () => {
     const store = useGameStore();
-    store.setGameState({ ...mockState, mode: GameMode.LABYRINTH, clickLimit: 5 });
-    expect(store.mode).toBe(GameMode.LABYRINTH);
+    store.setGameState({ ...mockState, mode: GameMode.BINGO, clickLimit: 5 });
+    expect(store.mode).toBe(GameMode.BINGO);
     expect(store.clickLimit).toBe(5);
   });
 
@@ -91,8 +88,6 @@ describe('useGameStore', () => {
       hopCount: 2,
       currentSlug: 'Paris',
       clicksLeft: null,
-      driftBestScore: null,
-      driftBestSlug: null,
       bingoValidated: [],
     };
     store.updatePlayerProgress(progress);
@@ -122,7 +117,6 @@ describe('useGameStore', () => {
       timeLimitSeconds: null,
       clickLimit: null,
       winnerPseudo: 'Alice',
-      driftObjective: null,
       bingoConstraintIds: null,
       players: [],
     };

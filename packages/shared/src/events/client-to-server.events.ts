@@ -1,4 +1,4 @@
-import { GameMode, DriftObjective } from '../domain/enums';
+import { GameMode } from '../domain/enums';
 import { BingoConstraintId } from '../domain/bingo.types';
 
 export interface RoomCreatePayload {
@@ -21,7 +21,6 @@ export interface GameConfirmChoicesPayload {
   clickLimit?: number | null;
   startSlug?: string;
   targetSlug?: string;
-  driftObjective?: DriftObjective;
   bingoConstraintIds?: BingoConstraintId[];
 }
 
@@ -41,7 +40,6 @@ export interface ChoosingPreviewPayload {
   targetTitle?: string;
   timeLimitSeconds?: number | null;
   clickLimit?: number | null;
-  driftObjective?: DriftObjective | null;
   bingoConstraintIds?: BingoConstraintId[];
 }
 
@@ -64,7 +62,8 @@ export interface SurenchereVerdictPayload {
 }
 
 export interface SurenchereChooseChallengePayload {
-  challengeId: string;
+  challengeId?: string;
+  customPhrase?: string;
 }
 
 export interface SurenchereSubmitWordsPayload {

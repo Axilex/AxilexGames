@@ -58,24 +58,6 @@ const modes = [
     description: 'Premier à la cible gagne.',
   },
   {
-    value: GameMode.SPRINT,
-    icon: '⚡',
-    label: 'Sprint',
-    description: 'Même but, timer obligatoire.',
-  },
-  {
-    value: GameMode.LABYRINTH,
-    icon: '🧩',
-    label: 'Labyrinthe',
-    description: 'Clics limités — plus de clics = éliminé.',
-  },
-  {
-    value: GameMode.DRIFT,
-    icon: '🌊',
-    label: 'WikiDrift',
-    description: "Optimisez un score selon l'objectif.",
-  },
-  {
     value: GameMode.BINGO,
     icon: '🎯',
     label: 'Bingo Wiki',
@@ -104,7 +86,7 @@ const CONSTRAINT_DESCRIPTIONS: Record<string, string> = {
   artist: 'Artiste (infobox Activité: musicien, acteur…).',
   sportsperson: 'Sportif (infobox Sport).',
   city: 'Commune ou ville (classe infobox commune).',
-  many_images: '10+ images réelles dans la page.',
+  many_images: '5+ images réelles dans la page.',
   film_or_series: 'Film ou série (infobox Réalisation/Chaîne).',
   science: "Discipline scientifique mentionnée dans l'intro.",
 };

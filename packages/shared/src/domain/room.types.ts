@@ -1,4 +1,4 @@
-import { GameStatus, PlayerStatus, GameMode, DriftObjective } from './enums';
+import { GameStatus, PlayerStatus, GameMode } from './enums';
 import { NavigationStep } from './wikipedia.types';
 import { BingoConstraintId } from './bingo.types';
 
@@ -10,9 +10,6 @@ export interface Player {
   history: NavigationStep[];
   lastNavigationAt: number;
   disconnectTimer?: ReturnType<typeof setTimeout>;
-  // Drift
-  driftBestScore: number | null;
-  driftBestSlug: string | null;
   // Bingo
   bingoValidated: BingoConstraintId[];
   bingoValidatedOnSlug: Partial<Record<BingoConstraintId, string>>;
@@ -30,15 +27,13 @@ export interface Room {
 export interface GameSession {
   mode: GameMode;
   startSlug: string;
-  targetSlug: string | null; // null for DRIFT and BINGO
+  targetSlug: string | null; // null for BINGO
   startTime: number;
   endTime: number | null;
   timeLimitSeconds: number | null;
-  clickLimit: number | null; // null for CLASSIC and SPRINT
+  clickLimit: number | null; // null for CLASSIC
   winnerSocketId: string | null;
   timerHandle: ReturnType<typeof setTimeout> | null;
-  // Drift
-  driftObjective: DriftObjective | null;
   // Bingo
   bingoConstraintIds: BingoConstraintId[] | null;
 }

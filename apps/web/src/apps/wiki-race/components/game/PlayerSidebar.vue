@@ -24,24 +24,7 @@
         </span>
       </div>
       <!-- Mode-specific secondary info -->
-      <div
-        v-if="mode === 'LABYRINTH' && player.clicksLeft !== null && player.status === 'CONNECTED'"
-        class="text-stone-400 text-[10px]"
-      >
-        {{ player.clicksLeft }} clic{{ player.clicksLeft !== 1 ? 's' : '' }} restant{{
-          player.clicksLeft !== 1 ? 's' : ''
-        }}
-      </div>
-      <div
-        v-else-if="mode === 'DRIFT' && player.driftBestScore !== null"
-        class="text-amber-600 text-[10px] truncate"
-      >
-        Meilleur : {{ player.driftBestScore === 9999 ? '—' : player.driftBestScore }}
-        <span v-if="player.driftBestSlug">
-          · {{ decodeURIComponent(player.driftBestSlug).replace(/_/g, ' ') }}</span
-        >
-      </div>
-      <div v-else-if="mode === 'BINGO'" class="text-amber-600 text-[10px]">
+      <div v-if="mode === 'BINGO'" class="text-amber-600 text-[10px]">
         {{ player.bingoValidated?.length ?? 0 }} contrainte{{
           (player.bingoValidated?.length ?? 0) !== 1 ? 's' : ''
         }}
@@ -64,7 +47,6 @@ function statusLabel(player: PlayerProgressDTO): string {
   if (player.status === 'SURRENDERED') return 'Abandonné';
   if (player.status === 'DISCONNECTED') return 'Déconnecté';
   if (player.status === 'FINISHED') {
-    if (props.mode === 'DRIFT') return '✅ Terminé';
     if (props.mode === 'BINGO') return `🎯 Terminé (${player.bingoValidated?.length ?? 0})`;
     return '🏆 Arrivé !';
   }

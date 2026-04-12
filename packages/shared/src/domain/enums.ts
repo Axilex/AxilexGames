@@ -14,14 +14,5 @@ export enum PlayerStatus {
 
 export enum GameMode {
   CLASSIC = 'CLASSIC',
-  SPRINT = 'SPRINT',
-  LABYRINTH = 'LABYRINTH',
-  DRIFT = 'DRIFT',
   BINGO = 'BINGO',
-}
-
-export enum DriftObjective {
-  OLDEST_TITLE_YEAR = 'oldest_title_year',
-  SHORTEST = 'shortest',
-  MOST_IMAGES = 'most_images',
 }
