@@ -1,5 +1,21 @@
 # web
 
+## 0.3.1
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`d9737bd`](https://github.com/Axilex/AxilexGames/commit/d9737bd) enhance lobby and game functionality with share links and voting system
+
+  ### ♻️ Refactoring
+  - [`6a5a6cd`](https://github.com/Axilex/AxilexGames/commit/6a5a6cd) game modes and remove Drift-related features
+
+  ### 🔧 Maintenance
+  - [`01e56f4`](https://github.com/Axilex/AxilexGames/commit/01e56f4) enhance auto-changeset and release scripts with structured changelog generation
+
+- Updated dependencies
+  - @wiki-race/shared@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
