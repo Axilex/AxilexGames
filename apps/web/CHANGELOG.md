@@ -1,5 +1,14 @@
 # web
 
+## 0.3.2
+
+### Patch Changes
+
+- ### 🐛 Corrections
+  - [`6ca8094`](https://github.com/Axilex/AxilexGames/commit/6ca8094) add optional chaining for voting progress and initialize wordVotes in store tests
+- Updated dependencies
+  - @wiki-race/shared@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
