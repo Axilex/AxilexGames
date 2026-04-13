@@ -10,8 +10,8 @@ import { SurenchereRegistryService } from './surenchere-registry.service';
 import { pickRandomChallenges, LETTERS } from './challenges.data';
 
 const MAX_PLAYERS = 8;
-const DEFAULT_ROUNDS = 5;
-const DEFAULT_START_BID = 5;
+const DEFAULT_ROUNDS = 3;
+const DEFAULT_START_BID = 1;
 const CHALLENGE_OPTIONS_COUNT = 3;
 
 @Injectable()
