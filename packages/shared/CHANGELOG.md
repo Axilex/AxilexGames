@@ -1,5 +1,12 @@
 # @wiki-race/shared
 
+## 0.3.3
+
+### Patch Changes
+
+- ### 🐛 Corrections
+  - [`199fb4e`](https://github.com/Axilex/AxilexGames/commit/199fb4e) change default value to 3 and 1
+
 ## 0.3.2
 
 ### Patch Changes
