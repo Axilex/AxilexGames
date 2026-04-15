@@ -1,5 +1,31 @@
 # api
 
+## 0.3.4
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`5f551b0`](https://github.com/Axilex/AxilexGames/commit/5f551b0) add ESLint configuration for TypeScript and Vue with custom rules
+  - [`dc9e15d`](https://github.com/Axilex/AxilexGames/commit/dc9e15d) implement lobby reset functionality and enhance room management
+  - [`885abac`](https://github.com/Axilex/AxilexGames/commit/885abac) add error code extraction utility and enhance player management in game rooms
+  - [`9092329`](https://github.com/Axilex/AxilexGames/commit/9092329) refactor error handling in CommonLobbyGateway and create GameEntryPage component for improved UI
+  - [`8b37f63`](https://github.com/Axilex/AxilexGames/commit/8b37f63) refactor room registry services to use MapRoomRegistryService and implement player management methods
+  - [`0197fe4`](https://github.com/Axilex/AxilexGames/commit/0197fe4) implement game clearing functionality in common lobby
+  - [`97a3207`](https://github.com/Axilex/AxilexGames/commit/97a3207) enhance room update handling to prevent incorrect navigation for unregistered players
+  - [`0ab17b3`](https://github.com/Axilex/AxilexGames/commit/0ab17b3) implement choose challenge timer functionality in surenchere game
+  - [`f31936c`](https://github.com/Axilex/AxilexGames/commit/f31936c) add settings update functionality for surenchere game
+  - [`29a016b`](https://github.com/Axilex/AxilexGames/commit/29a016b) implement typing relay and timer for surenchere game
+
+  ### ♻️ Refactoring
+  - [`8e86116`](https://github.com/Axilex/AxilexGames/commit/8e86116) improve formatting of RoomWithMappedPlayers interface for better readability
+  - [`2f8a994`](https://github.com/Axilex/AxilexGames/commit/2f8a994) clean up code formatting and improve readability across multiple files
+
+  ### 🔧 Maintenance
+  - [`51444e7`](https://github.com/Axilex/AxilexGames/commit/51444e7) upgrade dependencies
+
+- Updated dependencies
+  - @wiki-race/shared@0.3.4
+
 ## 0.3.3
 
 ### Patch Changes
