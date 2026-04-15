@@ -5,6 +5,6 @@ import { SurenchereGateway } from './surenchere.gateway';
 
 @Module({
   providers: [SurenchereService, SurenchereRegistryService, SurenchereGateway],
-  exports: [SurenchereService],
+  exports: [SurenchereService, SurenchereRegistryService],
 })
 export class SurenchereModule {}

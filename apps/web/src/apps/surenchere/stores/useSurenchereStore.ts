@@ -7,7 +7,6 @@ import {
   type SurenchereChallenge,
   type SurenchereRoundResult,
   type SurencherePlayer,
-  type WordVotes,
 } from '@wiki-race/shared';
 
 export const useSurenchereStore = defineStore('surenchere', () => {
@@ -22,11 +21,19 @@ export const useSurenchereStore = defineStore('surenchere', () => {
   const passedSocketIds = ref<string[]>([]);
   const currentWords = ref<string[] | null>(null);
   const wasForced = ref<boolean>(false);
-  const wordVotes = ref<Record<number, WordVotes>>({});
+  /** Block-vote display map: pseudo → true/false/null (null = not yet voted) */
+  const voteMap = ref<Record<string, boolean | null>>({});
   const roundHistory = ref<SurenchereRoundResult[]>([]);
   const scores = ref<Record<string, number>>({});
   const finalRanking = ref<SurencherePlayer[]>([]);
   const error = ref<string>('');
+  /** Server timestamp when the bid timer expires. */
+  const bidTimerEndsAt = ref<number | null>(null);
+  /** Server timestamp when the words timer expires. */
+  const wordsTimerEndsAt = ref<number | null>(null);
+  /** Live typing from the bidder (phase WORDS, for non-bidder display) */
+  const typingText = ref<string>('');
+  const typingPseudo = ref<string>('');
 
   const isHost = computed(() => {
     if (!room.value) return false;
@@ -37,6 +44,8 @@ export const useSurenchereStore = defineStore('surenchere', () => {
   const myPlayer = computed(
     () => room.value?.players.find((p) => p.socketId === mySocketId.value) ?? null,
   );
+
+  const myPseudo = computed(() => myPlayer.value?.pseudo ?? '');
 
   const currentBidder = computed(
     () => room.value?.players.find((p) => p.socketId === currentBidderSocketId.value) ?? null,
@@ -91,32 +100,19 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     () => phase.value === 'VOTING' && mySocketId.value !== currentBidderSocketId.value,
   );
 
-  function hasVotedOnWord(wordIndex: number): boolean {
-    const slot = wordVotes.value[wordIndex];
-    if (!slot) return false;
-    return slot.valid.includes(mySocketId.value) || slot.invalid.includes(mySocketId.value);
-  }
+  /** My block vote: true=accept, false=reject, null=not yet voted */
+  const myVote = computed(() => voteMap.value[myPseudo.value] ?? null);
 
-  function myVoteOnWord(wordIndex: number): boolean | null {
-    const slot = wordVotes.value[wordIndex];
-    if (!slot) return null;
-    if (slot.valid.includes(mySocketId.value)) return true;
-    if (slot.invalid.includes(mySocketId.value)) return false;
-    return null;
-  }
-
-  // Count of eligible voters who have cast all their votes
+  /** Count of eligible voters who have voted */
   const votingProgress = computed(() => {
-    if (!room.value || !currentWords.value) return { voted: 0, total: 0 };
+    if (!room.value) return { voted: 0, total: 0 };
     const voters = room.value.players.filter(
       (p) => p.status === PlayerStatus.CONNECTED && p.socketId !== currentBidderSocketId.value,
     );
-    const voted = voters.filter((p) =>
-      currentWords.value!.every((_, i) => {
-        const slot = wordVotes.value[i];
-        return slot && (slot.valid.includes(p.socketId) || slot.invalid.includes(p.socketId));
-      }),
-    ).length;
+    const voted = voters.filter((p) => {
+      const pseudo = p.pseudo;
+      return voteMap.value[pseudo] !== null && voteMap.value[pseudo] !== undefined;
+    }).length;
     return { voted, total: voters.length };
   });
 
@@ -131,8 +127,14 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     passedSocketIds.value = [...newRoom.passedSocketIds];
     currentWords.value = newRoom.currentWords ? [...newRoom.currentWords] : null;
     wasForced.value = newRoom.wasForced;
-    wordVotes.value = newRoom.wordVotes ? { ...newRoom.wordVotes } : {};
     scores.value = Object.fromEntries(newRoom.players.map((p) => [p.pseudo, p.score]));
+    bidTimerEndsAt.value = newRoom.bidTimerEndsAt ?? null;
+    wordsTimerEndsAt.value = newRoom.wordsTimerEndsAt ?? null;
+    // Reset typing display when phase changes away from WORDS
+    if (newRoom.phase !== 'WORDS') {
+      typingText.value = '';
+      typingPseudo.value = '';
+    }
   }
 
   function startRound(_payload: { round: number; firstBidderSocketId: string }): void {
@@ -141,7 +143,11 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     passedSocketIds.value = [];
     currentWords.value = null;
     wasForced.value = false;
-    wordVotes.value = {};
+    voteMap.value = {};
+    bidTimerEndsAt.value = null;
+    wordsTimerEndsAt.value = null;
+    typingText.value = '';
+    typingPseudo.value = '';
   }
 
   function updateBid(payload: { bidderSocketId: string; amount: number }): void {
@@ -153,6 +159,20 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     if (!passedSocketIds.value.includes(socketId)) {
       passedSocketIds.value.push(socketId);
     }
+  }
+
+  function setVoteUpdate(votes: Record<string, boolean | null>): void {
+    voteMap.value = { ...votes };
+  }
+
+  function setTimerUpdate(timerPhase: 'BIDDING' | 'WORDS', endsAt: number): void {
+    if (timerPhase === 'BIDDING') bidTimerEndsAt.value = endsAt;
+    else wordsTimerEndsAt.value = endsAt;
+  }
+
+  function setTyping(payload: { pseudo: string; text: string }): void {
+    typingText.value = payload.text;
+    typingPseudo.value = payload.pseudo;
   }
 
   function addRoundResult(result: SurenchereRoundResult, newScores: Record<string, number>): void {
@@ -193,11 +213,15 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     passedSocketIds.value = [];
     currentWords.value = null;
     wasForced.value = false;
-    wordVotes.value = {};
+    voteMap.value = {};
     roundHistory.value = [];
     scores.value = {};
     finalRanking.value = [];
     error.value = '';
+    bidTimerEndsAt.value = null;
+    wordsTimerEndsAt.value = null;
+    typingText.value = '';
+    typingPseudo.value = '';
   }
 
   return {
@@ -212,13 +236,18 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     passedSocketIds,
     currentWords,
     wasForced,
-    wordVotes,
+    voteMap,
     roundHistory,
     scores,
     finalRanking,
     error,
+    bidTimerEndsAt,
+    wordsTimerEndsAt,
+    typingText,
+    typingPseudo,
     isHost,
     myPlayer,
+    myPseudo,
     currentBidder,
     challengeChooser,
     allPassed,
@@ -228,13 +257,15 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     isChallengeChooser,
     canSubmitWords,
     canVote,
-    hasVotedOnWord,
-    myVoteOnWord,
+    myVote,
     votingProgress,
     setRoom,
     startRound,
     updateBid,
     addPass,
+    setVoteUpdate,
+    setTimerUpdate,
+    setTyping,
     addRoundResult,
     setFinished,
     setError,

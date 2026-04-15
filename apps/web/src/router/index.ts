@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { wikiRaceRoutes } from '@/apps/wiki-race/router';
 import { surenchereRoutes } from '@/apps/surenchere/router';
+import { commonLobbyRoutes } from '@/apps/common-lobby/router';
 
 /**
  * Main application router.
@@ -19,6 +20,7 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/pages/HomePage.vue'),
     },
+    ...commonLobbyRoutes,
     ...wikiRaceRoutes,
     ...surenchereRoutes,
     {

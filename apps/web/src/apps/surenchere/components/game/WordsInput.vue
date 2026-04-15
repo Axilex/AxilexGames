@@ -18,6 +18,7 @@
           type="text"
           :placeholder="`Mot ${i + 1}`"
           class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          @input="onInput"
         />
       </div>
       <BaseButton :disabled="!isValid" @click="submit">Valider mes mots</BaseButton>
@@ -29,6 +30,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
+import { surenchereSocket } from '../../services/surenchere.service';
 
 const props = defineProps<{
   count: number;
@@ -55,5 +57,15 @@ function submit(): void {
     'submit',
     words.value.map((w) => w.trim()),
   );
+}
+
+// Debounce typing relay
+let typingTimer: ReturnType<typeof setTimeout> | null = null;
+function onInput(): void {
+  if (typingTimer) clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => {
+    const text = words.value.filter((w) => w.trim()).join(', ');
+    surenchereSocket.typing(text);
+  }, 150);
 }
 </script>

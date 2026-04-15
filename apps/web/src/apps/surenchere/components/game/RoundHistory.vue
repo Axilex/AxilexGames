@@ -17,11 +17,11 @@
                 : 'bg-red-50 text-red-700 border border-red-200',
             ]"
           >
-            +{{ r.pointsDelta }}
+            {{ r.scoreDelta >= 0 ? '+' : '' }}{{ r.scoreDelta }}
           </span>
         </div>
         <span class="text-xs text-stone-500 truncate">
-          {{ r.challenge.category }} — « {{ r.challenge.letter }} » × {{ r.bid }}
+          {{ r.challenge.category }} × {{ r.bid }}
         </span>
         <div v-if="r.wasForced" class="flex">
           <span

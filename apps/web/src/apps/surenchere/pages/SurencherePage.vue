@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import AppNav from '@/shared/components/ui/AppNav.vue';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import BaseInput from '@/shared/components/ui/BaseInput.vue';
@@ -136,9 +136,17 @@ const joinCodeError = ref('');
 const creating = ref(false);
 const joining = ref(false);
 
-const urlCode = new URLSearchParams(window.location.search).get('code');
+const params = new URLSearchParams(window.location.search);
+const urlCode = params.get('code');
+const urlAutoJoin = params.get('autoJoin');
 if (urlCode) joinCode.value = urlCode.toUpperCase();
 const hasInviteCode = !!urlCode;
+
+onMounted(() => {
+  if (urlCode && urlAutoJoin && session.pseudo) {
+    handleJoin();
+  }
+});
 
 // Navigation handled by useSurenchereListeners — reset loading states here
 watch(

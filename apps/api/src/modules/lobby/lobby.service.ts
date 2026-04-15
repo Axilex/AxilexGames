@@ -8,6 +8,21 @@ const MAX_PLAYERS = 8;
 export class LobbyService {
   constructor(private readonly registry: RoomRegistryService) {}
 
+  seedRoom(code: string, players: Array<{ pseudo: string; isHost: boolean }>): void {
+    const hostPlayer = players.find((p) => p.isHost) ?? players[0];
+    const host = {
+      ...this.makePlayer(`seed-${hostPlayer.pseudo}`, hostPlayer.pseudo),
+      status: PlayerStatus.DISCONNECTED,
+    };
+    this.registry.createRoom(code, host);
+    for (const p of players.filter((pl) => !pl.isHost)) {
+      this.registry.addPlayer(code, {
+        ...this.makePlayer(`seed-${p.pseudo}`, p.pseudo),
+        status: PlayerStatus.DISCONNECTED,
+      });
+    }
+  }
+
   createRoom(pseudo: string, socketId: string): { room: Room; code: string } {
     const code = this.registry.generateCode();
     const host = this.makePlayer(socketId, pseudo);

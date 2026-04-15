@@ -10,6 +10,7 @@ import {
   SurenchereRoundResult,
   SurencherePlayer,
 } from '../domain/surenchere.types';
+import { CommonRoomDTO, GameChoice } from '../domain/common-lobby.types';
 
 export type ChoosingPreviewData = Omit<ChoosingPreviewPayload, 'roomCode'>;
 
@@ -24,6 +25,9 @@ export interface BingoValidatedPayload {
 }
 
 export interface ServerToClientEvents {
+  'lobby:room-update': (room: CommonRoomDTO) => void;
+  'lobby:error': (payload: { code: string; message: string }) => void;
+  'lobby:redirect': (payload: { game: GameChoice; code: string }) => void;
   'wikirace:room:update': (room: RoomDTO) => void;
   'wikirace:game:state': (state: GameStateDTO) => void;
   'wikirace:game:page': (page: WikipediaPage) => void;
@@ -46,6 +50,9 @@ export interface ServerToClientEvents {
     scores: Record<string, number>;
     ranked: SurencherePlayer[];
   }) => void;
+  'surenchere:timer-update': (payload: { phase: 'BIDDING' | 'WORDS'; endsAt: number }) => void;
+  'surenchere:vote-update': (payload: { votes: Record<string, boolean | null> }) => void;
+  'surenchere:typing-update': (payload: { pseudo: string; text: string }) => void;
   'surenchere:error': (payload: { code: string; message: string }) => void;
   error: (message: string) => void;
 }

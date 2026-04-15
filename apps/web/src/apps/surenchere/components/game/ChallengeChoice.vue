@@ -22,7 +22,7 @@
               ? 'border-amber-500 bg-amber-50 cursor-pointer'
               : 'border-stone-200 bg-stone-50 hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
         "
-        @click="selectChallenge(opt.id, opt.letter)"
+        @click="selectChallenge(opt.id)"
       >
         <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
           {{ opt.category }}
@@ -57,37 +57,10 @@
       </div>
     </template>
 
-    <!-- Letter picker — shown once a challenge or phrase is selected (chooser only) -->
+    <!-- Confirm button — shown once a challenge or phrase is selected (chooser only) -->
     <template v-if="isChooser && hasSelection">
-      <div class="flex flex-col gap-2 border-t border-stone-100 pt-4">
-        <label class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-          Choisis la lettre
-        </label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="l in LETTERS"
-            :key="l"
-            class="w-9 h-9 rounded-lg text-sm font-bold transition border"
-            :class="
-              selectedLetter === l
-                ? 'bg-amber-600 text-white border-amber-600'
-                : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-amber-400 hover:bg-amber-50'
-            "
-            @click="selectedLetter = l"
-          >
-            {{ l }}
-          </button>
-        </div>
-      </div>
-
       <button
-        :disabled="!canConfirm"
-        class="self-end rounded-xl px-6 py-2.5 text-sm font-semibold transition"
-        :class="
-          canConfirm
-            ? 'bg-amber-600 text-white hover:bg-amber-700'
-            : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-        "
+        class="self-end rounded-xl px-6 py-2.5 text-sm font-semibold transition bg-amber-600 text-white hover:bg-amber-700"
         @click="confirm"
       >
         Confirmer →
@@ -100,9 +73,6 @@
 import { ref, computed } from 'vue';
 import type { SurenchereChallenge } from '@wiki-race/shared';
 
-// Same set as the backend LETTERS constant
-const LETTERS = 'ABCDEFGHIJLMNOPRSTV'.split('');
-
 const props = defineProps<{
   options: SurenchereChallenge[];
   isChooser: boolean;
@@ -110,38 +80,32 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  choose: [options: { challengeId?: string; customPhrase?: string; letter: string }];
+  choose: [options: { challengeId?: string; customPhrase?: string }];
 }>();
 
 const selectedId = ref<string | null>(null);
 const customPhrase = ref('');
-const selectedLetter = ref<string | null>(null);
 
 const hasCustomPhrase = computed(() => customPhrase.value.trim().length >= 5);
 const hasSelection = computed(() => !!selectedId.value || hasCustomPhrase.value);
-const canConfirm = computed(() => hasSelection.value && !!selectedLetter.value);
 
-function selectChallenge(id: string, suggestedLetter: string): void {
+function selectChallenge(id: string): void {
   if (!props.isChooser || hasCustomPhrase.value) return;
   selectedId.value = id;
-  // Pre-fill with the challenge's suggested letter if nothing chosen yet
-  if (!selectedLetter.value) selectedLetter.value = suggestedLetter;
 }
 
 function onCustomPhraseInput(): void {
   if (hasCustomPhrase.value) {
     selectedId.value = null;
-    // Clear letter pre-fill when switching to custom
-    if (!LETTERS.includes(selectedLetter.value ?? '')) selectedLetter.value = null;
   }
 }
 
 function confirm(): void {
-  if (!canConfirm.value || !selectedLetter.value) return;
+  if (!hasSelection.value) return;
   if (hasCustomPhrase.value) {
-    emit('choose', { customPhrase: customPhrase.value.trim(), letter: selectedLetter.value });
+    emit('choose', { customPhrase: customPhrase.value.trim() });
   } else if (selectedId.value) {
-    emit('choose', { challengeId: selectedId.value, letter: selectedLetter.value });
+    emit('choose', { challengeId: selectedId.value });
   }
 }
 </script>

@@ -7,7 +7,7 @@ import {
 } from '@wiki-race/shared';
 import { randomUUID } from 'crypto';
 import { SurenchereRegistryService } from './surenchere-registry.service';
-import { pickRandomChallenges, LETTERS } from './challenges.data';
+import { pickRandomChallenges } from './challenges.data';
 
 const MAX_PLAYERS = 8;
 const DEFAULT_ROUNDS = 3;
@@ -37,6 +37,36 @@ export class SurenchereService {
       settings.totalRounds ?? DEFAULT_ROUNDS,
       settings.startBid ?? DEFAULT_START_BID,
     );
+  }
+
+  seedRoom(
+    code: string,
+    players: Array<{ pseudo: string; isHost: boolean }>,
+    settings: Partial<{ totalRounds: number; startBid: number }> = {},
+  ): void {
+    const hostPlayer = players.find((p) => p.isHost) ?? players[0];
+    const host: SurencherePlayer = {
+      socketId: `seed-${hostPlayer.pseudo}`,
+      pseudo: hostPlayer.pseudo,
+      score: 0,
+      isHost: true,
+      status: PlayerStatus.DISCONNECTED,
+    };
+    this.registry.createRoom(
+      code,
+      host,
+      settings.totalRounds ?? DEFAULT_ROUNDS,
+      settings.startBid ?? DEFAULT_START_BID,
+    );
+    for (const p of players.filter((pl) => !pl.isHost)) {
+      this.registry.addPlayer(code, {
+        socketId: `seed-${p.pseudo}`,
+        pseudo: p.pseudo,
+        score: 0,
+        isHost: false,
+        status: PlayerStatus.DISCONNECTED,
+      });
+    }
   }
 
   joinRoom(socketId: string, roomCode: string, pseudo: string): SurenchereRoom {
@@ -117,23 +147,20 @@ export class SurenchereService {
     room.passedSocketIds = [];
     room.currentWords = null;
     room.wasForced = false;
-    room.wordVotes = {};
+    room.voteMap = {};
+    room.bidTimerEndsAt = null;
+    room.wordsTimerEndsAt = null;
     room.phase = 'CHOOSING_CHALLENGE';
   }
 
   chooseChallenge(
     socketId: string,
-    options: { challengeId?: string; customPhrase?: string; letter?: string },
+    options: { challengeId?: string; customPhrase?: string },
   ): SurenchereRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
     if (room.challengeChooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
-
-    const letter =
-      options.letter && LETTERS.includes(options.letter)
-        ? options.letter
-        : LETTERS[Math.floor(Math.random() * LETTERS.length)];
 
     if (options.customPhrase !== undefined) {
       const phrase = options.customPhrase.trim();
@@ -143,13 +170,12 @@ export class SurenchereService {
         id: randomUUID(),
         category: '✏️ Défi custom',
         prompt: phrase,
-        letter,
         source: 'custom',
       };
     } else if (options.challengeId !== undefined) {
       const picked = room.challengeOptions.find((c) => c.id === options.challengeId);
       if (!picked) throw new Error('CHALLENGE_NOT_FOUND');
-      room.currentChallenge = { ...picked, letter };
+      room.currentChallenge = { ...picked };
     } else {
       throw new Error('MISSING_CHALLENGE_OPTION');
     }
@@ -233,15 +259,14 @@ export class SurenchereService {
     const cleaned = words.map((w) => w.trim()).filter((w) => w.length > 0);
     if (cleaned.length < room.currentBid) throw new Error('NOT_ENOUGH_WORDS');
     room.currentWords = cleaned;
-    room.wordVotes = {};
+    room.voteMap = {};
     room.phase = 'VOTING';
     return room;
   }
 
-  voteWord(
+  vote(
     socketId: string,
-    wordIndex: number,
-    valid: boolean,
+    accept: boolean,
   ): {
     room: SurenchereRoom;
     resolved: boolean;
@@ -253,19 +278,9 @@ export class SurenchereService {
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'VOTING') throw new Error('NOT_VOTING');
     if (socketId === room.currentBidderSocketId) throw new Error('BIDDER_CANNOT_VOTE');
-    if (!room.currentWords || wordIndex < 0 || wordIndex >= room.currentWords.length) {
-      throw new Error('INVALID_WORD_INDEX');
-    }
+    if (room.voteMap[socketId] !== undefined) throw new Error('ALREADY_VOTED');
 
-    if (!room.wordVotes[wordIndex]) {
-      room.wordVotes[wordIndex] = { valid: [], invalid: [] };
-    }
-    const slot = room.wordVotes[wordIndex];
-    if (slot.valid.includes(socketId) || slot.invalid.includes(socketId)) {
-      throw new Error('ALREADY_VOTED');
-    }
-    (valid ? slot.valid : slot.invalid).push(socketId);
-
+    room.voteMap[socketId] = accept;
     return this.tryResolveVoting(room);
   }
 
@@ -285,23 +300,18 @@ export class SurenchereService {
     // If no eligible voters remain, auto-resolve with all words rejected
     const allVoted =
       eligibleVoters.length === 0 ||
-      room.currentWords.every((_, i) => {
-        const slot = room.wordVotes[i];
-        if (!slot) return false;
-        return eligibleVoters.every(
-          (p) => slot.valid.includes(p.socketId) || slot.invalid.includes(p.socketId),
-        );
-      });
+      eligibleVoters.every((p) => room.voteMap[p.socketId] !== undefined);
 
     if (!allVoted) return { room, resolved: false };
 
-    const wordVerdicts = room.currentWords.map((_, i) => {
-      const slot = room.wordVotes[i] ?? { valid: [], invalid: [] };
-      return slot.valid.length > slot.invalid.length;
-    });
+    // Majority of eligible voters accepting → accepted (tie = rejected)
+    const acceptCount = Object.values(room.voteMap).filter(Boolean).length;
+    const accepted = acceptCount > eligibleVoters.length / 2;
 
-    const acceptedCount = wordVerdicts.filter(Boolean).length;
-    const success = acceptedCount >= room.currentBid;
+    // Block vote: binary verdict — all words accepted or all rejected
+    // Note: missingCount is therefore always 0 or currentBid.
+    const wordVerdicts = room.currentWords.map(() => accepted);
+    const success = accepted;
     const { result, finished } = this.applyVerdictResult(room, success, wordVerdicts);
     const scores = this.toScores(room);
     return { room, resolved: true, result, finished, scores };
@@ -318,8 +328,22 @@ export class SurenchereService {
     const bidder = room.players.find((p) => p.socketId === room.currentBidderSocketId);
     if (!bidder) throw new Error('BIDDER_NOT_FOUND');
 
-    const acceptedCount = wordVerdicts.filter(Boolean).length;
-    bidder.score += acceptedCount;
+    const validatedCount = wordVerdicts.filter(Boolean).length;
+    const missingCount = room.currentBid - validatedCount;
+
+    let scoreDelta: number;
+    if (missingCount === 0) {
+      // Full success: award the bid (+1 bonus if forced)
+      scoreDelta = room.currentBid + (room.wasForced ? 1 : 0);
+    } else if (missingCount < room.currentBid) {
+      // Partial failure: -1 per missing word.
+      // Note: unreachable with block vote (missingCount is always 0 or currentBid).
+      scoreDelta = -1 * missingCount;
+    } else {
+      // Total failure: no penalty
+      scoreDelta = 0;
+    }
+    bidder.score += scoreDelta;
 
     const result: SurenchereRoundResult = {
       bidderSocketId: bidder.socketId,
@@ -327,7 +351,8 @@ export class SurenchereService {
       challenge: room.currentChallenge,
       bid: room.currentBid,
       success,
-      pointsDelta: acceptedCount,
+      scoreDelta,
+      missingCount,
       words: room.currentWords ? [...room.currentWords] : [],
       wordVerdicts,
       wasForced: room.wasForced,
@@ -365,7 +390,9 @@ export class SurenchereService {
     room.passedSocketIds = [];
     room.currentWords = null;
     room.wasForced = false;
-    room.wordVotes = {};
+    room.voteMap = {};
+    room.bidTimerEndsAt = null;
+    room.wordsTimerEndsAt = null;
     room.roundStarterIndex = 0;
     room.lastRoundResult = null;
     for (const p of room.players) p.score = 0;
@@ -374,6 +401,33 @@ export class SurenchereService {
 
   getRoomBySocket(socketId: string): SurenchereRoom | undefined {
     return this.registry.findRoomBySocketId(socketId);
+  }
+
+  getRoomByCode(code: string): SurenchereRoom | undefined {
+    return this.registry.findRoom(code);
+  }
+
+  /** Called when the bid timer expires: force current bidder to WORDS phase. */
+  forceToWords(code: string): SurenchereRoom | null {
+    const room = this.registry.findRoom(code);
+    if (!room || room.phase !== 'BIDDING' || !room.currentBidderSocketId) return null;
+    room.wasForced = true;
+    room.bidTimerEndsAt = null;
+    room.phase = 'WORDS';
+    return room;
+  }
+
+  /** Called when the words timer expires: submit empty words and move to VOTING. */
+  autoSubmitWords(socketId: string): SurenchereRoom {
+    const room = this.registry.findRoomBySocketId(socketId);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    if (room.phase !== 'WORDS') throw new Error('NOT_IN_WORDS');
+    if (room.currentBidderSocketId !== socketId) throw new Error('NOT_CURRENT_BIDDER');
+    room.currentWords = [];
+    room.voteMap = {};
+    room.wordsTimerEndsAt = null;
+    room.phase = 'VOTING';
+    return room;
   }
 
   toScores(room: SurenchereRoom): Record<string, number> {

@@ -9,11 +9,6 @@ export type SurenchereGamePhase =
   | 'ROUND_END'
   | 'FINISHED';
 
-export interface WordVotes {
-  valid: string[]; // socketIds who voted valid
-  invalid: string[]; // socketIds who voted invalid
-}
-
 export interface SurencherePlayer {
   socketId: string;
   pseudo: string;
@@ -28,13 +23,14 @@ export interface SurenchereChallenge {
   id: string;
   category: string;
   prompt: string;
-  letter: string;
   source: ChallengeSource;
 }
 
 export interface SurenchereRoomSettings {
   totalRounds: number;
   startBid: number;
+  /** Timer for the words submission phase, in seconds. Default: 60. */
+  wordTimerSeconds: number;
 }
 
 export interface SurenchereRoom {
@@ -51,9 +47,14 @@ export interface SurenchereRoom {
   passedSocketIds: string[];
   currentWords: string[] | null;
   wasForced: boolean;
-  wordVotes: Record<number, WordVotes>;
+  /** Block-vote map: socketId → accept. Replaces per-word wordVotes. */
+  voteMap: Record<string, boolean>;
   roundStarterIndex: number;
   lastRoundResult: SurenchereRoundResult | null;
+  /** Server timestamp (ms) when the bid timer expires. Null when not in BIDDING. */
+  bidTimerEndsAt: number | null;
+  /** Server timestamp (ms) when the words timer expires. Null when not in WORDS. */
+  wordsTimerEndsAt: number | null;
 }
 
 export interface SurenchereRoundResult {
@@ -62,9 +63,13 @@ export interface SurenchereRoundResult {
   challenge: SurenchereChallenge;
   bid: number;
   success: boolean;
-  pointsDelta: number; // = number of valid words (always >= 0)
+  /** Score delta applied to the bidder this round. */
+  scoreDelta: number;
+  /** Number of missing words (bid - validatedWords). With block vote: always 0 or bid. */
+  missingCount: number;
   words: string[];
-  wordVerdicts: boolean[]; // per-word: true if accepted by majority vote
+  /** With block vote: all true or all false (binary verdict). */
+  wordVerdicts: boolean[];
   wasForced: boolean;
 }
 

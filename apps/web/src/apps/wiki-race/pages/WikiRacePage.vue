@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useLobby } from '../composables/useLobby';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
@@ -137,9 +137,17 @@ const joinCodeError = ref('');
 const creating = ref(false);
 const joining = ref(false);
 
-const urlCode = new URLSearchParams(window.location.search).get('code');
+const params = new URLSearchParams(window.location.search);
+const urlCode = params.get('code');
+const urlAutoJoin = params.get('autoJoin');
 if (urlCode) joinCode.value = urlCode.toUpperCase();
 const hasInviteCode = !!urlCode;
+
+onMounted(() => {
+  if (urlCode && urlAutoJoin && sessionStore.pseudo) {
+    handleJoin();
+  }
+});
 
 watch(
   () => lobbyStore.room,

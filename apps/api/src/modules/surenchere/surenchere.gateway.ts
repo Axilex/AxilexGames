@@ -14,9 +14,12 @@ import {
   SurenchereCreatePayload,
   SurenchereJoinPayload,
   SurenchereBidPayload,
-  SurenchereVoteWordPayload,
+  SurenchereVotePayload,
+  SurenchereTypingPayload,
   SurenchereChooseChallengePayload,
   SurenchereSubmitWordsPayload,
+  SurenchereRoom,
+  SurenchereRoundResult,
 } from '@wiki-race/shared';
 import { SurenchereService } from './surenchere.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
@@ -27,6 +30,7 @@ type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 const NEXT_ROUND_DELAY_MS = 4000;
+const BID_TIMEOUT_MS = 30_000;
 
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
@@ -34,6 +38,9 @@ const NEXT_ROUND_DELAY_MS = 4000;
 export class SurenchereGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
+
+  private bidTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private wordsTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   constructor(private readonly surenchere: SurenchereService) {}
 
@@ -78,10 +85,12 @@ export class SurenchereGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('surenchere:leave')
   async handleLeave(@ConnectedSocket() client: TypedSocket): Promise<void> {
-    const { room, deleted } = this.surenchere.leaveRoom(client.id);
-    if (!deleted && room) {
-      await client.leave(room.code);
-      this.server.to(room.code).emit('surenchere:room:update', room);
+    const room = this.surenchere.getRoomBySocket(client.id);
+    if (room) this.clearRoomTimers(room.code);
+    const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
+    if (!deleted && updatedRoom) {
+      await client.leave(updatedRoom.code);
+      this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
     }
   }
 
@@ -103,9 +112,10 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const room = this.surenchere.chooseChallenge(client.id, {
       challengeId: payload.challengeId,
       customPhrase: payload.customPhrase,
-      letter: payload.letter,
     });
     this.server.to(room.code).emit('surenchere:room:update', room);
+    // Start the bid timer after challenge is chosen
+    this.startBidTimer(room);
   }
 
   @SubscribeMessage('surenchere:bid')
@@ -119,19 +129,30 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       amount: payload.amount,
     });
     this.server.to(room.code).emit('surenchere:room:update', room);
+    // Reset bid timer on each new bid
+    this.startBidTimer(room);
   }
 
   @SubscribeMessage('surenchere:pass')
   handlePass(@ConnectedSocket() client: TypedSocket): void {
-    const { room } = this.surenchere.pass(client.id);
+    const { room, allPassed } = this.surenchere.pass(client.id);
     this.server.to(room.code).emit('surenchere:pass:update', { socketId: client.id });
     this.server.to(room.code).emit('surenchere:room:update', room);
+    if (allPassed) {
+      this.clearBidTimer(room.code);
+      this.startWordsTimer(room);
+    } else {
+      // Reset bid timer on each pass (still in bidding)
+      if (room.phase === 'BIDDING') this.startBidTimer(room);
+    }
   }
 
   @SubscribeMessage('surenchere:challenge')
   handleChallenge(@ConnectedSocket() client: TypedSocket): void {
     const room = this.surenchere.triggerChallenge(client.id);
+    this.clearBidTimer(room.code);
     this.server.to(room.code).emit('surenchere:room:update', room);
+    this.startWordsTimer(room);
   }
 
   @SubscribeMessage('surenchere:submit_words')
@@ -139,20 +160,23 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereSubmitWordsPayload,
   ): void {
+    this.clearWordsTimer(client.id);
     const room = this.surenchere.submitWords(client.id, payload.words);
     this.server.to(room.code).emit('surenchere:room:update', room);
   }
 
-  @SubscribeMessage('surenchere:vote_word')
-  handleVoteWord(
+  @SubscribeMessage('surenchere:vote')
+  handleVote(
     @ConnectedSocket() client: TypedSocket,
-    @MessageBody() payload: SurenchereVoteWordPayload,
+    @MessageBody() payload: SurenchereVotePayload,
   ): void {
-    const { room, resolved, result, finished, scores } = this.surenchere.voteWord(
+    const { room, resolved, result, finished, scores } = this.surenchere.vote(
       client.id,
-      payload.wordIndex,
-      payload.valid,
+      payload.accept,
     );
+    // Emit vote-update for real-time display (keyed by pseudo)
+    const votes = this.buildVoteDisplay(room);
+    this.server.to(room.code).emit('surenchere:vote-update', { votes });
     this.server.to(room.code).emit('surenchere:room:update', room);
 
     if (resolved && result && scores !== undefined) {
@@ -160,9 +184,35 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('surenchere:typing')
+  handleTyping(
+    @ConnectedSocket() client: TypedSocket,
+    @MessageBody() payload: SurenchereTypingPayload,
+  ): void {
+    const room = this.surenchere.getRoomBySocket(client.id);
+    if (!room || room.phase !== 'WORDS') return;
+    if (room.currentBidderSocketId !== client.id) return;
+    const player = room.players.find((p) => p.socketId === client.id);
+    if (!player) return;
+    // Pure relay — no storage
+    client.broadcast.to(room.code).emit('surenchere:typing-update', {
+      pseudo: player.pseudo,
+      text: payload.text,
+    });
+  }
+
+  private buildVoteDisplay(room: SurenchereRoom): Record<string, boolean | null> {
+    const result: Record<string, boolean | null> = {};
+    for (const p of room.players) {
+      if (p.socketId === room.currentBidderSocketId) continue;
+      result[p.pseudo] = room.voteMap[p.socketId] ?? null;
+    }
+    return result;
+  }
+
   private emitRoundEnd(
-    room: import('@wiki-race/shared').SurenchereRoom,
-    result: import('@wiki-race/shared').SurenchereRoundResult,
+    room: SurenchereRoom,
+    result: SurenchereRoundResult,
     finished: boolean,
     scores: Record<string, number>,
     hostId: string,
@@ -186,6 +236,8 @@ export class SurenchereGateway implements OnGatewayDisconnect {
           round: nextRoom.currentRound,
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
         });
+        // Start bid timer for next round
+        this.startBidTimer(nextRoom);
       } catch {
         // player left, ignore
       }
@@ -194,7 +246,90 @@ export class SurenchereGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('surenchere:reset')
   handleReset(@ConnectedSocket() client: TypedSocket): void {
-    const room = this.surenchere.resetRoom(client.id);
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    const room = this.surenchere.getRoomBySocket(client.id);
+    if (room) this.clearRoomTimers(room.code);
+    const updatedRoom = this.surenchere.resetRoom(client.id);
+    this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
+  }
+
+  // ── Timer helpers ────────────────────────────────────────────────────────────
+
+  private startBidTimer(room: SurenchereRoom): void {
+    this.clearBidTimer(room.code);
+    const endsAt = Date.now() + BID_TIMEOUT_MS;
+    room.bidTimerEndsAt = endsAt;
+    this.server.to(room.code).emit('surenchere:timer-update', { phase: 'BIDDING', endsAt });
+    const timer = setTimeout(() => {
+      this.onBidTimerExpired(room.code);
+    }, BID_TIMEOUT_MS);
+    this.bidTimers.set(room.code, timer);
+  }
+
+  private onBidTimerExpired(code: string): void {
+    this.bidTimers.delete(code);
+    const room = this.surenchere.getRoomByCode(code);
+    if (!room || room.phase !== 'BIDDING') return;
+    // Only auto-force if a bidder exists; if no one bid, leave the phase to resolve normally
+    if (!room.currentBidderSocketId) return;
+    const updatedRoom = this.surenchere.forceToWords(code);
+    if (!updatedRoom) return;
+    this.server.to(code).emit('surenchere:room:update', updatedRoom);
+    this.startWordsTimer(updatedRoom);
+  }
+
+  private startWordsTimer(room: SurenchereRoom): void {
+    this.clearWordsTimerByCode(room.code);
+    const secs = room.settings.wordTimerSeconds;
+    const endsAt = Date.now() + secs * 1000;
+    room.wordsTimerEndsAt = endsAt;
+    this.server.to(room.code).emit('surenchere:timer-update', { phase: 'WORDS', endsAt });
+    const timer = setTimeout(() => {
+      this.onWordsTimerExpired(room.code);
+    }, secs * 1000);
+    this.wordsTimers.set(room.code, timer);
+  }
+
+  private onWordsTimerExpired(code: string): void {
+    this.wordsTimers.delete(code);
+    const room = this.surenchere.getRoomByCode(code);
+    if (!room || room.phase !== 'WORDS' || !room.currentBidderSocketId) return;
+    try {
+      // Auto-submit whatever words have been entered (empty = fail)
+      const updatedRoom = this.surenchere.autoSubmitWords(room.currentBidderSocketId);
+      this.server.to(code).emit('surenchere:room:update', updatedRoom);
+      // Trigger vote resolution immediately (no eligible words → reject)
+      const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
+      if (resolved && result && scores !== undefined) {
+        this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, room.currentBidderSocketId);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private clearBidTimer(code: string): void {
+    const t = this.bidTimers.get(code);
+    if (t) {
+      clearTimeout(t);
+      this.bidTimers.delete(code);
+    }
+  }
+
+  private clearWordsTimer(socketId: string): void {
+    const room = this.surenchere.getRoomBySocket(socketId);
+    if (room) this.clearWordsTimerByCode(room.code);
+  }
+
+  private clearWordsTimerByCode(code: string): void {
+    const t = this.wordsTimers.get(code);
+    if (t) {
+      clearTimeout(t);
+      this.wordsTimers.delete(code);
+    }
+  }
+
+  private clearRoomTimers(code: string): void {
+    this.clearBidTimer(code);
+    this.clearWordsTimerByCode(code);
   }
 }

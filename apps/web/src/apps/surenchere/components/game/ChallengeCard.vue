@@ -6,7 +6,6 @@
       </span>
       <h2 class="text-2xl font-bold text-stone-900 leading-snug">
         {{ challenge.prompt }}
-        <span class="text-amber-600">« {{ challenge.letter }} »</span>
       </h2>
     </div>
     <div v-else class="text-sm text-stone-400">En attente du défi…</div>

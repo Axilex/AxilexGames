@@ -23,7 +23,7 @@
           @choose="onChooseChallenge"
         />
 
-        <!-- BIDDING / WORDS / VERDICT / ROUND_END all show the challenge card -->
+        <!-- BIDDING / WORDS / VOTING / ROUND_END all show the challenge card -->
         <template v-else>
           <ChallengeCard
             :challenge="store.currentChallenge"
@@ -34,26 +34,36 @@
           />
 
           <!-- BIDDING -->
-          <BidControls
-            v-if="store.phase === 'BIDDING'"
-            :can-bid="store.canBid"
-            :can-challenge="store.canChallenge"
-            :has-passed="store.hasPassed"
-            :current-bid="store.currentBid"
-            :start-bid="store.room?.settings.startBid ?? 5"
-            @bid="onBid"
-            @pass="onPass"
-            @challenge="onChallenge"
-          />
+          <template v-if="store.phase === 'BIDDING'">
+            <BidTimer
+              :ends-at="store.bidTimerEndsAt"
+              :total-ms="30_000"
+            />
+            <BidControls
+              :can-bid="store.canBid"
+              :can-challenge="store.canChallenge"
+              :has-passed="store.hasPassed"
+              :current-bid="store.currentBid"
+              :start-bid="store.room?.settings.startBid ?? 1"
+              @bid="onBid"
+              @pass="onPass"
+              @challenge="onChallenge"
+            />
+          </template>
 
           <!-- WORDS -->
-          <WordsInput
-            v-else-if="store.phase === 'WORDS'"
-            :count="store.currentBid"
-            :can-submit="store.canSubmitWords"
-            :bidder-name="store.currentBidder?.pseudo ?? null"
-            @submit="onSubmitWords"
-          />
+          <template v-else-if="store.phase === 'WORDS'">
+            <WordsTimer
+              :ends-at="store.wordsTimerEndsAt"
+              :total-ms="(store.room?.settings.wordTimerSeconds ?? 60) * 1000"
+            />
+            <WordsInput
+              :count="store.currentBid"
+              :can-submit="store.canSubmitWords"
+              :bidder-name="store.currentBidder?.pseudo ?? null"
+              @submit="onSubmitWords"
+            />
+          </template>
 
           <!-- VOTING -->
           <WordsDisplay
@@ -62,10 +72,10 @@
             :bidder-name="store.currentBidder?.pseudo ?? null"
             :show-voting="true"
             :can-vote="store.canVote"
-            :word-votes="store.wordVotes"
-            :voting-progress="store.votingProgress"
-            :has-voted-on-word="store.hasVotedOnWord"
-            :my-vote-on-word="store.myVoteOnWord"
+            :my-vote="store.myVote"
+            :vote-map="store.voteMap"
+            :typing-text="store.typingText"
+            :typing-pseudo="store.typingPseudo"
             @vote="onVote"
           />
 
@@ -91,7 +101,9 @@
 import ChallengeCard from '../components/game/ChallengeCard.vue';
 import ChallengeChoice from '../components/game/ChallengeChoice.vue';
 import BidControls from '../components/game/BidControls.vue';
+import BidTimer from '../components/game/BidTimer.vue';
 import WordsInput from '../components/game/WordsInput.vue';
+import WordsTimer from '../components/game/WordsTimer.vue';
 import WordsDisplay from '../components/game/WordsDisplay.vue';
 import ScoresBand from '../components/game/ScoresBand.vue';
 import RoundHistory from '../components/game/RoundHistory.vue';
@@ -101,11 +113,7 @@ import { surenchereSocket } from '../services/surenchere.service';
 
 const store = useSurenchereStore();
 
-function onChooseChallenge(options: {
-  challengeId?: string;
-  customPhrase?: string;
-  letter: string;
-}): void {
+function onChooseChallenge(options: { challengeId?: string; customPhrase?: string }): void {
   surenchereSocket.chooseChallenge(options);
 }
 function onBid(amount: number): void {
@@ -120,7 +128,7 @@ function onChallenge(): void {
 function onSubmitWords(words: string[]): void {
   surenchereSocket.submitWords(words);
 }
-function onVote(payload: { wordIndex: number; valid: boolean }): void {
-  surenchereSocket.voteWord(payload.wordIndex, payload.valid);
+function onVote(accept: boolean): void {
+  surenchereSocket.vote(accept);
 }
 </script>

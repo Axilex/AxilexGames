@@ -62,6 +62,18 @@ export function useSurenchereListeners(): void {
     router.push({ name: 'surenchere-summary' });
   });
 
+  socketService.on('surenchere:timer-update', (payload) => {
+    store.setTimerUpdate(payload.phase, payload.endsAt);
+  });
+
+  socketService.on('surenchere:vote-update', (payload) => {
+    store.setVoteUpdate(payload.votes);
+  });
+
+  socketService.on('surenchere:typing-update', (payload) => {
+    store.setTyping(payload);
+  });
+
   socketService.on('surenchere:error', (payload) => {
     if (payload.code === 'ROOM_NOT_FOUND' && !store.room) {
       // Stale session — room no longer exists, clear and go back to entry page

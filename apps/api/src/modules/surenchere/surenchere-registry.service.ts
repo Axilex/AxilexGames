@@ -9,12 +9,13 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
     host: SurencherePlayer,
     totalRounds: number,
     startBid: number,
+    wordTimerSeconds = 60,
   ): SurenchereRoom {
     const room: SurenchereRoom = {
       code,
       phase: 'WAITING',
       players: [host],
-      settings: { totalRounds, startBid },
+      settings: { totalRounds, startBid, wordTimerSeconds },
       currentRound: 0,
       currentChallenge: null,
       challengeOptions: [],
@@ -24,9 +25,11 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
       passedSocketIds: [],
       currentWords: null,
       wasForced: false,
-      wordVotes: {},
+      voteMap: {},
       roundStarterIndex: 0,
       lastRoundResult: null,
+      bidTimerEndsAt: null,
+      wordsTimerEndsAt: null,
     };
     this.registerRoom(room);
     this.bindSocket(host.socketId, code);
