@@ -60,10 +60,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       await client.join(room.code);
       client.emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {
-      client.emit('lobby:error', {
-        code: (e as Error).message,
-        message: (e as Error).message,
-      });
+      this.emitError(client, e);
     }
   }
 
@@ -77,10 +74,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       await client.join(room.code);
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {
-      client.emit('lobby:error', {
-        code: (e as Error).message,
-        message: (e as Error).message,
-      });
+      this.emitError(client, e);
     }
   }
 
@@ -106,10 +100,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       const room = this.lobbyService.chooseGame(client.id, payload.game);
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {
-      client.emit('lobby:error', {
-        code: (e as Error).message,
-        message: (e as Error).message,
-      });
+      this.emitError(client, e);
     }
   }
 
@@ -119,10 +110,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       const room = this.lobbyService.clearGameChoice(client.id);
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {
-      client.emit('lobby:error', {
-        code: (e as Error).message,
-        message: (e as Error).message,
-      });
+      this.emitError(client, e);
     }
   }
 
@@ -145,10 +133,12 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       this.server.to(room.code).emit('lobby:redirect', { game: room.gameChoice, code: room.code });
       this.registry.deleteRoom(room.code);
     } catch (e: unknown) {
-      client.emit('lobby:error', {
-        code: (e as Error).message,
-        message: (e as Error).message,
-      });
+      this.emitError(client, e);
     }
+  }
+
+  private emitError(client: TypedSocket, e: unknown): void {
+    const message = e instanceof Error ? e.message : 'UNKNOWN_ERROR';
+    client.emit('lobby:error', { code: message, message });
   }
 }
