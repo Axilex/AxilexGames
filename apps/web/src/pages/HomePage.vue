@@ -31,8 +31,18 @@
           <!-- Shared pseudo -->
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                class="w-4 h-4 text-amber-500"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
               <span class="text-sm font-semibold text-stone-700">Ton pseudo</span>
               <span class="text-xs text-stone-400">· commun à tous les salons</span>
@@ -47,64 +57,77 @@
             />
           </div>
 
-        <!-- Join -->
-        <div
-          :class="[
-            'bg-white rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
-            hasInviteCode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'border-stone-200',
-          ]"
-        >
-          <div class="flex items-center gap-2">
-            <span v-if="hasInviteCode" class="text-lg leading-none">🎉</span>
-            <h2 :class="['text-base font-semibold', hasInviteCode ? 'text-amber-900' : 'text-stone-800']">
-              {{ hasInviteCode ? 'Vous avez été invité !' : 'Rejoindre un salon' }}
-            </h2>
-          </div>
-          <div v-if="hasInviteCode" class="bg-white rounded-xl border border-amber-200 px-4 py-3 text-center">
-            <span class="text-2xl font-bold tracking-[0.3em] font-mono text-stone-900">{{ joinCode }}</span>
-          </div>
-          <BaseInput
-            v-model="joinCode"
-            :label="hasInviteCode ? 'Modifier le code' : 'Code du salon'"
-            placeholder="ex : ABCDEF"
-            :maxlength="6"
-            :error="joinCodeError"
-            class="font-mono uppercase"
-            @enter="joinLobby"
-          />
-          <BaseButton
-            :variant="hasInviteCode ? 'primary' : 'secondary'"
-            :loading="joining"
-            class="w-full"
-            @click="joinLobby"
+          <!-- Join -->
+          <div
+            :class="[
+              'bg-white rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
+              hasInviteCode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'border-stone-200',
+            ]"
           >
-            Rejoindre →
-          </BaseButton>
-        </div>
+            <div class="flex items-center gap-2">
+              <span v-if="hasInviteCode" class="text-lg leading-none">🎉</span>
+              <h2
+                :class="[
+                  'text-base font-semibold',
+                  hasInviteCode ? 'text-amber-900' : 'text-stone-800',
+                ]"
+              >
+                {{ hasInviteCode ? 'Vous avez été invité !' : 'Rejoindre un salon' }}
+              </h2>
+            </div>
+            <div
+              v-if="hasInviteCode"
+              class="bg-white rounded-xl border border-amber-200 px-4 py-3 text-center"
+            >
+              <span class="text-2xl font-bold tracking-[0.3em] font-mono text-stone-900">{{
+                joinCode
+              }}</span>
+            </div>
+            <BaseInput
+              v-model="joinCode"
+              :label="hasInviteCode ? 'Modifier le code' : 'Code du salon'"
+              placeholder="ex : ABCDEF"
+              :maxlength="6"
+              :error="joinCodeError"
+              class="font-mono uppercase"
+              @enter="joinLobby"
+            />
+            <BaseButton
+              :variant="hasInviteCode ? 'primary' : 'secondary'"
+              :loading="joining"
+              class="w-full"
+              @click="joinLobby"
+            >
+              Rejoindre →
+            </BaseButton>
+          </div>
 
-        <!-- Divider -->
-        <div v-if="!hasInviteCode" class="flex items-center gap-3">
-          <div class="flex-1 h-px bg-stone-200" />
-          <span class="text-xs text-stone-400 font-medium">ou</span>
-          <div class="flex-1 h-px bg-stone-200" />
-        </div>
+          <!-- Divider -->
+          <div v-if="!hasInviteCode" class="flex items-center gap-3">
+            <div class="flex-1 h-px bg-stone-200" />
+            <span class="text-xs text-stone-400 font-medium">ou</span>
+            <div class="flex-1 h-px bg-stone-200" />
+          </div>
 
-        <!-- Create -->
-        <div v-if="!hasInviteCode" class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4">
-          <h2 class="text-base font-semibold text-stone-800">Créer un salon</h2>
-          <BaseButton :loading="creating" class="w-full" @click="createLobby">
-            Créer un salon →
-          </BaseButton>
-        </div>
-        <div v-else class="text-center">
-          <button
-            class="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors"
-            :disabled="creating"
-            @click="createLobby"
+          <!-- Create -->
+          <div
+            v-if="!hasInviteCode"
+            class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4"
           >
-            {{ creating ? 'Création…' : 'ou créer un nouveau salon' }}
-          </button>
-        </div>
+            <h2 class="text-base font-semibold text-stone-800">Créer un salon</h2>
+            <BaseButton :loading="creating" class="w-full" @click="createLobby">
+              Créer un salon →
+            </BaseButton>
+          </div>
+          <div v-else class="text-center">
+            <button
+              class="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors"
+              :disabled="creating"
+              @click="createLobby"
+            >
+              {{ creating ? 'Création…' : 'ou créer un nouveau salon' }}
+            </button>
+          </div>
         </div>
       </section>
 

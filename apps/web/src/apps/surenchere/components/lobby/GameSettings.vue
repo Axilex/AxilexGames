@@ -54,7 +54,10 @@ import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import type { SurenchereRoomSettings } from '@wiki-race/shared';
 
 const props = defineProps<{ settings: SurenchereRoomSettings | undefined; disabled: boolean }>();
-const emit = defineEmits<{ start: []; 'update:settings': [{ totalRounds: number; startBid: number }] }>();
+const emit = defineEmits<{
+  start: [];
+  'update:settings': [{ totalRounds: number; startBid: number }];
+}>();
 
 const localRounds = ref(props.settings?.totalRounds ?? 3);
 const localStartBid = ref(props.settings?.startBid ?? 1);

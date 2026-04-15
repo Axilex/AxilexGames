@@ -313,7 +313,13 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       // Trigger vote resolution immediately (no eligible words → reject)
       const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
       if (resolved && result && scores !== undefined) {
-        this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, room.currentBidderSocketId);
+        this.emitRoundEnd(
+          updatedRoom,
+          result,
+          finished ?? false,
+          scores,
+          room.currentBidderSocketId,
+        );
       }
     } catch {
       // ignore

@@ -29,12 +29,21 @@ export const CHALLENGES: Omit<SurenchereChallenge, 'id' | 'source'>[] = [
   { category: '🧪 Sciences', prompt: 'citer des termes scientifiques' },
   { category: '🏛️ Villes françaises', prompt: 'citer des villes françaises' },
   { category: '🎤 Rappeurs', prompt: 'citer des rappeurs ou rappeuses' },
-  { category: '🍷 Gastronomie', prompt: 'citer des plats ou spécialités gastronomiques françaises' },
+  {
+    category: '🍷 Gastronomie',
+    prompt: 'citer des plats ou spécialités gastronomiques françaises',
+  },
   { category: '🗺️ Géographie', prompt: 'citer des régions, départements ou villes de France' },
   { category: '📖 Littérature', prompt: 'citer des romans ou auteurs de la littérature classique' },
-  { category: '🔬 Inventions', prompt: 'citer des inventions ou découvertes scientifiques célèbres' },
+  {
+    category: '🔬 Inventions',
+    prompt: 'citer des inventions ou découvertes scientifiques célèbres',
+  },
   { category: '🏛️ Histoire', prompt: 'citer des événements historiques majeurs' },
-  { category: '🎤 Musique française', prompt: 'citer des artistes ou groupes de musique française' },
+  {
+    category: '🎤 Musique française',
+    prompt: 'citer des artistes ou groupes de musique française',
+  },
   { category: '🎭 Théâtre', prompt: 'citer des pièces de théâtre ou dramaturges célèbres' },
 ];
 

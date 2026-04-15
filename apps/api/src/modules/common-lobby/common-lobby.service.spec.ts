@@ -74,7 +74,7 @@ describe('CommonLobbyService', () => {
     });
 
     it('deletes room when last player leaves', () => {
-      const room = service.createRoom('Alice', 's1');
+      service.createRoom('Alice', 's1');
       const { deleted } = service.leaveRoom('s1');
       expect(deleted).toBe(true);
     });
@@ -90,7 +90,7 @@ describe('CommonLobbyService', () => {
 
   describe('chooseGame', () => {
     it('sets game choice for host', () => {
-      const room = service.createRoom('Alice', 's1');
+      service.createRoom('Alice', 's1');
       const updated = service.chooseGame('s1', 'surenchere');
       expect(updated.gameChoice).toBe('surenchere');
     });
@@ -112,7 +112,7 @@ describe('CommonLobbyService', () => {
     });
 
     it('throws NOT_ENOUGH_PLAYERS with only 1 player', () => {
-      const room = service.createRoom('Alice', 's1');
+      service.createRoom('Alice', 's1');
       service.chooseGame('s1', 'wikirace');
       expect(() => service.startRoom('s1')).toThrow('NOT_ENOUGH_PLAYERS');
     });

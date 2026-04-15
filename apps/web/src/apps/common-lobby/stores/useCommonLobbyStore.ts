@@ -10,9 +10,7 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
   const session = useCommonSessionStore();
 
   const myPseudo = computed(() => session.pseudo);
-  const isHost = computed(
-    () => !!room.value && room.value.hostPseudo === myPseudo.value,
-  );
+  const isHost = computed(() => !!room.value && room.value.hostPseudo === myPseudo.value);
   const gameChoice = computed<GameChoice>(() => room.value?.gameChoice ?? null);
   const canStart = computed(
     () =>
@@ -39,5 +37,16 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
     error.value = '';
   }
 
-  return { room, error, myPseudo, isHost, gameChoice, canStart, setRoom, setError, clearError, reset };
+  return {
+    room,
+    error,
+    myPseudo,
+    isHost,
+    gameChoice,
+    canStart,
+    setRoom,
+    setError,
+    clearError,
+    reset,
+  };
 });

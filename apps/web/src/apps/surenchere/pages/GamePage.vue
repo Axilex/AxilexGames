@@ -36,10 +36,7 @@
 
           <!-- BIDDING -->
           <template v-if="store.phase === 'BIDDING'">
-            <BidTimer
-              :ends-at="store.bidTimerEndsAt"
-              :total-ms="30_000"
-            />
+            <BidTimer :ends-at="store.bidTimerEndsAt" :total-ms="30_000" />
             <BidControls
               :can-bid="store.canBid"
               :can-challenge="store.canChallenge"

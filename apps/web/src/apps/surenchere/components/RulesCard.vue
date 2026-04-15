@@ -10,9 +10,17 @@ const sections: RuleSection[] = [
     title: 'Déroulement',
     items: [
       { icon: '🎯', label: 'Défi', description: 'Le meneur choisit un défi parmi 3 propositions.' },
-      { icon: '💰', label: 'Enchères', description: 'Les joueurs surenchérissent ou passent. Timer de 30 s.' },
+      {
+        icon: '💰',
+        label: 'Enchères',
+        description: 'Les joueurs surenchérissent ou passent. Timer de 30 s.',
+      },
       { icon: '📝', label: 'Mots', description: 'Le gagnant liste ses mots. Timer configurable.' },
-      { icon: '🗳', label: 'Vote bloc', description: 'Tous les autres votent ✅ Accepter ou ❌ Refuser.' },
+      {
+        icon: '🗳',
+        label: 'Vote bloc',
+        description: 'Tous les autres votent ✅ Accepter ou ❌ Refuser.',
+      },
     ],
   },
   {
@@ -28,7 +36,7 @@ const sections: RuleSection[] = [
     bullets: [
       'Le meneur tourne à chaque manche.',
       "Seul l'hôte peut lancer la partie.",
-      'En cas d\'égalité des votes, les mots sont refusés.',
+      "En cas d'égalité des votes, les mots sont refusés.",
       'Si tous passent, le dernier à passer est forcé au bid de départ.',
       'La partie se termine après N manches.',
     ],

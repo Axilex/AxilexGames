@@ -107,8 +107,18 @@ import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { lobbySocket } from '../services/lobby.service';
 
 const GAMES = [
-  { id: 'wikirace', icon: '🌐', name: 'WikiRace', description: 'Naviguez de page en page sur Wikipédia.' },
-  { id: 'surenchere', icon: '🏆', name: 'Surenchère', description: 'Enchérissez et bluffez sur vos connaissances.' },
+  {
+    id: 'wikirace',
+    icon: '🌐',
+    name: 'WikiRace',
+    description: 'Naviguez de page en page sur Wikipédia.',
+  },
+  {
+    id: 'surenchere',
+    icon: '🏆',
+    name: 'Surenchère',
+    description: 'Enchérissez et bluffez sur vos connaissances.',
+  },
 ];
 
 const router = useRouter();

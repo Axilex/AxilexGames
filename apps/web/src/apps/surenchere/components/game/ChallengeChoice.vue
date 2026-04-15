@@ -12,7 +12,9 @@
     <div v-if="endsAt" class="flex flex-col gap-1">
       <div class="flex items-center justify-between text-xs text-stone-500">
         <span class="font-semibold uppercase tracking-widest">⏱ Temps de choix</span>
-        <span :class="['font-bold tabular-nums', secondsLeft <= 3 ? 'text-red-600' : 'text-stone-700']">
+        <span
+          :class="['font-bold tabular-nums', secondsLeft <= 3 ? 'text-red-600' : 'text-stone-700']"
+        >
           {{ secondsLeft }}s
         </span>
       </div>
@@ -100,10 +102,16 @@ const props = defineProps<{
 const TOTAL_MS = 10_000;
 const now = ref(Date.now());
 let interval: ReturnType<typeof setInterval> | null = null;
-onMounted(() => { interval = setInterval(() => { now.value = Date.now(); }, 100); });
-onUnmounted(() => { if (interval) clearInterval(interval); });
+onMounted(() => {
+  interval = setInterval(() => {
+    now.value = Date.now();
+  }, 100);
+});
+onUnmounted(() => {
+  if (interval) clearInterval(interval);
+});
 
-const remaining = computed(() => props.endsAt ? Math.max(0, props.endsAt - now.value) : 0);
+const remaining = computed(() => (props.endsAt ? Math.max(0, props.endsAt - now.value) : 0));
 const secondsLeft = computed(() => Math.ceil(remaining.value / 1000));
 const progressPct = computed(() => (remaining.value / TOTAL_MS) * 100);
 

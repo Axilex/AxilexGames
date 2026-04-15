@@ -2,7 +2,9 @@
   <div v-if="endsAt" class="flex flex-col gap-1">
     <div class="flex items-center justify-between text-xs text-stone-500">
       <span class="font-semibold uppercase tracking-widest">⏱ Temps enchères</span>
-      <span :class="['font-bold tabular-nums', secondsLeft <= 5 ? 'text-red-600' : 'text-stone-700']">
+      <span
+        :class="['font-bold tabular-nums', secondsLeft <= 5 ? 'text-red-600' : 'text-stone-700']"
+      >
         {{ secondsLeft }}s
       </span>
     </div>

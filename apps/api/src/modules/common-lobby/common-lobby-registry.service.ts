@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PlayerStatus, CommonPlayerDTO, CommonRoomDTO } from '@wiki-race/shared';
+import { CommonPlayerDTO, CommonRoomDTO } from '@wiki-race/shared';
 import { BaseRoomRegistryService } from '../../common/game-room';
 import { CommonRoom, CommonPlayer } from './common-lobby.types';
 
