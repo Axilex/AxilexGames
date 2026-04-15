@@ -73,21 +73,12 @@ export class LobbyService {
       return { room: null, deleted: true };
     }
 
-    // Transfer host if needed
-    if (room.hostSocketId === socketId) {
-      const newHost = room.players.values().next().value as Player;
-      room.hostSocketId = newHost.socketId;
-    }
-
+    this.registry.transferHostIfNeeded(room, socketId);
     return { room, deleted: false };
   }
 
   markDisconnected(socketId: string): Room | null {
-    const room = this.registry.findRoomBySocketId(socketId);
-    if (!room) return null;
-    const player = room.players.get(socketId);
-    if (player) player.status = PlayerStatus.DISCONNECTED;
-    return room;
+    return this.registry.markDisconnected(socketId);
   }
 
   handleReconnect(

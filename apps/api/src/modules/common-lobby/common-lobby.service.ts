@@ -56,22 +56,12 @@ export class CommonLobbyService {
       return { room: null, deleted: true };
     }
 
-    // Transfer host if needed
-    if (room.hostSocketId === socketId) {
-      const newHost = room.players.values().next().value as CommonPlayer;
-      room.hostSocketId = newHost.socketId;
-      newHost.isHost = true;
-    }
-
+    this.registry.transferHostIfNeeded(room, socketId);
     return { room, deleted: false };
   }
 
   markDisconnected(socketId: string): CommonRoom | null {
-    const room = this.registry.findRoomBySocketId(socketId);
-    if (!room) return null;
-    const player = room.players.get(socketId);
-    if (player) player.status = PlayerStatus.DISCONNECTED;
-    return room;
+    return this.registry.markDisconnected(socketId);
   }
 
   chooseGame(socketId: string, game: GameChoice): CommonRoom {

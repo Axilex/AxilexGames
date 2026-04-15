@@ -33,4 +33,12 @@ export class CommonLobbyRegistryService extends MapRoomRegistryService<CommonPla
       hostPseudo: hostPlayer?.pseudo ?? '',
     };
   }
+
+  override transferHostIfNeeded(room: CommonRoom, leavingSocketId: string): void {
+    super.transferHostIfNeeded(room, leavingSocketId);
+    if (room.hostSocketId !== leavingSocketId) {
+      const newHost = room.players.get(room.hostSocketId);
+      if (newHost) newHost.isHost = true;
+    }
+  }
 }

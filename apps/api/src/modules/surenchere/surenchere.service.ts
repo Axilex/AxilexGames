@@ -114,11 +114,7 @@ export class SurenchereService {
   }
 
   markDisconnected(socketId: string): SurenchereRoom | null {
-    const room = this.registry.findRoomBySocketId(socketId);
-    if (!room) return null;
-    const player = room.players.find((p) => p.socketId === socketId);
-    if (player) player.status = PlayerStatus.DISCONNECTED;
-    return room;
+    return this.registry.markDisconnected(socketId);
   }
 
   updateSettings(

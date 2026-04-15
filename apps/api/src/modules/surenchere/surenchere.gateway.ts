@@ -25,7 +25,7 @@ import {
 import { SurenchereService } from './surenchere.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -81,8 +81,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       await client.join(payload.roomCode);
       this.server.to(payload.roomCode).emit('surenchere:room:update', room);
     } catch (err) {
-      const code = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
-      client.emit('surenchere:error', { code, message: code });
+      this.emitError(client, err);
     }
   }
 
@@ -383,5 +382,10 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     this.clearChooseTimer(code);
     this.clearBidTimer(code);
     this.clearWordsTimerByCode(code);
+  }
+
+  private emitError(client: TypedSocket, e: unknown): void {
+    const code = extractErrorCode(e);
+    client.emit('surenchere:error', { code, message: code });
   }
 }

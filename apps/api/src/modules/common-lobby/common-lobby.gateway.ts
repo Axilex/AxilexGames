@@ -17,7 +17,7 @@ import {
   LobbyJoinPayload,
   LobbyChooseGamePayload,
 } from '@wiki-race/shared';
-import { GAME_GATEWAY_CONFIG } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
 import { CommonLobbyService } from './common-lobby.service';
 import { CommonLobbyRegistryService } from './common-lobby-registry.service';
 import { SurenchereService } from '../surenchere/surenchere.service';
@@ -138,7 +138,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
   }
 
   private emitError(client: TypedSocket, e: unknown): void {
-    const message = e instanceof Error ? e.message : 'UNKNOWN_ERROR';
+    const message = extractErrorCode(e);
     client.emit('lobby:error', { code: message, message });
   }
 }

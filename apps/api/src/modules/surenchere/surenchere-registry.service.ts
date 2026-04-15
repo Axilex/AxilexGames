@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SurenchereRoom, SurencherePlayer } from '@wiki-race/shared';
+import { PlayerStatus, SurenchereRoom, SurencherePlayer } from '@wiki-race/shared';
 import { BaseRoomRegistryService } from '../../common/game-room';
 
 @Injectable()
@@ -59,5 +59,14 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
     player.socketId = newSocketId;
     this.unbindSocket(oldSocketId);
     this.bindSocket(newSocketId, code);
+  }
+
+  /** Marks the player as DISCONNECTED and returns the room, or null if not found. */
+  markDisconnected(socketId: string): SurenchereRoom | null {
+    const room = this.findRoomBySocketId(socketId);
+    if (!room) return null;
+    const player = room.players.find((p) => p.socketId === socketId);
+    if (player) player.status = PlayerStatus.DISCONNECTED;
+    return room;
   }
 }
