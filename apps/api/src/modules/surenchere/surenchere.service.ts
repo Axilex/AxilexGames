@@ -121,6 +121,20 @@ export class SurenchereService {
     return room;
   }
 
+  updateSettings(
+    socketId: string,
+    settings: { totalRounds: number; startBid: number },
+  ): SurenchereRoom {
+    const room = this.registry.findRoomBySocketId(socketId);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    const player = room.players.find((p) => p.socketId === socketId);
+    if (!player?.isHost) throw new Error('NOT_HOST');
+    if (room.phase !== 'WAITING') throw new Error('GAME_IN_PROGRESS');
+    room.settings.totalRounds = settings.totalRounds;
+    room.settings.startBid = settings.startBid;
+    return room;
+  }
+
   startGame(socketId: string): SurenchereRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');

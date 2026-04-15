@@ -34,6 +34,9 @@ export const surenchereSocket = {
   typing(text: string): void {
     socketService.emit('surenchere:typing', { text });
   },
+  updateSettings(settings: { totalRounds: number; startBid: number }): void {
+    socketService.emit('surenchere:update-settings', settings);
+  },
   reset(): void {
     socketService.emit('surenchere:reset', undefined as never);
   },

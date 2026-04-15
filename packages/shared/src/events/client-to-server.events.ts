@@ -87,6 +87,11 @@ export interface SurenchereSubmitWordsPayload {
   words: string[];
 }
 
+export interface SurenchereUpdateSettingsPayload {
+  totalRounds: number;
+  startBid: number;
+}
+
 export interface ClientToServerEvents {
   'lobby:create': (payload: LobbyCreatePayload) => void;
   'lobby:join': (payload: LobbyJoinPayload) => void;
@@ -114,4 +119,5 @@ export interface ClientToServerEvents {
   'surenchere:choose_challenge': (payload: SurenchereChooseChallengePayload) => void;
   'surenchere:submit_words': (payload: SurenchereSubmitWordsPayload) => void;
   'surenchere:reset': () => void;
+  'surenchere:update-settings': (payload: SurenchereUpdateSettingsPayload) => void;
 }

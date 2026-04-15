@@ -20,6 +20,7 @@
           :settings="store.room?.settings"
           :disabled="!canStart"
           @start="onStart"
+          @update:settings="onUpdateSettings"
         />
         <div
           v-else
@@ -64,6 +65,10 @@ onMounted(() => {
 
 function onStart(): void {
   surenchereSocket.start();
+}
+
+function onUpdateSettings(settings: { totalRounds: number; startBid: number }): void {
+  surenchereSocket.updateSettings(settings);
 }
 
 function onLeave(): void {

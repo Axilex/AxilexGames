@@ -18,6 +18,7 @@ import {
   SurenchereTypingPayload,
   SurenchereChooseChallengePayload,
   SurenchereSubmitWordsPayload,
+  SurenchereUpdateSettingsPayload,
   SurenchereRoom,
   SurenchereRoundResult,
 } from '@wiki-race/shared';
@@ -92,6 +93,15 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       await client.leave(updatedRoom.code);
       this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
     }
+  }
+
+  @SubscribeMessage('surenchere:update-settings')
+  handleUpdateSettings(
+    @ConnectedSocket() client: TypedSocket,
+    @MessageBody() payload: SurenchereUpdateSettingsPayload,
+  ): void {
+    const room = this.surenchere.updateSettings(client.id, payload);
+    this.server.to(room.code).emit('surenchere:room:update', room);
   }
 
   @SubscribeMessage('surenchere:start')
