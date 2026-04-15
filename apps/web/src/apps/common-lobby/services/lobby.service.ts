@@ -13,6 +13,9 @@ export const lobbySocket = {
   chooseGame(game: 'wikirace' | 'surenchere'): void {
     socketService.emit('lobby:choose-game', { game });
   },
+  clearGame(): void {
+    socketService.emit('lobby:clear-game', undefined as never);
+  },
   start(): void {
     socketService.emit('lobby:start', undefined as never);
   },

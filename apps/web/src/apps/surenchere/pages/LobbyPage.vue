@@ -75,6 +75,6 @@ function onLeave(): void {
   surenchereSocket.leave();
   session.clearSession();
   store.reset();
-  router.push({ name: 'surenchere' });
+  router.push({ name: 'home' });
 }
 </script>

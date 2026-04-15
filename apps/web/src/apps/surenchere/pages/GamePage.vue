@@ -1,14 +1,15 @@
 <template>
   <div class="min-h-screen bg-stone-50 flex flex-col">
     <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-3">
-      <div class="max-w-5xl mx-auto flex items-center justify-between">
-        <h1 class="text-base font-bold text-stone-900">
+      <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+        <h1 class="text-base font-bold text-stone-900 shrink-0">
           🏆 Surenchère
           <span class="text-stone-400 font-normal ml-2">
             Manche {{ store.room?.currentRound ?? 0 }} / {{ store.room?.settings.totalRounds ?? 0 }}
           </span>
         </h1>
         <ScoresBand :players="store.room?.players ?? []" :my-socket-id="store.mySocketId" />
+        <BaseButton variant="ghost" size="sm" class="shrink-0" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
 
@@ -106,10 +107,17 @@ import WordsDisplay from '../components/game/WordsDisplay.vue';
 import ScoresBand from '../components/game/ScoresBand.vue';
 import RoundHistory from '../components/game/RoundHistory.vue';
 import RulesCard from '../components/RulesCard.vue';
+import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import { useSurenchereStore } from '../stores/useSurenchereStore';
 import { surenchereSocket } from '../services/surenchere.service';
+import { useRouter } from 'vue-router';
 
 const store = useSurenchereStore();
+const router = useRouter();
+
+function onLeave(): void {
+  router.push({ name: 'surenchere-lobby' });
+}
 
 function onChooseChallenge(options: { challengeId?: string; customPhrase?: string }): void {
   surenchereSocket.chooseChallenge(options);

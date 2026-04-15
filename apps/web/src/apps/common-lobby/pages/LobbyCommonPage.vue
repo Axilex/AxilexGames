@@ -129,7 +129,11 @@ const shareUrl = computed(() =>
 );
 
 function onChooseGame(game: 'wikirace' | 'surenchere'): void {
-  lobbySocket.chooseGame(game);
+  if (store.gameChoice === game) {
+    lobbySocket.clearGame();
+  } else {
+    lobbySocket.chooseGame(game);
+  }
 }
 
 function onStart(): void {

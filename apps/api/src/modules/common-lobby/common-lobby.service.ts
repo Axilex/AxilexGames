@@ -82,6 +82,14 @@ export class CommonLobbyService {
     return room;
   }
 
+  clearGameChoice(socketId: string): CommonRoom {
+    const room = this.registry.findRoomBySocketId(socketId);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
+    room.gameChoice = null;
+    return room;
+  }
+
   startRoom(socketId: string): CommonRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');

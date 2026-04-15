@@ -113,6 +113,19 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('lobby:clear-game')
+  handleClearGame(@ConnectedSocket() client: TypedSocket): void {
+    try {
+      const room = this.lobbyService.clearGameChoice(client.id);
+      this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
+    } catch (e: unknown) {
+      client.emit('lobby:error', {
+        code: (e as Error).message,
+        message: (e as Error).message,
+      });
+    }
+  }
+
   @SubscribeMessage('lobby:start')
   handleStart(@ConnectedSocket() client: TypedSocket): void {
     try {
