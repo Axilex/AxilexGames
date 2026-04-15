@@ -18,8 +18,19 @@ export function useSurenchereListeners(): void {
 
   socketService.on('surenchere:room:update', (room) => {
     if (!store.mySocketId && socketService.id) store.setMySocketId(socketService.id);
+
+    // Guard: only process navigation for players who are actually registered in this room.
+    // Without this, a player still in the common-lobby socket.io room (same code) would receive
+    // broadcasts from other players joining Surenchère and get incorrectly redirected.
+    const myId = store.mySocketId || socketService.id;
+    const isInRoom = room.players.some((p) => p.socketId === myId);
+
     store.setRoom(room);
-    if (room.code) session.setSession(session.pseudo, room.code);
+    // Only persist session if we have a pseudo — avoids overwriting it with an empty string
+    // when overhearing a broadcast before our own lobby:redirect has fired.
+    if (room.code && session.pseudo) session.setSession(session.pseudo, room.code);
+
+    if (!isInRoom) return;
 
     if (room.phase === 'WAITING') {
       if (router.currentRoute.value.name !== 'surenchere-lobby') {
