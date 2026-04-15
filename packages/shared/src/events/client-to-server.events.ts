@@ -99,6 +99,7 @@ export interface ClientToServerEvents {
   'lobby:choose-game': (payload: LobbyChooseGamePayload) => void;
   'lobby:clear-game': () => void;
   'lobby:start': () => void;
+  'lobby:reset': () => void;
   'wikirace:room:create': (payload: RoomCreatePayload) => void;
   'wikirace:room:join': (payload: RoomJoinPayload) => void;
   'wikirace:room:leave': (payload: { roomCode: string }) => void;

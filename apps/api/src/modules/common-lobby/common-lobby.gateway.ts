@@ -131,7 +131,17 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       }
 
       this.server.to(room.code).emit('lobby:redirect', { game: room.gameChoice, code: room.code });
-      this.registry.deleteRoom(room.code);
+      // Room stays alive in IN_GAME state so players can return to it after the game
+    } catch (e: unknown) {
+      this.emitError(client, e);
+    }
+  }
+
+  @SubscribeMessage('lobby:reset')
+  handleReset(@ConnectedSocket() client: TypedSocket): void {
+    try {
+      const room = this.lobbyService.resetToWaiting(client.id);
+      this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {
       this.emitError(client, e);
     }

@@ -9,6 +9,7 @@ export class LobbyService {
   constructor(private readonly registry: RoomRegistryService) {}
 
   seedRoom(code: string, players: Array<{ pseudo: string; isHost: boolean }>): void {
+    this.registry.deleteRoom(code); // clean up any previous room with this code
     const hostPlayer = players.find((p) => p.isHost) ?? players[0];
     const host = {
       ...this.makePlayer(`seed-${hostPlayer.pseudo}`, hostPlayer.pseudo),

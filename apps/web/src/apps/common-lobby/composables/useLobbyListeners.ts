@@ -19,15 +19,20 @@ export function useLobbyListeners(): void {
   socketService.on('lobby:room-update', (room) => {
     store.setRoom(room);
     if (room.code) session.setSession(session.pseudo, room.code);
-    if (router.currentRoute.value.name !== 'common-lobby') {
+    // Only auto-navigate when the room returns to WAITING (e.g. host resets after a game)
+    // Don't interrupt players who are in the middle of a game
+    if (
+      room.status === 'WAITING' &&
+      session.roomCode &&
+      router.currentRoute.value.name !== 'common-lobby'
+    ) {
       router.push({ name: 'common-lobby', params: { code: room.code } });
     }
   });
 
   socketService.on('lobby:redirect', ({ game, code }) => {
     const pseudo = session.pseudo;
-    session.clearSession();
-    store.reset();
+    // Keep the common session alive so players can return to this lobby after the game
 
     if (game === 'surenchere') {
       surenchereSession.setSession(pseudo, '');

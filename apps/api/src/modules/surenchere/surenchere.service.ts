@@ -44,6 +44,7 @@ export class SurenchereService {
     players: Array<{ pseudo: string; isHost: boolean }>,
     settings: Partial<{ totalRounds: number; startBid: number }> = {},
   ): void {
+    this.registry.deleteRoom(code); // clean up any previous room with this code
     const hostPlayer = players.find((p) => p.isHost) ?? players[0];
     const host: SurencherePlayer = {
       socketId: `seed-${hostPlayer.pseudo}`,

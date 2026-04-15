@@ -31,8 +31,11 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex gap-3 justify-center">
+      <div class="flex gap-3 justify-center flex-wrap">
         <BaseButton variant="secondary" @click="goHome"> Accueil </BaseButton>
+        <BaseButton v-if="commonSession.roomCode" variant="secondary" @click="returnToCommonLobby">
+          ↩ Retour au lobby commun
+        </BaseButton>
         <BaseButton v-if="isHost" @click="playAgain"> Rejouer dans cette room → </BaseButton>
         <BaseButton v-else variant="secondary" @click="goToLobby"> Retour au lobby </BaseButton>
       </div>
@@ -46,7 +49,10 @@ import { useRouter } from 'vue-router';
 import { useGameStore } from '../stores/useGameStore';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
 import { useLobbyStore } from '../stores/useLobbyStore';
+import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
+import { useCommonLobbyStore } from '@/apps/common-lobby/stores/useCommonLobbyStore';
 import { lobbyService } from '../services/lobby.service';
+import { lobbySocket as commonLobbySocket } from '@/apps/common-lobby/services/lobby.service';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import WinnerBanner from '../components/summary/WinnerBanner.vue';
 import PlayerPathDisplay from '../components/summary/PlayerPathDisplay.vue';
@@ -56,15 +62,30 @@ const router = useRouter();
 const gameStore = useGameStore();
 const sessionStore = useSessionStore();
 const lobbyStore = useLobbyStore();
+const commonSession = useCommonSessionStore();
+const commonLobbyStore = useCommonLobbyStore();
 
 const summary = computed(() => gameStore.summary);
 const isHost = computed(() => lobbyStore.room?.hostPseudo === sessionStore.pseudo);
 
 function goHome() {
+  if (commonSession.roomCode) {
+    commonLobbySocket.leave();
+    commonSession.clearSession();
+    commonLobbyStore.reset();
+  }
   gameStore.reset();
   sessionStore.clearSession();
   lobbyStore.reset();
   router.push({ name: 'wikirace' });
+}
+
+function returnToCommonLobby() {
+  const code = commonSession.roomCode;
+  gameStore.reset();
+  sessionStore.clearSession();
+  lobbyStore.reset();
+  router.push({ name: 'common-lobby', params: { code } });
 }
 
 function playAgain() {

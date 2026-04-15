@@ -19,21 +19,18 @@ export class CommonLobbyService {
   joinRoom(roomCode: string, pseudo: string, socketId: string): CommonRoom {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
-    if (room.status === 'IN_GAME') throw new Error('GAME_IN_PROGRESS');
 
-    // Reconnect: same pseudo, disconnected
-    const existing = Array.from(room.players.values()).find(
-      (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
-    );
+    // Reconnect or return from game: same pseudo already has a slot — rebind socket
+    const existing = Array.from(room.players.values()).find((p) => p.pseudo === pseudo);
     if (existing) {
       this.registry.rebindSocket(existing.socketId, socketId, roomCode);
       existing.status = PlayerStatus.CONNECTED;
       return room;
     }
 
+    // New player: cannot join while a game is in progress
+    if (room.status === 'IN_GAME') throw new Error('GAME_IN_PROGRESS');
     if (room.players.size >= MAX_PLAYERS) throw new Error('ROOM_FULL');
-    if (Array.from(room.players.values()).some((p) => p.pseudo === pseudo))
-      throw new Error('PSEUDO_TAKEN');
 
     const player: CommonPlayer = {
       socketId,
@@ -101,5 +98,17 @@ export class CommonLobbyService {
 
   getConnectedPlayers(room: CommonRoom): CommonPlayer[] {
     return Array.from(room.players.values()).filter((p) => p.status === PlayerStatus.CONNECTED);
+  }
+
+  resetToWaiting(socketId: string): CommonRoom {
+    const room = this.registry.findRoomBySocketId(socketId);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
+    room.status = 'WAITING';
+    room.gameChoice = null;
+    for (const player of room.players.values()) {
+      player.status = PlayerStatus.CONNECTED;
+    }
+    return room;
   }
 }

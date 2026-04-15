@@ -49,44 +49,59 @@
       <div class="flex flex-col gap-4">
         <!-- Game choice -->
         <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4">
-          <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
-            Choix du jeu
-          </span>
+          <template v-if="store.room?.status === 'IN_GAME'">
+            <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
+              Partie en cours
+            </span>
+            <p class="text-sm text-stone-500 text-center">
+              La partie vient de se terminer. Choisissez un nouveau jeu pour rejouer.
+            </p>
+            <BaseButton v-if="store.isHost" class="w-full" @click="onResetGame">
+              Choisir un nouveau jeu
+            </BaseButton>
+            <p v-else class="text-xs text-stone-400 text-center">En attente du host…</p>
+          </template>
 
-          <div class="flex flex-col gap-2">
-            <button
-              v-for="game in GAMES"
-              :key="game.id"
-              :disabled="!store.isHost"
-              :class="[
-                'rounded-xl border px-4 py-3 text-left transition-all',
-                store.gameChoice === game.id
-                  ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-300'
-                  : 'border-stone-200 bg-stone-50 hover:border-amber-300',
-                !store.isHost ? 'cursor-default' : 'cursor-pointer',
-              ]"
-              @click="store.isHost && onChooseGame(game.id as 'wikirace' | 'surenchere')"
+          <template v-else>
+            <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
+              Choix du jeu
+            </span>
+
+            <div class="flex flex-col gap-2">
+              <button
+                v-for="game in GAMES"
+                :key="game.id"
+                :disabled="!store.isHost"
+                :class="[
+                  'rounded-xl border px-4 py-3 text-left transition-all',
+                  store.gameChoice === game.id
+                    ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-300'
+                    : 'border-stone-200 bg-stone-50 hover:border-amber-300',
+                  !store.isHost ? 'cursor-default' : 'cursor-pointer',
+                ]"
+                @click="store.isHost && onChooseGame(game.id as 'wikirace' | 'surenchere')"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">{{ game.icon }}</span>
+                  <span class="font-semibold text-stone-900 text-sm">{{ game.name }}</span>
+                </div>
+                <p class="text-xs text-stone-500 mt-1">{{ game.description }}</p>
+              </button>
+            </div>
+
+            <p v-if="!store.isHost" class="text-xs text-stone-400 text-center">
+              En attente du choix du host…
+            </p>
+
+            <BaseButton
+              v-if="store.isHost"
+              :disabled="!store.canStart"
+              class="w-full"
+              @click="onStart"
             >
-              <div class="flex items-center gap-2">
-                <span class="text-lg">{{ game.icon }}</span>
-                <span class="font-semibold text-stone-900 text-sm">{{ game.name }}</span>
-              </div>
-              <p class="text-xs text-stone-500 mt-1">{{ game.description }}</p>
-            </button>
-          </div>
-
-          <p v-if="!store.isHost" class="text-xs text-stone-400 text-center">
-            En attente du choix du host…
-          </p>
-
-          <BaseButton
-            v-if="store.isHost"
-            :disabled="!store.canStart"
-            class="w-full"
-            @click="onStart"
-          >
-            Lancer la partie →
-          </BaseButton>
+              Lancer la partie →
+            </BaseButton>
+          </template>
         </div>
 
         <ErrorToast :message="store.error" />
@@ -97,7 +112,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
@@ -128,6 +143,13 @@ const shareUrl = computed(() =>
   store.room?.code ? `${window.location.origin}/?code=${store.room.code}` : '',
 );
 
+onMounted(() => {
+  // Re-register with the server when returning from a game (refreshes room state)
+  if (session.roomCode && session.pseudo) {
+    lobbySocket.join(session.roomCode, session.pseudo);
+  }
+});
+
 function onChooseGame(game: 'wikirace' | 'surenchere'): void {
   if (store.gameChoice === game) {
     lobbySocket.clearGame();
@@ -138,6 +160,10 @@ function onChooseGame(game: 'wikirace' | 'surenchere'): void {
 
 function onStart(): void {
   lobbySocket.start();
+}
+
+function onResetGame(): void {
+  lobbySocket.reset();
 }
 
 function onLeave(): void {

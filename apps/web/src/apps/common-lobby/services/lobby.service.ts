@@ -19,4 +19,7 @@ export const lobbySocket = {
   start(): void {
     socketService.emit('lobby:start', undefined as never);
   },
+  reset(): void {
+    socketService.emit('lobby:reset', undefined as never);
+  },
 };
