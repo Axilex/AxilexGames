@@ -32,6 +32,7 @@ function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO
     currentWords: null,
     wasForced: false,
     voteMap: {},
+    chooseTimerEndsAt: null,
     bidTimerEndsAt: null,
     wordsTimerEndsAt: null,
     roundStarterIndex: 0,

@@ -162,9 +162,23 @@ export class SurenchereService {
     room.currentWords = null;
     room.wasForced = false;
     room.voteMap = {};
+    room.chooseTimerEndsAt = null;
     room.bidTimerEndsAt = null;
     room.wordsTimerEndsAt = null;
     room.phase = 'CHOOSING_CHALLENGE';
+  }
+
+  autoChooseChallenge(roomCode: string): SurenchereRoom {
+    const room = this.registry.findRoom(roomCode);
+    if (!room) throw new Error('ROOM_NOT_FOUND');
+    if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
+    const picked = room.challengeOptions[0];
+    if (!picked) throw new Error('NO_CHALLENGE_OPTIONS');
+    room.currentChallenge = { ...picked };
+    room.challengeOptions = [];
+    room.chooseTimerEndsAt = null;
+    room.phase = 'BIDDING';
+    return room;
   }
 
   chooseChallenge(

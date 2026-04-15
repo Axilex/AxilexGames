@@ -20,6 +20,7 @@
           :options="store.challengeOptions"
           :is-chooser="store.isChallengeChooser"
           :chooser-name="store.challengeChooser?.pseudo ?? null"
+          :ends-at="store.chooseTimerEndsAt"
           @choose="onChooseChallenge"
         />
 

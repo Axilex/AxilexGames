@@ -20,7 +20,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps<{ endsAt: number | null; totalMs?: number }>();
-const total = computed(() => props.totalMs ?? 30_000);
+const total = computed(() => props.totalMs ?? 10_000);
 
 const now = ref(Date.now());
 let interval: ReturnType<typeof setInterval> | null = null;

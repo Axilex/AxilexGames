@@ -31,6 +31,7 @@ type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 const NEXT_ROUND_DELAY_MS = 4000;
+const CHOOSE_TIMEOUT_MS = 10_000;
 const BID_TIMEOUT_MS = 30_000;
 
 @UseFilters(WsExceptionFilter)
@@ -40,6 +41,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
 
+  private chooseTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private bidTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private wordsTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -112,6 +114,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       round: room.currentRound,
       firstBidderSocketId: room.challengeChooserSocketId ?? '',
     });
+    this.startChooseTimer(room);
   }
 
   @SubscribeMessage('surenchere:choose_challenge')
@@ -123,6 +126,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       challengeId: payload.challengeId,
       customPhrase: payload.customPhrase,
     });
+    this.clearChooseTimer(room.code);
     this.server.to(room.code).emit('surenchere:room:update', room);
     // Start the bid timer after challenge is chosen
     this.startBidTimer(room);
@@ -246,8 +250,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
           round: nextRoom.currentRound,
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
         });
-        // Start bid timer for next round
-        this.startBidTimer(nextRoom);
+        this.startChooseTimer(nextRoom);
       } catch {
         // player left, ignore
       }
@@ -338,7 +341,40 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     }
   }
 
+  private startChooseTimer(room: SurenchereRoom): void {
+    this.clearChooseTimer(room.code);
+    const endsAt = Date.now() + CHOOSE_TIMEOUT_MS;
+    room.chooseTimerEndsAt = endsAt;
+    this.server.to(room.code).emit('surenchere:timer-update', { phase: 'CHOOSING', endsAt });
+    const timer = setTimeout(() => {
+      this.onChooseTimerExpired(room.code);
+    }, CHOOSE_TIMEOUT_MS);
+    this.chooseTimers.set(room.code, timer);
+  }
+
+  private onChooseTimerExpired(code: string): void {
+    this.chooseTimers.delete(code);
+    const room = this.surenchere.getRoomByCode(code);
+    if (!room || room.phase !== 'CHOOSING_CHALLENGE') return;
+    try {
+      const updatedRoom = this.surenchere.autoChooseChallenge(code);
+      this.server.to(code).emit('surenchere:room:update', updatedRoom);
+      this.startBidTimer(updatedRoom);
+    } catch {
+      // ignore
+    }
+  }
+
+  private clearChooseTimer(code: string): void {
+    const t = this.chooseTimers.get(code);
+    if (t) {
+      clearTimeout(t);
+      this.chooseTimers.delete(code);
+    }
+  }
+
   private clearRoomTimers(code: string): void {
+    this.clearChooseTimer(code);
     this.clearBidTimer(code);
     this.clearWordsTimerByCode(code);
   }

@@ -4,7 +4,7 @@
 
     <main class="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-10">
       <!-- Hero -->
-      <section class="text-center flex flex-col items-center gap-4 py-8">
+      <section class="text-center flex flex-col items-center gap-5 py-8">
         <div
           class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 text-xs font-semibold text-amber-700 uppercase tracking-widest"
         >
@@ -24,18 +24,28 @@
       </section>
 
       <!-- Quick play -->
-      <section class="flex flex-col gap-4 max-w-sm mx-auto w-full">
+      <section class="flex flex-col gap-5">
+        <SectionTitle title="Création de lobby" />
         <ErrorToast :message="lobbyStore.error" />
-
-        <!-- Shared pseudo -->
-        <BaseInput
-          v-model="pseudo"
-          placeholder="Ton pseudo"
-          :maxlength="16"
-          :error="pseudoError"
-          size="lg"
-          @enter="joinLobby"
-        />
+        <div class="max-w-sm mx-auto w-full flex flex-col gap-5">
+          <!-- Shared pseudo -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span class="text-sm font-semibold text-stone-700">Ton pseudo</span>
+              <span class="text-xs text-stone-400">· commun à tous les salons</span>
+            </div>
+            <BaseInput
+              v-model="pseudo"
+              placeholder="ex : Alice"
+              :maxlength="16"
+              :error="pseudoError"
+              size="lg"
+              @enter="joinLobby"
+            />
+          </div>
 
         <!-- Join -->
         <div
@@ -95,14 +105,12 @@
             {{ creating ? 'Création…' : 'ou créer un nouveau salon' }}
           </button>
         </div>
+        </div>
       </section>
 
       <!-- Games grid -->
       <section class="flex flex-col gap-5">
-        <div class="flex items-center gap-4">
-          <h2 class="text-xs font-bold text-stone-400 uppercase tracking-widest shrink-0">Jeux</h2>
-          <div class="flex-1 h-px bg-stone-200" />
-        </div>
+        <SectionTitle title="Jeux" />
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <GameCard v-for="game in games" :key="game.name" v-bind="game" />
@@ -129,6 +137,7 @@ import GameCard from '@/shared/components/ui/GameCard.vue';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import BaseInput from '@/shared/components/ui/BaseInput.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
+import SectionTitle from '@/shared/components/ui/SectionTitle.vue';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { useCommonLobbyStore } from '@/apps/common-lobby/stores/useCommonLobbyStore';
 import { lobbySocket } from '@/apps/common-lobby/services/lobby.service';

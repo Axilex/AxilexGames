@@ -28,6 +28,7 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
       voteMap: {},
       roundStarterIndex: 0,
       lastRoundResult: null,
+      chooseTimerEndsAt: null,
       bidTimerEndsAt: null,
       wordsTimerEndsAt: null,
     };

@@ -27,6 +27,8 @@ export const useSurenchereStore = defineStore('surenchere', () => {
   const scores = ref<Record<string, number>>({});
   const finalRanking = ref<SurencherePlayer[]>([]);
   const error = ref<string>('');
+  /** Server timestamp when the choose-challenge timer expires. */
+  const chooseTimerEndsAt = ref<number | null>(null);
   /** Server timestamp when the bid timer expires. */
   const bidTimerEndsAt = ref<number | null>(null);
   /** Server timestamp when the words timer expires. */
@@ -128,6 +130,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     currentWords.value = newRoom.currentWords ? [...newRoom.currentWords] : null;
     wasForced.value = newRoom.wasForced;
     scores.value = Object.fromEntries(newRoom.players.map((p) => [p.pseudo, p.score]));
+    chooseTimerEndsAt.value = newRoom.chooseTimerEndsAt ?? null;
     bidTimerEndsAt.value = newRoom.bidTimerEndsAt ?? null;
     wordsTimerEndsAt.value = newRoom.wordsTimerEndsAt ?? null;
     // Reset typing display when phase changes away from WORDS
@@ -144,6 +147,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     currentWords.value = null;
     wasForced.value = false;
     voteMap.value = {};
+    chooseTimerEndsAt.value = null;
     bidTimerEndsAt.value = null;
     wordsTimerEndsAt.value = null;
     typingText.value = '';
@@ -165,8 +169,9 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     voteMap.value = { ...votes };
   }
 
-  function setTimerUpdate(timerPhase: 'BIDDING' | 'WORDS', endsAt: number): void {
-    if (timerPhase === 'BIDDING') bidTimerEndsAt.value = endsAt;
+  function setTimerUpdate(timerPhase: 'CHOOSING' | 'BIDDING' | 'WORDS', endsAt: number): void {
+    if (timerPhase === 'CHOOSING') chooseTimerEndsAt.value = endsAt;
+    else if (timerPhase === 'BIDDING') bidTimerEndsAt.value = endsAt;
     else wordsTimerEndsAt.value = endsAt;
   }
 
@@ -218,6 +223,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     scores.value = {};
     finalRanking.value = [];
     error.value = '';
+    chooseTimerEndsAt.value = null;
     bidTimerEndsAt.value = null;
     wordsTimerEndsAt.value = null;
     typingText.value = '';
@@ -241,6 +247,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
     scores,
     finalRanking,
     error,
+    chooseTimerEndsAt,
     bidTimerEndsAt,
     wordsTimerEndsAt,
     typingText,

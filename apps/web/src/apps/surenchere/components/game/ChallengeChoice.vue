@@ -8,6 +8,23 @@
       <h2 class="text-xl font-bold text-stone-900">Choisis un défi</h2>
     </div>
 
+    <!-- Choose timer -->
+    <div v-if="endsAt" class="flex flex-col gap-1">
+      <div class="flex items-center justify-between text-xs text-stone-500">
+        <span class="font-semibold uppercase tracking-widest">⏱ Temps de choix</span>
+        <span :class="['font-bold tabular-nums', secondsLeft <= 3 ? 'text-red-600' : 'text-stone-700']">
+          {{ secondsLeft }}s
+        </span>
+      </div>
+      <div class="h-1.5 rounded-full bg-stone-100 overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all"
+          :class="secondsLeft <= 3 ? 'bg-red-500' : 'bg-amber-500'"
+          :style="{ width: `${progressPct}%` }"
+        />
+      </div>
+    </div>
+
     <!-- Challenge cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <button
@@ -70,14 +87,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { SurenchereChallenge } from '@wiki-race/shared';
 
 const props = defineProps<{
   options: SurenchereChallenge[];
   isChooser: boolean;
   chooserName: string | null;
+  endsAt: number | null;
 }>();
+
+const TOTAL_MS = 10_000;
+const now = ref(Date.now());
+let interval: ReturnType<typeof setInterval> | null = null;
+onMounted(() => { interval = setInterval(() => { now.value = Date.now(); }, 100); });
+onUnmounted(() => { if (interval) clearInterval(interval); });
+
+const remaining = computed(() => props.endsAt ? Math.max(0, props.endsAt - now.value) : 0);
+const secondsLeft = computed(() => Math.ceil(remaining.value / 1000));
+const progressPct = computed(() => (remaining.value / TOTAL_MS) * 100);
 
 const emit = defineEmits<{
   choose: [options: { challengeId?: string; customPhrase?: string }];

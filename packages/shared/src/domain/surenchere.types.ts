@@ -51,6 +51,8 @@ export interface SurenchereRoom {
   voteMap: Record<string, boolean>;
   roundStarterIndex: number;
   lastRoundResult: SurenchereRoundResult | null;
+  /** Server timestamp (ms) when the choose-challenge timer expires. Null when not in CHOOSING_CHALLENGE. */
+  chooseTimerEndsAt: number | null;
   /** Server timestamp (ms) when the bid timer expires. Null when not in BIDDING. */
   bidTimerEndsAt: number | null;
   /** Server timestamp (ms) when the words timer expires. Null when not in WORDS. */

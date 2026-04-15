@@ -50,7 +50,7 @@ export interface ServerToClientEvents {
     scores: Record<string, number>;
     ranked: SurencherePlayer[];
   }) => void;
-  'surenchere:timer-update': (payload: { phase: 'BIDDING' | 'WORDS'; endsAt: number }) => void;
+  'surenchere:timer-update': (payload: { phase: 'CHOOSING' | 'BIDDING' | 'WORDS'; endsAt: number }) => void;
   'surenchere:vote-update': (payload: { votes: Record<string, boolean | null> }) => void;
   'surenchere:typing-update': (payload: { pseudo: string; text: string }) => void;
   'surenchere:error': (payload: { code: string; message: string }) => void;
