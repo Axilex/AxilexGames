@@ -103,7 +103,7 @@ export class LobbyService {
     );
     if (!existing) return null;
 
-    this.registry.updateSocketId(existing.socketId, newSocketId, roomCode);
+    this.registry.rebindSocket(existing.socketId, newSocketId, roomCode);
     existing.status = PlayerStatus.CONNECTED;
     return { room, player: existing };
   }

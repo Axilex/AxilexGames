@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Room, Player, GameStatus } from '@wiki-race/shared';
-import { BaseRoomRegistryService } from '../../common/game-room';
+import { MapRoomRegistryService } from '../../common/game-room';
 
 @Injectable()
-export class RoomRegistryService extends BaseRoomRegistryService<Room> {
+export class RoomRegistryService extends MapRoomRegistryService<Player, Room> {
   createRoom(code: string, host: Player): Room {
     const room: Room = {
       code,
@@ -18,35 +18,9 @@ export class RoomRegistryService extends BaseRoomRegistryService<Room> {
     return room;
   }
 
-  addPlayer(code: string, player: Player): void {
+  override rebindSocket(oldSocketId: string, newSocketId: string, code: string): void {
+    super.rebindSocket(oldSocketId, newSocketId, code);
     const room = this.rooms.get(code);
-    if (!room) throw new Error(`Room ${code} not found`);
-    room.players.set(player.socketId, player);
-    this.bindSocket(player.socketId, code);
-  }
-
-  removePlayer(code: string, socketId: string): void {
-    const room = this.rooms.get(code);
-    if (!room) return;
-    room.players.delete(socketId);
-    this.unbindSocket(socketId);
-  }
-
-  updateSocketId(oldSocketId: string, newSocketId: string, code: string): void {
-    const room = this.rooms.get(code);
-    if (!room) return;
-    const player = room.players.get(oldSocketId);
-    if (!player) return;
-    player.socketId = newSocketId;
-    room.players.delete(oldSocketId);
-    room.players.set(newSocketId, player);
-    this.unbindSocket(oldSocketId);
-    this.bindSocket(newSocketId, code);
-    if (room.hostSocketId === oldSocketId) {
-      room.hostSocketId = newSocketId;
-    }
-    if (room.chooserSocketId === oldSocketId) {
-      room.chooserSocketId = newSocketId;
-    }
+    if (room?.chooserSocketId === oldSocketId) room.chooserSocketId = newSocketId;
   }
 }
