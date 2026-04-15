@@ -2,8 +2,9 @@ import { PlayerStatus } from '@wiki-race/shared';
 import { BaseRoom } from './base-room.interface';
 import { BaseRoomRegistryService } from './base-room-registry.service';
 
-export interface RoomWithMappedPlayers<P extends { socketId: string; status: PlayerStatus }>
-  extends BaseRoom {
+export interface RoomWithMappedPlayers<
+  P extends { socketId: string; status: PlayerStatus },
+> extends BaseRoom {
   players: Map<string, P>;
   hostSocketId: string;
 }
