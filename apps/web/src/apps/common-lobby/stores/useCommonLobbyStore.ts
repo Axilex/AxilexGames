@@ -12,12 +12,22 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
   const myPseudo = computed(() => session.pseudo);
   const isHost = computed(() => !!room.value && room.value.hostPseudo === myPseudo.value);
   const gameChoice = computed<GameChoice>(() => room.value?.gameChoice ?? null);
-  const canStart = computed(
-    () =>
-      isHost.value &&
-      !!gameChoice.value &&
-      (room.value?.players.filter((p) => p.status === 'CONNECTED').length ?? 0) >= 2,
+  const connectedCount = computed(
+    () => room.value?.players.filter((p) => p.status === 'CONNECTED').length ?? 0,
   );
+  const canStart = computed(
+    () => isHost.value && !!gameChoice.value && connectedCount.value >= 2,
+  );
+
+  /** Human-readable reason the start button is disabled, or null if startable. */
+  const startBlockedReason = computed<string | null>(() => {
+    if (!isHost.value) return null;
+    if (!gameChoice.value) return 'Choisis un jeu pour pouvoir lancer la partie.';
+    if (connectedCount.value < 2) {
+      return 'En attente d\u2019un autre joueur (minimum 2 pour lancer).';
+    }
+    return null;
+  });
 
   function setRoom(r: CommonRoomDTO): void {
     room.value = r;
@@ -43,7 +53,9 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
     myPseudo,
     isHost,
     gameChoice,
+    connectedCount,
     canStart,
+    startBlockedReason,
     setRoom,
     setError,
     clearError,

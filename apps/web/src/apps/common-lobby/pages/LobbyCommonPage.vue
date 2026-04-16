@@ -101,6 +101,12 @@
             >
               Lancer la partie →
             </BaseButton>
+            <p
+              v-if="store.isHost && store.startBlockedReason"
+              class="text-xs text-stone-400 text-center"
+            >
+              {{ store.startBlockedReason }}
+            </p>
           </template>
         </div>
 
@@ -162,10 +168,12 @@ const shareUrl = computed(() =>
 );
 
 onMounted(() => {
-  // Re-register with the server when returning from a game (refreshes room state)
-  if (session.roomCode && session.pseudo) {
-    lobbySocket.join(session.roomCode, session.pseudo);
-  }
+  // Re-register with the server only when our store doesn't already reflect this room
+  // (refresh, return from game). Skip when we just landed here from `lobby:create` —
+  // re-emitting `lobby:join` would just trigger a redundant rebind + broadcast.
+  if (!session.roomCode || !session.pseudo) return;
+  if (store.room?.code === session.roomCode && store.room?.status === 'WAITING') return;
+  lobbySocket.join(session.roomCode, session.pseudo);
 });
 
 function onChooseGame(game: NonNullable<GameChoice>): void {

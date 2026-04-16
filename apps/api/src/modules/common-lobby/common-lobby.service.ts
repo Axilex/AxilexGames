@@ -20,9 +20,19 @@ export class CommonLobbyService {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
-    // Reconnect or return from game: same pseudo already has a slot — rebind socket
+    // Reconnect or return from game: same pseudo already has a slot.
     const existing = Array.from(room.players.values()).find((p) => p.pseudo === pseudo);
     if (existing) {
+      // Same socket re-emitting join (e.g. page mount after create) — no-op.
+      if (existing.socketId === socketId) {
+        existing.status = PlayerStatus.CONNECTED;
+        return room;
+      }
+      // Different socket trying to claim a CONNECTED pseudo = impersonation. Refuse.
+      if (existing.status === PlayerStatus.CONNECTED) {
+        throw new Error('PSEUDO_TAKEN');
+      }
+      // Legitimate reconnection of a DISCONNECTED player.
       this.registry.rebindSocket(existing.socketId, socketId, roomCode);
       existing.status = PlayerStatus.CONNECTED;
       return room;

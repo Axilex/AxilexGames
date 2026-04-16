@@ -22,12 +22,17 @@ export function useLobbyListeners(): void {
 
   socketService.on('lobby:room-update', (room) => {
     store.setRoom(room);
-    if (room.code) session.setSession(session.pseudo, room.code);
-    // Only auto-navigate when the room returns to WAITING (e.g. host resets after a game)
-    // Don't interrupt players who are in the middle of a game
+    // Only persist when we own a pseudo for this room — overhearing a stale broadcast
+    // before our own join shouldn't blank our session.
+    if (room.code && session.pseudo) session.setSession(session.pseudo, room.code);
+
+    // Only auto-navigate when:
+    //  - the room is back in WAITING (don't interrupt mid-game players),
+    //  - this update is for OUR room (avoid hijacking on a stale broadcast),
+    //  - we're not already on the lobby page.
     if (
       room.status === 'WAITING' &&
-      session.roomCode &&
+      session.roomCode === room.code &&
       router.currentRoute.value.name !== 'common-lobby'
     ) {
       router.push({ name: 'common-lobby', params: { code: room.code } });
