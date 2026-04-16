@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PlayerStatus, SurenchereRoom, SurencherePlayer } from '@wiki-race/shared';
-import { BaseRoomRegistryService } from '../../common/game-room';
+import { SurenchereRoom, SurencherePlayer } from '@wiki-race/shared';
+import { ArrayRoomRegistryService } from '../../common/game-room';
 
 @Injectable()
-export class SurenchereRegistryService extends BaseRoomRegistryService<SurenchereRoom> {
+export class SurenchereRegistryService extends ArrayRoomRegistryService<
+  SurencherePlayer,
+  SurenchereRoom
+> {
   createRoom(
     code: string,
     host: SurencherePlayer,
@@ -34,39 +37,6 @@ export class SurenchereRegistryService extends BaseRoomRegistryService<Surencher
     };
     this.registerRoom(room);
     this.bindSocket(host.socketId, code);
-    return room;
-  }
-
-  addPlayer(code: string, player: SurencherePlayer): void {
-    const room = this.rooms.get(code);
-    if (!room) throw new Error('ROOM_NOT_FOUND');
-    room.players.push(player);
-    this.bindSocket(player.socketId, code);
-  }
-
-  removePlayer(code: string, socketId: string): void {
-    const room = this.rooms.get(code);
-    if (!room) return;
-    room.players = room.players.filter((p) => p.socketId !== socketId);
-    this.unbindSocket(socketId);
-  }
-
-  rebindSocket(oldSocketId: string, newSocketId: string, code: string): void {
-    const room = this.rooms.get(code);
-    if (!room) return;
-    const player = room.players.find((p) => p.socketId === oldSocketId);
-    if (!player) return;
-    player.socketId = newSocketId;
-    this.unbindSocket(oldSocketId);
-    this.bindSocket(newSocketId, code);
-  }
-
-  /** Marks the player as DISCONNECTED and returns the room, or null if not found. */
-  markDisconnected(socketId: string): SurenchereRoom | null {
-    const room = this.findRoomBySocketId(socketId);
-    if (!room) return null;
-    const player = room.players.find((p) => p.socketId === socketId);
-    if (player) player.status = PlayerStatus.DISCONNECTED;
     return room;
   }
 }

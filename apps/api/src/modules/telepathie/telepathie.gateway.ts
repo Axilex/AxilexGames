@@ -18,10 +18,9 @@ import {
   TelepathieChooseWordPayload,
 } from '@wiki-race/shared';
 import { TelepathieService } from './telepathie.service';
-import { TelepathieTimerService } from './telepathie-timer.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
 import { TelepathieRoomInternal } from './telepathie-room.types';
 
 /** Délai d'affichage du résultat avant de lancer le sous-round suivant (ms) */
@@ -41,7 +40,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
 
   constructor(
     private readonly telepathie: TelepathieService,
-    private readonly timerService: TelepathieTimerService,
+    private readonly timer: RoomTimerService,
   ) {}
 
   handleDisconnect(client: TypedSocket): void {
@@ -84,7 +83,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
       const { room, deleted } = this.telepathie.leaveRoom(client.id);
       if (!deleted && room) {
         await client.leave(room.code);
-        this.timerService.clearAllTimers(room.code);
+        this.timer.clearAll(room.code);
         this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
       }
     } catch {
@@ -115,7 +114,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
       const { room, allChosen } = this.telepathie.chooseWord(client.id, payload.word);
       this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
       if (allChosen) {
-        this.timerService.clearChooseTimer(room.code);
+        this.timer.clear(room.code, 'choose');
         this.startManche(room.code);
       }
     } catch (e: unknown) {
@@ -133,7 +132,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
       this.server.to(room.code).emit('telepathie:word-received', { pseudo });
 
       if (allSubmitted) {
-        this.timerService.clearRoundTimer(room.code);
+        this.timer.clear(room.code, 'round');
         this.resolveRound(room.code);
       }
     } catch (e: unknown) {
@@ -146,7 +145,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     try {
       // Annule le timer auto-next si l'hôte clique avant (ne devrait pas arriver mais sécurité)
       const existing = this.telepathie.getRoomBySocket(client.id);
-      if (existing) this.timerService.clearAutoNextTimer(existing.code);
+      if (existing) this.timer.clear(existing.code, 'autoNext');
 
       const room = this.telepathie.nextManche(client.id);
       this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
@@ -169,7 +168,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
   handleReset(@ConnectedSocket() client: TypedSocket): void {
     try {
       const existing = this.telepathie.getRoomBySocket(client.id);
-      if (existing) this.timerService.clearAllTimers(existing.code);
+      if (existing) this.timer.clearAll(existing.code);
       const room = this.telepathie.resetRoom(client.id);
       this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
     } catch (e: unknown) {
@@ -184,7 +183,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     const endsAt = Date.now() + CHOOSE_TIMER_SECONDS * 1000;
     room.roundTimerEndsAt = endsAt;
     this.server.to(room.code).emit('telepathie:choose-open', { endsAt });
-    this.timerService.startChooseTimer(room.code, CHOOSE_TIMER_SECONDS, () => {
+    this.timer.start(room.code, 'choose', CHOOSE_TIMER_SECONDS * 1000, () => {
       this.startManche(room.code);
     });
   }
@@ -205,7 +204,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     const endsAt = Date.now() + room.settings.roundTimerSeconds * 1000;
     room.roundTimerEndsAt = endsAt;
     this.server.to(room.code).emit('telepathie:input-open', { endsAt });
-    this.timerService.startRoundTimer(room.code, room.settings.roundTimerSeconds, () => {
+    this.timer.start(room.code, 'round', room.settings.roundTimerSeconds * 1000, () => {
       this.resolveRound(room.code);
     });
   }
@@ -233,7 +232,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
         // Sinon, on attend que l'hôte appelle next-manche
       } else {
         // Pas de match, manche continue : auto-start le sous-round suivant après 3s
-        this.timerService.startAutoNextTimer(roomCode, AUTO_NEXT_DELAY_MS, () => {
+        this.timer.start(roomCode, 'autoNext', AUTO_NEXT_DELAY_MS, () => {
           try {
             const updatedRoom = this.telepathie.startNextSousRound(roomCode);
             this.openSousRound(updatedRoom);

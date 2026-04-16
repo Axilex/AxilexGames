@@ -25,7 +25,7 @@ import {
 import { SurenchereService } from './surenchere.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -41,11 +41,10 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
 
-  private chooseTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  private bidTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  private wordsTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-  constructor(private readonly surenchere: SurenchereService) {}
+  constructor(
+    private readonly surenchere: SurenchereService,
+    private readonly timer: RoomTimerService,
+  ) {}
 
   handleDisconnect(client: TypedSocket): void {
     const room = this.surenchere.markDisconnected(client.id);
@@ -88,7 +87,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   @SubscribeMessage('surenchere:leave')
   async handleLeave(@ConnectedSocket() client: TypedSocket): Promise<void> {
     const room = this.surenchere.getRoomBySocket(client.id);
-    if (room) this.clearRoomTimers(room.code);
+    if (room) this.timer.clearAll(room.code);
     const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
     if (!deleted && updatedRoom) {
       await client.leave(updatedRoom.code);
@@ -125,7 +124,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       challengeId: payload.challengeId,
       customPhrase: payload.customPhrase,
     });
-    this.clearChooseTimer(room.code);
+    this.timer.clear(room.code, 'choose');
     this.server.to(room.code).emit('surenchere:room:update', room);
     // Start the bid timer after challenge is chosen
     this.startBidTimer(room);
@@ -152,7 +151,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     this.server.to(room.code).emit('surenchere:pass:update', { socketId: client.id });
     this.server.to(room.code).emit('surenchere:room:update', room);
     if (allPassed) {
-      this.clearBidTimer(room.code);
+      this.timer.clear(room.code, 'bid');
       this.startWordsTimer(room);
     } else {
       // Reset bid timer on each pass (still in bidding)
@@ -163,7 +162,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   @SubscribeMessage('surenchere:challenge')
   handleChallenge(@ConnectedSocket() client: TypedSocket): void {
     const room = this.surenchere.triggerChallenge(client.id);
-    this.clearBidTimer(room.code);
+    this.timer.clear(room.code, 'bid');
     this.server.to(room.code).emit('surenchere:room:update', room);
     this.startWordsTimer(room);
   }
@@ -259,7 +258,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   @SubscribeMessage('surenchere:reset')
   handleReset(@ConnectedSocket() client: TypedSocket): void {
     const room = this.surenchere.getRoomBySocket(client.id);
-    if (room) this.clearRoomTimers(room.code);
+    if (room) this.timer.clearAll(room.code);
     const updatedRoom = this.surenchere.resetRoom(client.id);
     this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
   }
@@ -267,22 +266,15 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   // ── Timer helpers ────────────────────────────────────────────────────────────
 
   private startBidTimer(room: SurenchereRoom): void {
-    this.clearBidTimer(room.code);
     const endsAt = Date.now() + BID_TIMEOUT_MS;
     room.bidTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'BIDDING', endsAt });
-    const timer = setTimeout(() => {
-      this.onBidTimerExpired(room.code);
-    }, BID_TIMEOUT_MS);
-    this.bidTimers.set(room.code, timer);
+    this.timer.start(room.code, 'bid', BID_TIMEOUT_MS, () => this.onBidTimerExpired(room.code));
   }
 
   private onBidTimerExpired(code: string): void {
-    this.bidTimers.delete(code);
     const room = this.surenchere.getRoomByCode(code);
-    if (!room || room.phase !== 'BIDDING') return;
-    // Only auto-force if a bidder exists; if no one bid, leave the phase to resolve normally
-    if (!room.currentBidderSocketId) return;
+    if (!room || room.phase !== 'BIDDING' || !room.currentBidderSocketId) return;
     const updatedRoom = this.surenchere.forceToWords(code);
     if (!updatedRoom) return;
     this.server.to(code).emit('surenchere:room:update', updatedRoom);
@@ -290,75 +282,36 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   }
 
   private startWordsTimer(room: SurenchereRoom): void {
-    this.clearWordsTimerByCode(room.code);
     const secs = room.settings.wordTimerSeconds;
     const endsAt = Date.now() + secs * 1000;
     room.wordsTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'WORDS', endsAt });
-    const timer = setTimeout(() => {
-      this.onWordsTimerExpired(room.code);
-    }, secs * 1000);
-    this.wordsTimers.set(room.code, timer);
+    this.timer.start(room.code, 'words', secs * 1000, () => this.onWordsTimerExpired(room.code));
   }
 
   private onWordsTimerExpired(code: string): void {
-    this.wordsTimers.delete(code);
     const room = this.surenchere.getRoomByCode(code);
     if (!room || room.phase !== 'WORDS' || !room.currentBidderSocketId) return;
     try {
-      // Auto-submit whatever words have been entered (empty = fail)
       const updatedRoom = this.surenchere.autoSubmitWords(room.currentBidderSocketId);
       this.server.to(code).emit('surenchere:room:update', updatedRoom);
-      // Trigger vote resolution immediately (no eligible words → reject)
       const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
       if (resolved && result && scores !== undefined) {
-        this.emitRoundEnd(
-          updatedRoom,
-          result,
-          finished ?? false,
-          scores,
-          room.currentBidderSocketId,
-        );
+        this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, room.currentBidderSocketId);
       }
     } catch {
       // ignore
     }
   }
 
-  private clearBidTimer(code: string): void {
-    const t = this.bidTimers.get(code);
-    if (t) {
-      clearTimeout(t);
-      this.bidTimers.delete(code);
-    }
-  }
-
-  private clearWordsTimer(socketId: string): void {
-    const room = this.surenchere.getRoomBySocket(socketId);
-    if (room) this.clearWordsTimerByCode(room.code);
-  }
-
-  private clearWordsTimerByCode(code: string): void {
-    const t = this.wordsTimers.get(code);
-    if (t) {
-      clearTimeout(t);
-      this.wordsTimers.delete(code);
-    }
-  }
-
   private startChooseTimer(room: SurenchereRoom): void {
-    this.clearChooseTimer(room.code);
     const endsAt = Date.now() + CHOOSE_TIMEOUT_MS;
     room.chooseTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'CHOOSING', endsAt });
-    const timer = setTimeout(() => {
-      this.onChooseTimerExpired(room.code);
-    }, CHOOSE_TIMEOUT_MS);
-    this.chooseTimers.set(room.code, timer);
+    this.timer.start(room.code, 'choose', CHOOSE_TIMEOUT_MS, () => this.onChooseTimerExpired(room.code));
   }
 
   private onChooseTimerExpired(code: string): void {
-    this.chooseTimers.delete(code);
     const room = this.surenchere.getRoomByCode(code);
     if (!room || room.phase !== 'CHOOSING_CHALLENGE') return;
     try {
@@ -370,18 +323,9 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     }
   }
 
-  private clearChooseTimer(code: string): void {
-    const t = this.chooseTimers.get(code);
-    if (t) {
-      clearTimeout(t);
-      this.chooseTimers.delete(code);
-    }
-  }
-
-  private clearRoomTimers(code: string): void {
-    this.clearChooseTimer(code);
-    this.clearBidTimer(code);
-    this.clearWordsTimerByCode(code);
+  private clearWordsTimer(socketId: string): void {
+    const room = this.surenchere.getRoomBySocket(socketId);
+    if (room) this.timer.clear(room.code, 'words');
   }
 
   private emitError(client: TypedSocket, e: unknown): void {

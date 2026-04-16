@@ -17,10 +17,9 @@ import {
   SnapAvisSubmitWordPayload,
 } from '@wiki-race/shared';
 import { SnapAvisService } from './snap-avis.service';
-import { SnapAvisTimerService } from './snap-avis-timer.service';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
 import { SnapAvisRoomInternal } from './snap-avis-room.types';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -35,7 +34,7 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
 
   constructor(
     private readonly snapAvis: SnapAvisService,
-    private readonly timerService: SnapAvisTimerService,
+    private readonly timer: RoomTimerService,
   ) {}
 
   handleDisconnect(client: TypedSocket): void {
@@ -77,7 +76,7 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
     const { room, deleted } = this.snapAvis.leaveRoom(client.id);
     if (!deleted && room) {
       await client.leave(room.code);
-      this.timerService.clearAllTimers(room.code);
+      this.timer.clearAll(room.code);
       this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(room));
     }
   }
@@ -106,7 +105,7 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
       this.server.to(room.code).emit('snapavis:word-received', { pseudo });
 
       if (allSubmitted) {
-        this.timerService.clearWritingTimer(room.code);
+        this.timer.clear(room.code, 'writing');
         this.resolveRound(room.code);
       }
     } catch (e: unknown) {
@@ -118,7 +117,7 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
   handleReset(@ConnectedSocket() client: TypedSocket): void {
     try {
       const existing = this.snapAvis.getRoomBySocket(client.id);
-      if (existing) this.timerService.clearAllTimers(existing.code);
+      if (existing) this.timer.clearAll(existing.code);
       const room = this.snapAvis.resetRoom(client.id);
       this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(room));
     } catch (e: unknown) {
@@ -148,14 +147,14 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
   }
 
   private scheduleRevealTimer(room: SnapAvisRoomInternal): void {
-    this.timerService.startRevealTimer(room.code, room.settings.revealDurationMs, () => {
+    this.timer.start(room.code, 'reveal', room.settings.revealDurationMs, () => {
       const endsAt = Date.now() + room.settings.writingDurationMs;
       const updatedRoom = this.snapAvis.setWritingPhase(room.code, endsAt);
       this.server.to(room.code).emit('snapavis:writing-start', { endsAt });
       // Keep room-update in sync (hasSubmitted resets, writingTimerEndsAt set)
       this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(updatedRoom));
 
-      this.timerService.startWritingTimer(room.code, room.settings.writingDurationMs, () => {
+      this.timer.start(room.code, 'writing', room.settings.writingDurationMs, () => {
         this.resolveRound(room.code);
       });
     });
