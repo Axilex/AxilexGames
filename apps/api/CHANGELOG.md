@@ -1,5 +1,16 @@
 # api
 
+## 0.4.0
+
+### Minor Changes
+
+- Add snap avis
+
+### Patch Changes
+
+- Updated dependencies
+  - @wiki-race/shared@0.4.0
+
 ## 0.3.4
 
 ### Patch Changes
