@@ -92,6 +92,23 @@ export interface SurenchereUpdateSettingsPayload {
   startBid: number;
 }
 
+export interface SnapAvisCreatePayload {
+  pseudo: string;
+}
+
+export interface SnapAvisJoinPayload {
+  roomCode: string;
+  pseudo: string;
+}
+
+export interface SnapAvisStartPayload {
+  settings?: Partial<{ totalRounds: number; revealDurationMs: number; writingDurationMs: number }>;
+}
+
+export interface SnapAvisSubmitWordPayload {
+  word: string;
+}
+
 export interface ClientToServerEvents {
   'lobby:create': (payload: LobbyCreatePayload) => void;
   'lobby:join': (payload: LobbyJoinPayload) => void;
@@ -122,4 +139,11 @@ export interface ClientToServerEvents {
   'surenchere:submit_words': (payload: SurenchereSubmitWordsPayload) => void;
   'surenchere:reset': () => void;
   'surenchere:update-settings': (payload: SurenchereUpdateSettingsPayload) => void;
+  'snapavis:create': (payload: SnapAvisCreatePayload) => void;
+  'snapavis:join': (payload: SnapAvisJoinPayload) => void;
+  'snapavis:leave': () => void;
+  'snapavis:start': (payload: SnapAvisStartPayload) => void;
+  'snapavis:submit-word': (payload: SnapAvisSubmitWordPayload) => void;
+  'snapavis:next-round': () => void;
+  'snapavis:reset': () => void;
 }

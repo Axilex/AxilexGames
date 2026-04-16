@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { wikiRaceRoutes } from '@/apps/wiki-race/router';
 import { surenchereRoutes } from '@/apps/surenchere/router';
 import { commonLobbyRoutes } from '@/apps/common-lobby/router';
+import { snapAvisRoutes } from '@/apps/snap-avis/router';
 
 /**
  * Main application router.
@@ -23,6 +24,7 @@ const router = createRouter({
     ...commonLobbyRoutes,
     ...wikiRaceRoutes,
     ...surenchereRoutes,
+    ...snapAvisRoutes,
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',

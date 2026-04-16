@@ -22,6 +22,7 @@ import { CommonLobbyService } from './common-lobby.service';
 import { CommonLobbyRegistryService } from './common-lobby-registry.service';
 import { SurenchereService } from '../surenchere/surenchere.service';
 import { LobbyService } from '../lobby/lobby.service';
+import { SnapAvisService } from '../snap-avis/snap-avis.service';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -38,6 +39,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
     private readonly registry: CommonLobbyRegistryService,
     private readonly surenchereService: SurenchereService,
     private readonly wikiLobbyService: LobbyService,
+    private readonly snapAvisService: SnapAvisService,
   ) {}
 
   handleDisconnect(client: TypedSocket): void {
@@ -128,6 +130,8 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
         this.surenchereService.seedRoom(room.code, seedPlayers);
       } else if (room.gameChoice === 'wikirace') {
         this.wikiLobbyService.seedRoom(room.code, seedPlayers);
+      } else if (room.gameChoice === 'snap-avis') {
+        this.snapAvisService.seedRoom(room.code, seedPlayers);
       }
 
       this.server.to(room.code).emit('lobby:redirect', { game: room.gameChoice, code: room.code });

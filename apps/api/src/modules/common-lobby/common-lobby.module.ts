@@ -4,9 +4,10 @@ import { CommonLobbyRegistryService } from './common-lobby-registry.service';
 import { CommonLobbyGateway } from './common-lobby.gateway';
 import { SurenchereModule } from '../surenchere/surenchere.module';
 import { LobbyModule } from '../lobby/lobby.module';
+import { SnapAvisModule } from '../snap-avis/snap-avis.module';
 
 @Module({
-  imports: [SurenchereModule, LobbyModule],
+  imports: [SurenchereModule, LobbyModule, SnapAvisModule],
   providers: [CommonLobbyService, CommonLobbyRegistryService, CommonLobbyGateway],
 })
 export class CommonLobbyModule {}

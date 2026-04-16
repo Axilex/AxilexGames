@@ -6,6 +6,7 @@ export * from './domain/game-summary.types';
 export * from './domain/bingo.types';
 export * from './domain/surenchere.types';
 export * from './domain/common-lobby.types';
+export * from './domain/snap-avis.types';
 
 // DTOs (wire format)
 export * from './dto/player.dto';

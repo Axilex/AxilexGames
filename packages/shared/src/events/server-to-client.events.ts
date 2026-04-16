@@ -11,6 +11,11 @@ import {
   SurencherePlayer,
 } from '../domain/surenchere.types';
 import { CommonRoomDTO, GameChoice } from '../domain/common-lobby.types';
+import {
+  SnapAvisRoomDTO,
+  SnapAvisRoundResult,
+  SnapAvisRankEntry,
+} from '../domain/snap-avis.types';
 
 export type ChoosingPreviewData = Omit<ChoosingPreviewPayload, 'roomCode'>;
 
@@ -57,5 +62,12 @@ export interface ServerToClientEvents {
   'surenchere:vote-update': (payload: { votes: Record<string, boolean | null> }) => void;
   'surenchere:typing-update': (payload: { pseudo: string; text: string }) => void;
   'surenchere:error': (payload: { code: string; message: string }) => void;
+  'snapavis:room-update': (room: SnapAvisRoomDTO) => void;
+  'snapavis:round-start': (payload: { round: number; total: number; imageUrl: string }) => void;
+  'snapavis:writing-start': (payload: { endsAt: number }) => void;
+  'snapavis:word-received': (payload: { pseudo: string }) => void;
+  'snapavis:results': (result: SnapAvisRoundResult) => void;
+  'snapavis:game-finished': (payload: { rankings: SnapAvisRankEntry[] }) => void;
+  'snapavis:error': (payload: { code: string; message: string }) => void;
   error: (message: string) => void;
 }

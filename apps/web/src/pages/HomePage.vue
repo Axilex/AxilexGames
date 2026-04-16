@@ -256,14 +256,15 @@ const games = [
     players: '2–8 joueurs',
   },
   {
-    name: '???',
-    description: 'Un nouveau défi arrive bientôt. Reste connecté.',
-    tags: ['Bientôt'],
-    gradient: 'from-stone-300 to-stone-400',
-    icon: 'soon',
-    to: null,
-    live: false,
-    players: null,
+    name: 'Snap Avis',
+    description:
+      'Une photo 3 secondes, un mot — marque des points si tu penses comme les autres sans être trop évident.',
+    tags: ['Multijoueur', 'Réflexes', 'Nouveau'],
+    gradient: 'from-violet-500 to-pink-500',
+    icon: 'camera',
+    to: '/snap-avis',
+    live: true,
+    players: '2–8 joueurs',
   },
 ];
 </script>

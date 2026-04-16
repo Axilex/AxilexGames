@@ -8,7 +8,6 @@
 
     <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
       <Podium :ranked="store.finalRanking" />
-      <FullScoreboard :ranked="store.finalRanking" />
 
       <div class="flex gap-3 justify-center flex-wrap">
         <BaseButton v-if="store.isHost" @click="onReplay">Rejouer</BaseButton>
@@ -25,7 +24,6 @@
 import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import Podium from '../components/summary/Podium.vue';
-import FullScoreboard from '../components/summary/FullScoreboard.vue';
 import { useSurenchereStore } from '../stores/useSurenchereStore';
 import { useSurenchereSessionStore } from '@/shared/stores/useSurenchereSessionStore';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
