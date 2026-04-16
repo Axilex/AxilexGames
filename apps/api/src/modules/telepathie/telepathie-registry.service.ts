@@ -19,6 +19,7 @@ export class TelepathieRegistryService extends ArrayRoomRegistryService<
       currentManche: 0,
       currentSousRound: 0,
       mancheResults: [],
+      sousRoundHistory: [],
       lastRoundResult: null,
       roundTimerEndsAt: null,
     };

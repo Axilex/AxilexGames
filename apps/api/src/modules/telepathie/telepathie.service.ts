@@ -71,6 +71,7 @@ export class TelepathieService {
     room.currentManche = 1;
     room.currentSousRound = 1;
     room.mancheResults = [];
+    room.sousRoundHistory = [];
     room.lastRoundResult = null;
     room.roundTimerEndsAt = null;
 
@@ -79,6 +80,7 @@ export class TelepathieService {
       p.currentWord = null;
       p.submittedWord = null;
       p.hasSubmitted = false;
+      p.usedWords = [];
       p.status = PlayerStatus.CONNECTED;
     }
 
@@ -105,8 +107,14 @@ export class TelepathieService {
       return { room, allSubmitted, pseudo: player.pseudo };
     }
 
-    player.submittedWord = this.normalizeWord(word);
+    const normalized = this.normalizeWord(word);
+    if (player.usedWords.includes(normalized)) {
+      throw new Error('DUPLICATE_WORD');
+    }
+
+    player.submittedWord = normalized;
     player.hasSubmitted = true;
+    player.usedWords.push(normalized);
 
     const connected = room.players.filter((p) => p.status === PlayerStatus.CONNECTED);
     const allSubmitted = connected.every((p) => p.hasSubmitted);
@@ -155,6 +163,7 @@ export class TelepathieService {
     };
 
     room.lastRoundResult = roundResult;
+    room.sousRoundHistory.push(roundResult);
 
     // Le mot soumis devient le mot courant pour le sous-round suivant
     for (const player of connected) {
@@ -230,6 +239,7 @@ export class TelepathieService {
       p.currentWord = null;
       p.submittedWord = null;
       p.hasSubmitted = false;
+      p.usedWords = [];
     }
     room.phase = 'CHOOSING';
 
@@ -324,6 +334,7 @@ export class TelepathieService {
       currentWord: null,
       hasSubmitted: false,
       submittedWord: null,
+      usedWords: [],
     };
     this.registry.createRoom(code, host);
 
@@ -338,6 +349,7 @@ export class TelepathieService {
         currentWord: null,
         hasSubmitted: false,
         submittedWord: null,
+        usedWords: [],
       });
     }
   }
@@ -351,6 +363,7 @@ export class TelepathieService {
     room.currentManche = 0;
     room.currentSousRound = 0;
     room.mancheResults = [];
+    room.sousRoundHistory = [];
     room.lastRoundResult = null;
     room.roundTimerEndsAt = null;
 
@@ -359,6 +372,7 @@ export class TelepathieService {
       p.currentWord = null;
       p.submittedWord = null;
       p.hasSubmitted = false;
+      p.usedWords = [];
       p.status = PlayerStatus.CONNECTED;
     }
 
@@ -384,6 +398,7 @@ export class TelepathieService {
       currentManche: room.currentManche,
       currentSousRound: room.currentSousRound,
       mancheResults: room.mancheResults,
+      sousRoundHistory: room.sousRoundHistory,
       lastRoundResult: room.lastRoundResult,
       roundTimerEndsAt: room.roundTimerEndsAt,
     };
@@ -401,6 +416,7 @@ export class TelepathieService {
       currentWord: null,
       hasSubmitted: false,
       submittedWord: null,
+      usedWords: [],
     };
   }
 

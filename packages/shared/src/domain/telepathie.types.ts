@@ -59,6 +59,8 @@ export interface TelepathieRoom {
   currentManche: number;
   currentSousRound: number;
   mancheResults: TelepathieMancheResult[];
+  /** Historique de tous les sous-rounds de la partie (pour le résumé final) */
+  sousRoundHistory: TelepathieSousRoundResult[];
   lastRoundResult: TelepathieSousRoundResult | null;
   roundTimerEndsAt: number | null;
 }

@@ -115,6 +115,14 @@
         <!-- Mots des autres joueurs -->
         <CurrentWords :players="store.room?.players ?? []" :my-socket-id="store.mySocketId" />
 
+        <!-- Erreur mot dupliqué -->
+        <p
+          v-if="duplicateError"
+          class="text-xs text-red-500 font-medium text-center bg-red-50 border border-red-200 rounded-xl px-3 py-2"
+        >
+          Tu as déjà utilisé ce mot dans cette manche. Essaie un autre mot !
+        </p>
+
         <!-- Saisie -->
         <WordInput :disabled="store.hasSubmitted" @submit="onSubmitWord" />
 
@@ -216,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useTelepathieStore } from '../stores/useTelepathieStore';
 import { useTelepathieSessionStore } from '@/shared/stores/useTelepathieSessionStore';
 import { telepathieSocket } from '../services/telepathie.service';
@@ -231,6 +239,7 @@ const store = useTelepathieStore();
 const session = useTelepathieSessionStore();
 
 const showScores = ref(false);
+const duplicateError = ref(false);
 
 const sortedPlayers = computed(() =>
   [...(store.room?.players ?? [])].sort((a, b) => b.score - a.score),
@@ -240,6 +249,23 @@ const isLastManche = computed(
   () => store.room !== null && store.room.currentManche >= store.room.settings.totalManches,
 );
 
+watch(
+  () => store.error,
+  (err) => {
+    if (err === 'DUPLICATE_WORD') {
+      duplicateError.value = true;
+      store.clearError();
+    }
+  },
+);
+
+watch(
+  () => store.phase,
+  () => {
+    duplicateError.value = false;
+  },
+);
+
 onMounted(() => {
   if (!store.room && session.roomCode && session.pseudo) {
     telepathieSocket.join(session.roomCode, session.pseudo);
@@ -247,6 +273,7 @@ onMounted(() => {
 });
 
 function onSubmitWord(word: string): void {
+  duplicateError.value = false;
   telepathieSocket.submit(word);
 }
 

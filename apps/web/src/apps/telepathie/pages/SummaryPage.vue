@@ -17,8 +17,11 @@
       </section>
 
       <!-- Historique -->
-      <section v-if="store.room?.mancheResults.length">
-        <RoundHistory :results="store.room.mancheResults" />
+      <section v-if="store.room?.sousRoundHistory?.length">
+        <RoundHistory
+          :manche-results="store.room.mancheResults"
+          :sous-round-history="store.room.sousRoundHistory"
+        />
       </section>
 
       <!-- Actions -->
