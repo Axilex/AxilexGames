@@ -2,11 +2,7 @@
   <div class="flex flex-col gap-4">
     <!-- Re-affichage de l'image -->
     <div class="w-full rounded-2xl overflow-hidden bg-stone-100" style="aspect-ratio: 4/3">
-      <img
-        :src="result.imageUrl"
-        alt="Photo de la manche"
-        class="w-full h-full object-cover"
-      />
+      <img :src="result.imageUrl" alt="Photo de la manche" class="w-full h-full object-cover" />
     </div>
 
     <!-- Groupes de mots -->
@@ -16,15 +12,11 @@
         :key="word"
         :class="[
           'rounded-2xl border p-4 flex items-start gap-3',
-          groupScore(pseudos) > 0
-            ? 'bg-white border-violet-200'
-            : 'bg-stone-50 border-stone-200',
+          groupScore(pseudos) > 0 ? 'bg-white border-violet-200' : 'bg-stone-50 border-stone-200',
         ]"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-base font-bold text-stone-800 mb-1">
-            « {{ word || '—' }} »
-          </p>
+          <p class="text-base font-bold text-stone-800 mb-1">« {{ word || '—' }} »</p>
           <p class="text-xs text-stone-500">
             {{ pseudos.join(', ') }}
           </p>
@@ -78,7 +70,5 @@ const sortedGroups = computed(() =>
   Object.entries(props.result.groups).sort((a, b) => b[1].length - a[1].length),
 );
 
-const sortedScores = computed(() =>
-  Object.entries(props.playerScores).sort((a, b) => b[1] - a[1]),
-);
+const sortedScores = computed(() => Object.entries(props.playerScores).sort((a, b) => b[1] - a[1]));
 </script>

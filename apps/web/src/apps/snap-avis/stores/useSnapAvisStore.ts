@@ -25,8 +25,8 @@ export const useSnapAvisStore = defineStore('snap-avis', () => {
     return room.value.hostSocketId === mySocketId.value;
   });
 
-  const myPlayer = computed(() =>
-    room.value?.players.find((p) => p.socketId === mySocketId.value) ?? null,
+  const myPlayer = computed(
+    () => room.value?.players.find((p) => p.socketId === mySocketId.value) ?? null,
   );
 
   const myPseudo = computed(() => myPlayer.value?.pseudo ?? '');

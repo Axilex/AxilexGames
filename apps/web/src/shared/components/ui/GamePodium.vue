@@ -15,7 +15,8 @@
           <p class="text-[11px] font-semibold text-stone-500 mt-0.5">{{ entries[1].score }} pts</p>
           <span
             class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-stone-500 bg-stone-100 rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
-          >2</span>
+            >2</span
+          >
         </div>
       </div>
 
@@ -32,7 +33,8 @@
           <p class="text-[11px] font-semibold text-amber-100 mt-0.5">{{ entries[0].score }} pts</p>
           <span
             class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-amber-700 bg-amber-100 rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
-          >1</span>
+            >1</span
+          >
         </div>
       </div>
 
@@ -49,7 +51,8 @@
           <p class="text-[11px] font-semibold text-orange-100 mt-0.5">{{ entries[2].score }} pts</p>
           <span
             class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-orange-700 bg-orange-100 rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
-          >3</span>
+            >3</span
+          >
         </div>
       </div>
     </div>

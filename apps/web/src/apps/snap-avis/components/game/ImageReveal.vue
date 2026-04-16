@@ -12,10 +12,7 @@
     </transition>
 
     <!-- Countdown bar -->
-    <div
-      v-if="visible && !blurred"
-      class="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20"
-    >
+    <div v-if="visible && !blurred" class="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
       <div
         class="h-full bg-white transition-none"
         :style="{ width: `${progressPct}%`, transition: `width ${revealDurationMs}ms linear` }"
@@ -23,10 +20,7 @@
     </div>
 
     <!-- Hidden overlay -->
-    <div
-      v-if="!visible"
-      class="absolute inset-0 flex items-center justify-center bg-stone-800"
-    >
+    <div v-if="!visible" class="absolute inset-0 flex items-center justify-center bg-stone-800">
       <span class="text-4xl select-none">✍️</span>
     </div>
   </div>

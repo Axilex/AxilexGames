@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-stone-50 flex flex-col">
     <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-4 py-3">
       <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">📸 Snap Avis — Résultats</h1>
+        <h1 class="text-lg font-bold text-stone-900">🔄 Télépathie — Résultats</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -13,7 +13,12 @@
         <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest text-center">
           Classement final
         </p>
-        <RankPodium :rankings="store.rankings" />
+        <TelepathiePodium :rankings="store.rankings" />
+      </section>
+
+      <!-- Historique -->
+      <section v-if="store.room?.mancheResults.length">
+        <RoundHistory :results="store.room.mancheResults" />
       </section>
 
       <!-- Actions -->
@@ -28,22 +33,23 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
-import RankPodium from '../components/summary/Podium.vue';
-import { useSnapAvisStore } from '../stores/useSnapAvisStore';
-import { useSnapAvisSessionStore } from '@/shared/stores/useSnapAvisSessionStore';
-import { snapAvisSocket } from '../services/snap-avis.service';
+import TelepathiePodium from '../components/summary/Podium.vue';
+import RoundHistory from '../components/summary/RoundHistory.vue';
+import { useTelepathieStore } from '../stores/useTelepathieStore';
+import { useTelepathieSessionStore } from '@/shared/stores/useTelepathieSessionStore';
+import { telepathieSocket } from '../services/telepathie.service';
 
 const router = useRouter();
-const store = useSnapAvisStore();
-const session = useSnapAvisSessionStore();
+const store = useTelepathieStore();
+const session = useTelepathieSessionStore();
 
 function onReplay(): void {
-  snapAvisSocket.reset();
-  void router.push({ name: 'snap-avis-lobby' });
+  telepathieSocket.reset();
+  void router.push({ name: 'telepathie-lobby' });
 }
 
 function onLeave(): void {
-  snapAvisSocket.leave();
+  telepathieSocket.leave();
   session.clearSession();
   store.reset();
   void router.push({ name: 'home' });

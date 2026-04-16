@@ -259,10 +259,21 @@ const games = [
     name: 'Snap Avis',
     description:
       'Une photo 3 secondes, un mot — marque des points si tu penses comme les autres sans être trop évident.',
-    tags: ['Multijoueur', 'Réflexes', 'Nouveau'],
+    tags: ['Multijoueur', 'Réflexes'],
     gradient: 'from-violet-500 to-pink-500',
     icon: 'camera',
     to: '/snap-avis',
+    live: true,
+    players: '2–8 joueurs',
+  },
+  {
+    name: 'Télépathie',
+    description:
+      'Convergez vers le même mot en soumettant des associations simultanément — deux esprits qui se rencontrent gagnent des points.',
+    tags: ['Multijoueur', 'Associations', 'Nouveau'],
+    gradient: 'from-teal-500 to-cyan-500',
+    icon: 'chat',
+    to: '/telepathie',
     live: true,
     players: '2–8 joueurs',
   },

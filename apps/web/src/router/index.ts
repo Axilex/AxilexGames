@@ -3,6 +3,7 @@ import { wikiRaceRoutes } from '@/apps/wiki-race/router';
 import { surenchereRoutes } from '@/apps/surenchere/router';
 import { commonLobbyRoutes } from '@/apps/common-lobby/router';
 import { snapAvisRoutes } from '@/apps/snap-avis/router';
+import { telepathieRoutes } from '@/apps/telepathie/router';
 
 /**
  * Main application router.
@@ -25,6 +26,7 @@ const router = createRouter({
     ...wikiRaceRoutes,
     ...surenchereRoutes,
     ...snapAvisRoutes,
+    ...telepathieRoutes,
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',

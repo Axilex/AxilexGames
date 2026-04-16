@@ -11,11 +11,13 @@ import {
   SurencherePlayer,
 } from '../domain/surenchere.types';
 import { CommonRoomDTO, GameChoice } from '../domain/common-lobby.types';
+import { SnapAvisRoomDTO, SnapAvisRoundResult, SnapAvisRankEntry } from '../domain/snap-avis.types';
 import {
-  SnapAvisRoomDTO,
-  SnapAvisRoundResult,
-  SnapAvisRankEntry,
-} from '../domain/snap-avis.types';
+  TelepathieRoomDTO,
+  TelepathieSousRoundResult,
+  TelepathieMancheResult,
+  TelepathieRankEntry,
+} from '../domain/telepathie.types';
 
 export type ChoosingPreviewData = Omit<ChoosingPreviewPayload, 'roomCode'>;
 
@@ -69,5 +71,13 @@ export interface ServerToClientEvents {
   'snapavis:results': (result: SnapAvisRoundResult) => void;
   'snapavis:game-finished': (payload: { rankings: SnapAvisRankEntry[] }) => void;
   'snapavis:error': (payload: { code: string; message: string }) => void;
+  'telepathie:room-update': (room: TelepathieRoomDTO) => void;
+  'telepathie:choose-open': (payload: { endsAt: number }) => void;
+  'telepathie:input-open': (payload: { endsAt: number }) => void;
+  'telepathie:word-received': (payload: { pseudo: string }) => void;
+  'telepathie:round-result': (result: TelepathieSousRoundResult) => void;
+  'telepathie:manche-result': (result: TelepathieMancheResult) => void;
+  'telepathie:game-finished': (payload: { rankings: TelepathieRankEntry[] }) => void;
+  'telepathie:error': (payload: { code: string; message: string }) => void;
   error: (message: string) => void;
 }

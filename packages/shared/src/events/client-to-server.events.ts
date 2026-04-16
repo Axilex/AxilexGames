@@ -53,7 +53,7 @@ export interface LobbyJoinPayload {
 }
 
 export interface LobbyChooseGamePayload {
-  game: 'wikirace' | 'surenchere';
+  game: 'wikirace' | 'surenchere' | 'snap-avis' | 'telepathie';
 }
 
 export interface SurenchereCreatePayload {
@@ -109,6 +109,31 @@ export interface SnapAvisSubmitWordPayload {
   word: string;
 }
 
+export interface TelepathieCreatePayload {
+  pseudo: string;
+}
+
+export interface TelepathieJoinPayload {
+  roomCode: string;
+  pseudo: string;
+}
+
+export interface TelepathieStartPayload {
+  settings?: Partial<{
+    totalManches: number;
+    maxSousRounds: number;
+    roundTimerSeconds: number;
+  }>;
+}
+
+export interface TelepathieSubmitPayload {
+  word: string;
+}
+
+export interface TelepathieChooseWordPayload {
+  word: string;
+}
+
 export interface ClientToServerEvents {
   'lobby:create': (payload: LobbyCreatePayload) => void;
   'lobby:join': (payload: LobbyJoinPayload) => void;
@@ -146,4 +171,12 @@ export interface ClientToServerEvents {
   'snapavis:submit-word': (payload: SnapAvisSubmitWordPayload) => void;
   'snapavis:next-round': () => void;
   'snapavis:reset': () => void;
+  'telepathie:create': (payload: TelepathieCreatePayload) => void;
+  'telepathie:join': (payload: TelepathieJoinPayload) => void;
+  'telepathie:leave': () => void;
+  'telepathie:start': (payload: TelepathieStartPayload) => void;
+  'telepathie:submit': (payload: TelepathieSubmitPayload) => void;
+  'telepathie:choose-word': (payload: TelepathieChooseWordPayload) => void;
+  'telepathie:next-manche': () => void;
+  'telepathie:reset': () => void;
 }

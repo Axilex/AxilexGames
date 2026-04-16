@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-stone-50 flex flex-col">
     <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">📸 Snap Avis — Salon</h1>
+        <h1 class="text-lg font-bold text-stone-900">🔄 Télépathie — Salon</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -12,7 +12,7 @@
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
         <ShareLink :share-url="shareUrl" />
 
-        <!-- Player list -->
+        <!-- Liste des joueurs -->
         <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3">
           <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
             Joueurs ({{ connectedCount }}/8)
@@ -48,7 +48,7 @@
       </div>
 
       <div class="flex flex-col gap-4">
-        <!-- Settings (host only) -->
+        <!-- Réglages (hôte uniquement) -->
         <div
           v-if="store.isHost"
           class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4"
@@ -58,23 +58,34 @@
           <div class="flex flex-col gap-1">
             <label class="text-xs font-medium text-stone-600">Nombre de manches</label>
             <select
-              v-model.number="totalRounds"
-              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              v-model.number="settings.totalManches"
+              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
-              <option v-for="n in [4, 6, 8, 10, 12]" :key="n" :value="n">{{ n }}</option>
+              <option v-for="n in [3, 5, 7, 10]" :key="n" :value="n">{{ n }}</option>
             </select>
           </div>
 
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-stone-600">Temps d'écriture</label>
+            <label class="text-xs font-medium text-stone-600">Sous-rounds max par manche</label>
             <select
-              v-model.number="writingDurationSec"
-              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              v-model.number="settings.maxSousRounds"
+              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
-              <option :value="8">8 secondes</option>
-              <option :value="10">10 secondes</option>
-              <option :value="15">15 secondes</option>
-              <option :value="20">20 secondes</option>
+              <option v-for="n in [5, 8, 10, 15, 20]" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-stone-600">Secondes par sous-round</label>
+            <select
+              v-model.number="settings.roundTimerSeconds"
+              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              <option :value="15">15 s</option>
+              <option :value="20">20 s</option>
+              <option :value="30">30 s</option>
+              <option :value="45">45 s</option>
+              <option :value="60">60 s</option>
             </select>
           </div>
 
@@ -100,22 +111,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
-import { useSnapAvisStore } from '../stores/useSnapAvisStore';
-import { useSnapAvisSessionStore } from '@/shared/stores/useSnapAvisSessionStore';
-import { snapAvisSocket } from '../services/snap-avis.service';
+import { useTelepathieStore } from '../stores/useTelepathieStore';
+import { useTelepathieSessionStore } from '@/shared/stores/useTelepathieSessionStore';
+import { telepathieSocket } from '../services/telepathie.service';
 import RulesCard from '../components/RulesCard.vue';
 
 const router = useRouter();
-const store = useSnapAvisStore();
-const session = useSnapAvisSessionStore();
+const store = useTelepathieStore();
+const session = useTelepathieSessionStore();
 
-const totalRounds = ref(store.room?.settings.totalRounds ?? 8);
-const writingDurationSec = ref((store.room?.settings.writingDurationMs ?? 10000) / 1000);
+const settings = reactive({
+  totalManches: store.room?.settings.totalManches ?? 5,
+  maxSousRounds: store.room?.settings.maxSousRounds ?? 10,
+  roundTimerSeconds: store.room?.settings.roundTimerSeconds ?? 30,
+});
 
 const canStart = computed(
   () => (store.room?.players.filter((p) => p.status === 'CONNECTED').length ?? 0) >= 2,
@@ -123,26 +137,22 @@ const canStart = computed(
 const connectedCount = computed(
   () => store.room?.players.filter((p) => p.status === 'CONNECTED').length ?? 0,
 );
-
 const shareUrl = computed(
-  () => `${window.location.origin}/snap-avis?code=${store.room?.code ?? ''}`,
+  () => `${window.location.origin}/telepathie?code=${store.room?.code ?? ''}`,
 );
 
 onMounted(() => {
   if (!store.room && session.roomCode && session.pseudo) {
-    snapAvisSocket.join(session.roomCode, session.pseudo);
+    telepathieSocket.join(session.roomCode, session.pseudo);
   }
 });
 
 function onStart(): void {
-  snapAvisSocket.start({
-    totalRounds: totalRounds.value,
-    writingDurationMs: writingDurationSec.value * 1000,
-  });
+  telepathieSocket.start({ ...settings });
 }
 
 function onLeave(): void {
-  snapAvisSocket.leave();
+  telepathieSocket.leave();
   session.clearSession();
   store.reset();
   void router.push({ name: 'home' });

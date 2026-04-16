@@ -89,11 +89,7 @@
           :player-scores="playerScores"
         />
 
-        <BaseButton
-          v-if="store.canGoNextRound"
-          class="w-full"
-          @click="onNextRound"
-        >
+        <BaseButton v-if="store.canGoNextRound" class="w-full" @click="onNextRound">
           Manche suivante →
         </BaseButton>
         <p

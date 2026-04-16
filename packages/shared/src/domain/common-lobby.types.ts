@@ -1,6 +1,6 @@
 import { PlayerStatus } from './enums';
 
-export type GameChoice = 'wikirace' | 'surenchere' | 'snap-avis' | null;
+export type GameChoice = 'wikirace' | 'surenchere' | 'snap-avis' | 'telepathie' | null;
 
 export interface CommonPlayerDTO {
   pseudo: string;
