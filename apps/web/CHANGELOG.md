@@ -1,5 +1,17 @@
 # web
 
+## 0.5.0
+
+### Minor Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`2272978`](https://github.com/Axilex/AxilexGames/commit/2272978) add Telepathie game with lobby, game, and summary pages
+
+### Patch Changes
+
+- Updated dependencies
+  - @wiki-race/shared@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
