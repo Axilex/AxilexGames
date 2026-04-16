@@ -1,5 +1,15 @@
 # @wiki-race/shared
 
+## 0.5.1
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`75e344b`](https://github.com/Axilex/AxilexGames/commit/75e344b) optimize resource requests for web deployment in Kubernetes
+  - [`3fd020b`](https://github.com/Axilex/AxilexGames/commit/3fd020b) implement game color schemes for improved UI consistency and styling
+  - [`e68dec1`](https://github.com/Axilex/AxilexGames/commit/e68dec1) enhance Telepathie game integration with Snap Avis and improve code formatting
+  - [`442ffb2`](https://github.com/Axilex/AxilexGames/commit/442ffb2) implement ArrayRoomRegistryService and RoomTimerService for game room management
+
 ## 0.5.0
 
 ### Minor Changes
