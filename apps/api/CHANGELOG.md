@@ -1,5 +1,14 @@
 # api
 
+## 0.5.2
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`9768dd7`](https://github.com/Axilex/AxilexGames/commit/9768dd7) optimize resource requests and limits in API deployment configuration
+- Updated dependencies
+  - @wiki-race/shared@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes
