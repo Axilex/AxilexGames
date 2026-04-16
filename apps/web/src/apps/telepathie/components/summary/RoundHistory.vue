@@ -14,7 +14,9 @@
       <div class="flex items-center justify-between">
         <span class="text-xs font-semibold text-stone-500">Manche {{ result.manche }}</span>
         <span v-if="result.hasMatch" class="text-xs text-teal-600 font-semibold">
-          🎯 Match en {{ result.sousRoundsPlayed }} sous-round{{ result.sousRoundsPlayed > 1 ? 's' : '' }}
+          🎯 Match en {{ result.sousRoundsPlayed }} sous-round{{
+            result.sousRoundsPlayed > 1 ? 's' : ''
+          }}
         </span>
         <span v-else class="text-xs text-stone-400">
           Aucun match ({{ result.sousRoundsPlayed }} sous-rounds)

@@ -59,10 +59,7 @@ export class TelepathieService {
   }
 
   /** Lance la partie : assigne les mots et démarre la manche 1 sous-round 1. */
-  startGame(
-    socketId: string,
-    settings?: Partial<TelepathieSettings>,
-  ): TelepathieRoomInternal {
+  startGame(socketId: string, settings?: Partial<TelepathieSettings>): TelepathieRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
@@ -394,11 +391,7 @@ export class TelepathieService {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  private makePlayer(
-    pseudo: string,
-    socketId: string,
-    isHost: boolean,
-  ): TelepathiePlayerInternal {
+  private makePlayer(pseudo: string, socketId: string, isHost: boolean): TelepathiePlayerInternal {
     return {
       socketId,
       pseudo,

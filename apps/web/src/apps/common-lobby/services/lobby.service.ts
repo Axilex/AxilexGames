@@ -10,7 +10,7 @@ export const lobbySocket = {
   leave(): void {
     socketService.emit('lobby:leave', undefined as never);
   },
-  chooseGame(game: 'wikirace' | 'surenchere'): void {
+  chooseGame(game: 'wikirace' | 'surenchere' | 'snap-avis' | 'telepathie'): void {
     socketService.emit('lobby:choose-game', { game });
   },
   clearGame(): void {

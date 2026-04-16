@@ -297,7 +297,13 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       this.server.to(code).emit('surenchere:room:update', updatedRoom);
       const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
       if (resolved && result && scores !== undefined) {
-        this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, room.currentBidderSocketId);
+        this.emitRoundEnd(
+          updatedRoom,
+          result,
+          finished ?? false,
+          scores,
+          room.currentBidderSocketId,
+        );
       }
     } catch {
       // ignore
@@ -308,7 +314,9 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const endsAt = Date.now() + CHOOSE_TIMEOUT_MS;
     room.chooseTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'CHOOSING', endsAt });
-    this.timer.start(room.code, 'choose', CHOOSE_TIMEOUT_MS, () => this.onChooseTimerExpired(room.code));
+    this.timer.start(room.code, 'choose', CHOOSE_TIMEOUT_MS, () =>
+      this.onChooseTimerExpired(room.code),
+    );
   }
 
   private onChooseTimerExpired(code: string): void {

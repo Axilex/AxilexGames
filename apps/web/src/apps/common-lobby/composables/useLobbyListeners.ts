@@ -4,6 +4,8 @@ import { useCommonLobbyStore } from '../stores/useCommonLobbyStore';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
 import { useSurenchereSessionStore } from '@/shared/stores/useSurenchereSessionStore';
+import { useSnapAvisSessionStore } from '@/shared/stores/useSnapAvisSessionStore';
+import { useTelepathieSessionStore } from '@/shared/stores/useTelepathieSessionStore';
 
 /**
  * Registers all `lobby:*` socket → store bindings.
@@ -14,6 +16,8 @@ export function useLobbyListeners(): void {
   const session = useCommonSessionStore();
   const wikiSession = useSessionStore();
   const surenchereSession = useSurenchereSessionStore();
+  const snapAvisSession = useSnapAvisSessionStore();
+  const telepathieSession = useTelepathieSessionStore();
   const router = useRouter();
 
   socketService.on('lobby:room-update', (room) => {
@@ -37,6 +41,12 @@ export function useLobbyListeners(): void {
     if (game === 'surenchere') {
       surenchereSession.setSession(pseudo, '');
       router.push({ name: 'surenchere', query: { code: code ?? '', autoJoin: '1' } });
+    } else if (game === 'snap-avis') {
+      snapAvisSession.setSession(pseudo, '');
+      router.push({ name: 'snap-avis', query: { code: code ?? '', autoJoin: '1' } });
+    } else if (game === 'telepathie') {
+      telepathieSession.setSession(pseudo, '');
+      router.push({ name: 'telepathie', query: { code: code ?? '', autoJoin: '1' } });
     } else {
       wikiSession.setSession(pseudo, '');
       router.push({ name: 'wikirace', query: { code: code ?? '', autoJoin: '1' } });

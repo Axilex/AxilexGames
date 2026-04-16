@@ -12,7 +12,9 @@
           <template v-if="store.phase === 'PLAYING' || store.phase === 'ROUND_RESULT'">
             <span class="text-stone-300">·</span>
             <span class="text-xs text-stone-400">
-              SR {{ store.room?.currentSousRound ?? 1 }}/{{ store.room?.settings.maxSousRounds ?? 10 }}
+              SR {{ store.room?.currentSousRound ?? 1 }}/{{
+                store.room?.settings.maxSousRounds ?? 10
+              }}
             </span>
           </template>
         </div>
@@ -52,7 +54,9 @@
 
       <!-- ── PHASE: CHOOSING ── -->
       <template v-if="store.phase === 'CHOOSING'">
-        <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3 text-center">
+        <div
+          class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3 text-center"
+        >
           <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
             Manche {{ store.room?.currentManche ?? 1 }} — Choisissez votre mot de départ
           </p>
@@ -62,24 +66,14 @@
         </div>
 
         <!-- Timer -->
-        <TimerBar
-          v-if="store.inputEndsAt"
-          :ends-at="store.inputEndsAt"
-          :total-ms="30 * 1000"
-        />
+        <TimerBar v-if="store.inputEndsAt" :ends-at="store.inputEndsAt" :total-ms="30 * 1000" />
 
         <!-- Saisie du mot de départ -->
-        <WordInput
-          :disabled="store.hasChosen"
-          button-label="Choisir →"
-          @submit="onChooseWord"
-        />
+        <WordInput :disabled="store.hasChosen" button-label="Choisir →" @submit="onChooseWord" />
 
         <!-- Qui a déjà choisi -->
         <div class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2">
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
-            En attente
-          </p>
+          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">En attente</p>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="player in store.room?.players ?? []"
@@ -173,7 +167,8 @@
             ont trouvé le même mot en
             {{ store.lastMancheResult.sousRoundsPlayed }} sous-round{{
               store.lastMancheResult.sousRoundsPlayed > 1 ? 's' : ''
-            }} !
+            }}
+            !
             <span class="ml-1 font-bold text-teal-600">+1 point</span>
           </p>
           <p v-else class="text-sm text-stone-600">
@@ -208,9 +203,7 @@
           <BaseButton v-if="store.canNextManche" class="w-full" @click="onNextManche">
             Voir le podium →
           </BaseButton>
-          <p v-else class="text-center text-sm text-stone-400">
-            En attente de l'hôte…
-          </p>
+          <p v-else class="text-center text-sm text-stone-400">En attente de l'hôte…</p>
         </div>
       </template>
 
@@ -244,9 +237,7 @@ const sortedPlayers = computed(() =>
 );
 
 const isLastManche = computed(
-  () =>
-    store.room !== null &&
-    store.room.currentManche >= store.room.settings.totalManches,
+  () => store.room !== null && store.room.currentManche >= store.room.settings.totalManches,
 );
 
 onMounted(() => {

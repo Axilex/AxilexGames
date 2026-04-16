@@ -79,7 +79,7 @@
                     : 'border-stone-200 bg-stone-50 hover:border-amber-300',
                   !store.isHost ? 'cursor-default' : 'cursor-pointer',
                 ]"
-                @click="store.isHost && onChooseGame(game.id as 'wikirace' | 'surenchere')"
+                @click="store.isHost && onChooseGame(game.id as GameChoice)"
               >
                 <div class="flex items-center gap-2">
                   <span class="text-lg">{{ game.icon }}</span>
@@ -113,6 +113,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { computed, onMounted } from 'vue';
+import type { GameChoice } from '@wiki-race/shared';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
@@ -134,6 +135,18 @@ const GAMES = [
     name: 'Surenchère',
     description: 'Enchérissez et bluffez sur vos connaissances.',
   },
+  {
+    id: 'snap-avis',
+    icon: '📸',
+    name: 'Snap Avis',
+    description: 'Décrivez une image en un mot, trouvez les mêmes.',
+  },
+  {
+    id: 'telepathie',
+    icon: '🧠',
+    name: 'Télépathie',
+    description: 'Synchronisez vos mots avec les autres joueurs.',
+  },
 ];
 
 const router = useRouter();
@@ -150,7 +163,7 @@ onMounted(() => {
   }
 });
 
-function onChooseGame(game: 'wikirace' | 'surenchere'): void {
+function onChooseGame(game: GameChoice): void {
   if (store.gameChoice === game) {
     lobbySocket.clearGame();
   } else {

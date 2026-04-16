@@ -36,7 +36,9 @@ export const useTelepathieStore = defineStore('telepathie', () => {
   const myScore = computed(() => myPlayer.value?.score ?? 0);
 
   const isActive = computed(() =>
-    (['CHOOSING', 'PLAYING', 'ROUND_RESULT', 'MANCHE_RESULT'] as TelepathiePhase[]).includes(phase.value),
+    (['CHOOSING', 'PLAYING', 'ROUND_RESULT', 'MANCHE_RESULT'] as TelepathiePhase[]).includes(
+      phase.value,
+    ),
   );
 
   const canNextManche = computed(

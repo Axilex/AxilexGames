@@ -4,12 +4,12 @@
     <div
       :class="[
         'rounded-2xl p-4 text-center',
-        result.hasMatch ? 'bg-teal-50 border border-teal-200' : 'bg-stone-100 border border-stone-200',
+        result.hasMatch
+          ? 'bg-teal-50 border border-teal-200'
+          : 'bg-stone-100 border border-stone-200',
       ]"
     >
-      <p v-if="result.hasMatch" class="text-base font-bold text-teal-700">
-        🎯 Match trouvé !
-      </p>
+      <p v-if="result.hasMatch" class="text-base font-bold text-teal-700">🎯 Match trouvé !</p>
       <p v-else class="text-sm font-semibold text-stone-500">
         Pas de match — le jeu continue…
         <span v-if="!mancheOver" class="block text-xs font-normal mt-1 text-stone-400">
