@@ -5,12 +5,12 @@
     :class="[
       'group bg-white rounded-2xl border overflow-hidden flex flex-col transition-all duration-200',
       to
-        ? 'border-stone-200 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100/60 cursor-pointer'
+        ? ['border-stone-200 cursor-pointer', colorScheme.cardHover]
         : 'border-dashed border-stone-200 opacity-60 cursor-default',
     ]"
   >
     <!-- Banner -->
-    <div :class="['relative h-28 bg-gradient-to-br p-5 overflow-hidden flex items-end', gradient]">
+    <div :class="['relative h-28 bg-gradient-to-br p-5 overflow-hidden flex items-end', colorScheme.gradient]">
       <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10" />
       <div class="absolute right-5 bottom-4 w-12 h-12 rounded-full bg-white/10" />
 
@@ -116,7 +116,7 @@
                 ? 'bg-violet-50 text-violet-600'
                 : tag === 'Multijoueur'
                   ? 'bg-blue-50 text-blue-600'
-                  : 'bg-amber-50 text-amber-600',
+                  : colorScheme.tag,
           ]"
         >
           {{ tag }}
@@ -140,7 +140,7 @@
       <div class="mt-auto pt-2">
         <span
           v-if="live"
-          class="inline-flex items-center gap-1.5 text-sm font-bold text-amber-600 group-hover:text-amber-700 transition-colors"
+          :class="['inline-flex items-center gap-1.5 text-sm font-bold transition-colors', colorScheme.cta]"
         >
           Jouer
           <svg
@@ -165,12 +165,13 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
+import type { GameColorScheme } from '@/shared/constants/game-colors';
 
 defineProps<{
   name: string;
   description: string;
   tags: string[];
-  gradient: string;
+  colorScheme: GameColorScheme;
   icon: string;
   to: string | null;
   live: boolean;

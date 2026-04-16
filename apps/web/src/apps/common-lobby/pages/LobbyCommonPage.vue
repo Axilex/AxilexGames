@@ -75,11 +75,11 @@
                 :class="[
                   'rounded-xl border px-4 py-3 text-left transition-all',
                   store.gameChoice === game.id
-                    ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-300'
-                    : 'border-stone-200 bg-stone-50 hover:border-amber-300',
+                    ? game.colorScheme.lobbySelected
+                    : ['border-stone-200 bg-stone-50', game.colorScheme.lobbyHover],
                   !store.isHost ? 'cursor-default' : 'cursor-pointer',
                 ]"
-                @click="store.isHost && onChooseGame(game.id as GameChoice)"
+                @click="store.isHost && onChooseGame(game.id as NonNullable<GameChoice>)"
               >
                 <div class="flex items-center gap-2">
                   <span class="text-lg">{{ game.icon }}</span>
@@ -118,6 +118,7 @@ import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
+import { GAME_COLOR_SCHEMES } from '@/shared/constants/game-colors';
 import { useCommonLobbyStore } from '../stores/useCommonLobbyStore';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { lobbySocket } from '../services/lobby.service';
@@ -128,24 +129,28 @@ const GAMES = [
     icon: '🌐',
     name: 'WikiRace',
     description: 'Naviguez de page en page sur Wikipédia.',
+    colorScheme: GAME_COLOR_SCHEMES.amber,
   },
   {
     id: 'surenchere',
     icon: '🏆',
     name: 'Surenchère',
     description: 'Enchérissez et bluffez sur vos connaissances.',
+    colorScheme: GAME_COLOR_SCHEMES.blue,
   },
   {
     id: 'snap-avis',
     icon: '📸',
     name: 'Snap Avis',
     description: 'Décrivez une image en un mot, trouvez les mêmes.',
+    colorScheme: GAME_COLOR_SCHEMES.violet,
   },
   {
     id: 'telepathie',
     icon: '🧠',
     name: 'Télépathie',
     description: 'Synchronisez vos mots avec les autres joueurs.',
+    colorScheme: GAME_COLOR_SCHEMES.teal,
   },
 ];
 
@@ -163,7 +168,7 @@ onMounted(() => {
   }
 });
 
-function onChooseGame(game: GameChoice): void {
+function onChooseGame(game: NonNullable<GameChoice>): void {
   if (store.gameChoice === game) {
     lobbySocket.clearGame();
   } else {

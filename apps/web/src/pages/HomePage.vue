@@ -161,6 +161,7 @@ import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import BaseInput from '@/shared/components/ui/BaseInput.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
 import SectionTitle from '@/shared/components/ui/SectionTitle.vue';
+import { GAME_COLOR_SCHEMES } from '@/shared/constants/game-colors';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { useCommonLobbyStore } from '@/apps/common-lobby/stores/useCommonLobbyStore';
 import { lobbySocket } from '@/apps/common-lobby/services/lobby.service';
@@ -238,7 +239,7 @@ const games = [
     description:
       'Navigue de page en page sur Wikipédia et arrive à destination avant tes adversaires.',
     tags: ['Multijoueur', 'Cerveau'],
-    gradient: 'from-amber-400 to-orange-500',
+    colorScheme: GAME_COLOR_SCHEMES.amber,
     icon: 'book',
     to: '/wikirace',
     live: true,
@@ -249,7 +250,7 @@ const games = [
     description:
       "Défiez-vous à coups d'enchères ! Citez plus que les autres… ou perdez des points.",
     tags: ['Multijoueur', 'Culture', 'Rapidité'],
-    gradient: 'from-amber-400 to-orange-500',
+    colorScheme: GAME_COLOR_SCHEMES.blue,
     icon: 'trophy',
     to: '/surenchere',
     live: true,
@@ -260,7 +261,7 @@ const games = [
     description:
       'Une photo 3 secondes, un mot — marque des points si tu penses comme les autres sans être trop évident.',
     tags: ['Multijoueur', 'Réflexes'],
-    gradient: 'from-violet-500 to-pink-500',
+    colorScheme: GAME_COLOR_SCHEMES.violet,
     icon: 'camera',
     to: '/snap-avis',
     live: true,
@@ -271,7 +272,7 @@ const games = [
     description:
       'Convergez vers le même mot en soumettant des associations simultanément — deux esprits qui se rencontrent gagnent des points.',
     tags: ['Multijoueur', 'Associations', 'Nouveau'],
-    gradient: 'from-teal-500 to-cyan-500',
+    colorScheme: GAME_COLOR_SCHEMES.teal,
     icon: 'chat',
     to: '/telepathie',
     live: true,
