@@ -1,5 +1,15 @@
 # @wiki-race/shared
 
+## 0.5.3
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`9f9c732`](https://github.com/Axilex/AxilexGames/commit/9f9c732) add host management and redirect handling in lobby components
+  - [`c3d4750`](https://github.com/Axilex/AxilexGames/commit/c3d4750) refactor PlayerList component for improved player display and status handling
+  - [`12abbf8`](https://github.com/Axilex/AxilexGames/commit/12abbf8) enhance lobby functionality with improved player connection handling and start conditions
+  - [`ddfd1f3`](https://github.com/Axilex/AxilexGames/commit/ddfd1f3) add sousRoundHistory to track round history and prevent duplicate words
+
 ## 0.5.2
 
 ### Patch Changes
