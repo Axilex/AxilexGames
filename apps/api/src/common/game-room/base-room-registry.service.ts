@@ -8,6 +8,18 @@ const CODE_LENGTH = 6;
  *
  * Holds `Map<code, Room>` + `Map<socketId, code>` for O(1) lookup on disconnect,
  * plus a unique-code generator. Subclasses add their own player CRUD on top.
+ *
+ * ## Host-transfer convention
+ * Modules that designate a host must implement host transfer themselves using one of
+ * these two patterns — pick the one that matches the room's player storage:
+ *
+ * - **MapRoomRegistryService** (`hostSocketId` is a declared field on the room): override
+ *   `transferHostIfNeeded` (see `CommonLobbyRegistryService`).
+ * - **ArrayRoomRegistryService** (`hostSocketId?` on `RoomWithArrayPlayers`): override
+ *   `transferHostIfNeeded` (see `TelepathieRegistryService`) — `rebindSocket` already
+ *   keeps `hostSocketId` in sync on reconnect.
+ * - **Inline in the service**: acceptable for leaf games where the registry is thin
+ *   (e.g. `SnapAvisService.leaveRoom`), but prefer the override pattern for consistency.
  */
 export abstract class BaseRoomRegistryService<R extends BaseRoom> {
   protected readonly rooms = new Map<string, R>();

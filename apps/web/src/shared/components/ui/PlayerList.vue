@@ -17,6 +17,12 @@
         <span :class="['w-2 h-2 rounded-full shrink-0', dotClass(player.status)]" />
         <span class="flex-1 text-sm font-medium text-stone-900 truncate">{{ player.pseudo }}</span>
         <span
+          v-if="showMeLabel && player.pseudo === myPseudo"
+          class="text-[10px] font-medium text-amber-600 shrink-0"
+          aria-hidden="true"
+        >(toi)</span>
+        <span v-if="showMeLabel && player.pseudo === myPseudo" class="sr-only"> (vous)</span>
+        <span
           v-if="player.isHost"
           class="text-[10px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded"
         >
@@ -32,10 +38,10 @@
           v-else-if="showFullStatus && STATUS_BADGE[player.status]"
           :class="[
             'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
-            STATUS_BADGE[player.status].cls,
+            STATUS_BADGE[player.status]?.cls,
           ]"
         >
-          {{ STATUS_BADGE[player.status].label }}
+          {{ STATUS_BADGE[player.status]?.label }}
         </span>
       </li>
     </TransitionGroup>
@@ -44,11 +50,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { PlayerStatus } from '@wiki-race/shared';
 
 interface PlayerLike {
   pseudo: string;
   isHost: boolean;
-  status: string;
+  status: PlayerStatus;
   score?: number;
 }
 
@@ -60,6 +67,7 @@ const props = withDefaults(
     countConnectedOnly?: boolean;
     showScore?: boolean;
     showFullStatus?: boolean;
+    showMeLabel?: boolean;
   }>(),
   {
     myPseudo: '',
@@ -67,12 +75,13 @@ const props = withDefaults(
     countConnectedOnly: false,
     showScore: false,
     showFullStatus: false,
+    showMeLabel: false,
   },
 );
 
 const playerCount = computed(() =>
   props.countConnectedOnly
-    ? props.players.filter((p) => p.status === 'CONNECTED').length
+    ? props.players.filter((p) => p.status === PlayerStatus.CONNECTED).length
     : props.players.length,
 );
 
@@ -80,15 +89,15 @@ const countLabel = computed(() =>
   props.maxPlayers ? `${playerCount.value}/${props.maxPlayers}` : `${playerCount.value}`,
 );
 
-function dotClass(status: string): string {
-  return status === 'CONNECTED' ? 'bg-emerald-500' : 'bg-stone-300';
+function dotClass(status: PlayerStatus): string {
+  return status === PlayerStatus.CONNECTED ? 'bg-emerald-500' : 'bg-stone-300';
 }
 
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  CONNECTED: { label: 'Connecté', cls: 'bg-emerald-100 text-emerald-700' },
-  DISCONNECTED: { label: 'Déconnecté', cls: 'bg-amber-100 text-amber-700' },
-  SURRENDERED: { label: 'Abandonné', cls: 'bg-red-100 text-red-700' },
-  FINISHED: { label: 'Arrivé', cls: 'bg-amber-100 text-amber-700' },
+const STATUS_BADGE: Partial<Record<PlayerStatus, { label: string; cls: string }>> = {
+  [PlayerStatus.CONNECTED]: { label: 'Connecté', cls: 'bg-emerald-100 text-emerald-700' },
+  [PlayerStatus.DISCONNECTED]: { label: 'Déconnecté', cls: 'bg-amber-100 text-amber-700' },
+  [PlayerStatus.SURRENDERED]: { label: 'Abandonné', cls: 'bg-red-100 text-red-700' },
+  [PlayerStatus.FINISHED]: { label: 'Arrivé', cls: 'bg-amber-100 text-amber-700' },
 };
 </script>
 

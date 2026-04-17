@@ -42,6 +42,8 @@ export function useLobbyListeners(): void {
   socketService.on('lobby:redirect', ({ game, code }) => {
     const pseudo = session.pseudo;
     // Keep the common session alive so players can return to this lobby after the game
+    // Flag the store so LobbyCommonPage hides the IN_GAME panel while navigating away.
+    store.redirecting = true;
 
     if (game === 'surenchere') {
       surenchereSession.setSession(pseudo, '');

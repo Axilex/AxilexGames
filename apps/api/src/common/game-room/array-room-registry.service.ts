@@ -6,6 +6,8 @@ export interface RoomWithArrayPlayers<
   P extends { socketId: string; status: PlayerStatus },
 > extends BaseRoom {
   players: P[];
+  /** Optional — rooms that designate a host by socket id (telepathie, snap-avis). */
+  hostSocketId?: string;
 }
 
 /**
@@ -42,9 +44,8 @@ export abstract class ArrayRoomRegistryService<
     // Rooms that track the host via `hostSocketId` (telepathie, snap-avis) must
     // follow the rebind too, otherwise the host check on startGame fails after a
     // common-lobby seed → real-socket swap.
-    const roomWithHost = room as R & { hostSocketId?: string };
-    if (roomWithHost.hostSocketId === oldSocketId) {
-      roomWithHost.hostSocketId = newSocketId;
+    if (room.hostSocketId === oldSocketId) {
+      room.hostSocketId = newSocketId;
     }
     this.unbindSocket(oldSocketId);
     this.bindSocket(newSocketId, code);

@@ -17,6 +17,7 @@
           :my-pseudo="store.myPseudo"
           :max-players="8"
           count-connected-only
+          show-me-label
         />
       </div>
 

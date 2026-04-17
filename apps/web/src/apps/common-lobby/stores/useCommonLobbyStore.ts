@@ -6,6 +6,11 @@ import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 export const useCommonLobbyStore = defineStore('common-lobby', () => {
   const room = ref<CommonRoomDTO | null>(null);
   const error = ref<string>('');
+  /**
+   * Set to `true` just before `lobby:redirect` pushes the router away.
+   * Prevents the brief IN_GAME panel flash while the navigation is pending.
+   */
+  const redirecting = ref<boolean>(false);
 
   const session = useCommonSessionStore();
 
@@ -45,11 +50,13 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
   function reset(): void {
     room.value = null;
     error.value = '';
+    redirecting.value = false;
   }
 
   return {
     room,
     error,
+    redirecting,
     myPseudo,
     isHost,
     gameChoice,

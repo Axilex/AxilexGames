@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { PlayerStatus } from '@wiki-race/shared';
 import PlayerList from './PlayerList.vue';
 
 const players = [
-  { pseudo: 'Alice', status: 'CONNECTED', isHost: true, score: 5 },
-  { pseudo: 'Bob', status: 'CONNECTED', isHost: false, score: 3 },
-  { pseudo: 'Carol', status: 'DISCONNECTED', isHost: false, score: 0 },
+  { pseudo: 'Alice', status: PlayerStatus.CONNECTED, isHost: true, score: 5 },
+  { pseudo: 'Bob', status: PlayerStatus.CONNECTED, isHost: false, score: 3 },
+  { pseudo: 'Carol', status: PlayerStatus.DISCONNECTED, isHost: false, score: 0 },
 ];
 
 describe('PlayerList (shared)', () => {

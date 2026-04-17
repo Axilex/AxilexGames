@@ -18,7 +18,7 @@
       <div class="flex flex-col gap-4">
         <!-- Game choice -->
         <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4">
-          <template v-if="store.room?.status === 'IN_GAME'">
+          <template v-if="store.room?.status === 'IN_GAME' && !store.redirecting">
             <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
               Partie en cours
             </span>
@@ -138,6 +138,9 @@ const shareUrl = computed(() =>
 );
 
 onMounted(() => {
+  // Clear a stale redirecting flag from a previous game launch so the IN_GAME
+  // panel renders correctly when a player returns to this lobby after the game.
+  store.redirecting = false;
   // Re-register with the server only when our store doesn't already reflect this room
   // (refresh, return from game). Skip when we just landed here from `lobby:create` —
   // re-emitting `lobby:join` would just trigger a redundant rebind + broadcast.
