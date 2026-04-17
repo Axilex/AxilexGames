@@ -197,7 +197,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
   /** Ouvre la phase CHOOSING : arme le timer et émet `choose-open`. */
   private openChoosing(room: TelepathieRoomInternal): void {
     const endsAt = Date.now() + CHOOSE_TIMER_SECONDS * 1000;
-    room.roundTimerEndsAt = endsAt;
+    this.telepathie.setRoundTimerEndsAt(room.code, endsAt);
     this.server.to(room.code).emit('telepathie:choose-open', { endsAt });
     this.timer.start(room.code, 'choose', CHOOSE_TIMER_SECONDS * 1000, () => {
       this.startManche(room.code);
@@ -223,7 +223,7 @@ export class TelepathieGateway implements OnGatewayDisconnect {
   /** Ouvre un sous-round : met à jour `roundTimerEndsAt`, émet `input-open` et arme le timer. */
   private openSousRound(room: TelepathieRoomInternal): void {
     const endsAt = Date.now() + room.settings.roundTimerSeconds * 1000;
-    room.roundTimerEndsAt = endsAt;
+    this.telepathie.setRoundTimerEndsAt(room.code, endsAt);
     this.server.to(room.code).emit('telepathie:input-open', { endsAt });
     this.timer.start(room.code, 'round', room.settings.roundTimerSeconds * 1000, () => {
       this.resolveRound(room.code);

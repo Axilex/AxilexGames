@@ -6,6 +6,7 @@ import {
   TelepathieMancheResult,
   TelepathieRankEntry,
   TelepathieRoomDTO,
+  normalizeWord,
 } from '@wiki-race/shared';
 import { TelepathieRegistryService } from './telepathie-registry.service';
 import { TelepathieRoomInternal, TelepathiePlayerInternal } from './telepathie-room.types';
@@ -357,6 +358,12 @@ export class TelepathieService {
     return this.registry.markDisconnected(socketId);
   }
 
+  /** Sets the round timer end timestamp on the room (called by gateway when arming a timer). */
+  setRoundTimerEndsAt(roomCode: string, endsAt: number | null): void {
+    const room = this.registry.findRoom(roomCode);
+    if (room) room.roundTimerEndsAt = endsAt;
+  }
+
   getRoomBySocket(socketId: string): TelepathieRoomInternal | undefined {
     return this.registry.findRoomBySocketId(socketId);
   }
@@ -485,11 +492,6 @@ export class TelepathieService {
   }
 
   private normalizeWord(word: string): string {
-    return word
-      .toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z]/g, '');
+    return normalizeWord(word);
   }
 }

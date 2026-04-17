@@ -5,6 +5,7 @@ import {
   SnapAvisRoundResult,
   SnapAvisRankEntry,
   SnapAvisRoomDTO,
+  normalizeWord,
 } from '@wiki-race/shared';
 import { SnapAvisRegistryService } from './snap-avis-registry.service';
 import { SnapAvisRoomInternal, SnapAvisPlayerInternal } from './snap-avis-room.types';
@@ -325,12 +326,7 @@ export class SnapAvisService {
   }
 
   private normalizeWord(word: string): string {
-    return word
-      .toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z]/g, '');
+    return normalizeWord(word);
   }
 
   getPseudo(socketId: string): string {

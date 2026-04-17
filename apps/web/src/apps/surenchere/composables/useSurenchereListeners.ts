@@ -65,7 +65,7 @@ export function useSurenchereListeners(): void {
   });
 
   socketService.on('surenchere:round:end', (payload) => {
-    store.addRoundResult(payload.result, payload.scores);
+    store.addRoundResult(payload.result);
   });
 
   socketService.on('surenchere:game:finished', (payload) => {

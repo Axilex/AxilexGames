@@ -56,6 +56,9 @@ export class WikipediaService {
     const normalized = this.normalizeSlug(slug);
     const cached = this.cache.get(normalized);
     if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+      // Refresh insertion order so this entry is not the next eviction candidate
+      this.cache.delete(normalized);
+      this.cache.set(normalized, cached);
       return cached.page;
     }
 
@@ -82,6 +85,8 @@ export class WikipediaService {
     const to = this.normalizeSlug(toSlug);
     const cached = this.cache.get(from);
     if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+      this.cache.delete(from);
+      this.cache.set(from, cached);
       return cached.links.has(to);
     }
     // Not cached — fetch and check
@@ -134,7 +139,7 @@ export class WikipediaService {
 
   private setCache(slug: string, entry: CacheEntry): void {
     if (this.cache.size >= CACHE_MAX_SIZE) {
-      // LRU eviction: remove oldest entry (first key in Map insertion order)
+      // Evict the least-recently-used entry (first key in Map insertion order)
       const oldest = this.cache.keys().next().value;
       if (oldest) this.cache.delete(oldest);
     }

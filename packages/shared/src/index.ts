@@ -18,3 +18,6 @@ export * from './dto/game-state.dto';
 // Socket.IO event contracts
 export * from './events/client-to-server.events';
 export * from './events/server-to-client.events';
+
+// Utilities
+export * from './utils/normalize-word';

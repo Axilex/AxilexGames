@@ -104,6 +104,7 @@ export class LobbyService {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.hostSocketId !== socketId) throw new Error('NOT_HOST');
+    if (room.status === GameStatus.IN_PROGRESS) throw new Error('GAME_IN_PROGRESS');
     room.status = GameStatus.WAITING;
     room.chooserSocketId = null;
     room.game = null;

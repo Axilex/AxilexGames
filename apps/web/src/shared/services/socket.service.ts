@@ -26,8 +26,7 @@ class SocketService {
     event: E,
     payload: Parameters<ClientToServerEvents[E]>[0],
   ): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.socket as any)?.emit(event, payload);
+    this.socket?.emit(event, ...([payload] as unknown as Parameters<ClientToServerEvents[E]>));
   }
 
   on<E extends keyof ServerToClientEvents>(event: E, listener: ServerToClientEvents[E]): void {

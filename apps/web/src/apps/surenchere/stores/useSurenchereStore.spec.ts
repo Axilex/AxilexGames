@@ -31,7 +31,6 @@ function makeRoom(overrides: Partial<SurenchereRoomDTO> = {}): SurenchereRoomDTO
     passedSocketIds: [],
     currentWords: null,
     wasForced: false,
-    voteMap: {},
     chooseTimerEndsAt: null,
     bidTimerEndsAt: null,
     wordsTimerEndsAt: null,
@@ -121,7 +120,7 @@ describe('useSurenchereStore', () => {
     expect(store.wasForced).toBe(true);
   });
 
-  it('addRoundResult prepends to history and updates scores', () => {
+  it('addRoundResult prepends to history', () => {
     const store = useSurenchereStore();
     store.setMySocketId('s1');
     store.setRoom(makeRoom());
@@ -137,10 +136,10 @@ describe('useSurenchereStore', () => {
       wordVerdicts: [true, true, true, true, true, true, true],
       wasForced: false,
     };
-    store.addRoundResult(result, { Alice: 7, Bob: 0, Carol: 0 });
+    store.addRoundResult(result);
     expect(store.roundHistory).toHaveLength(1);
     expect(store.roundHistory[0].bidderPseudo).toBe('Alice');
-    expect(store.scores.Alice).toBe(7);
-    expect(store.phase).toBe('ROUND_END');
+    // scores and phase are derived from room (updated via setRoom/room:update)
+    expect(store.scores.Alice).toBe(0); // room not updated yet
   });
 });
