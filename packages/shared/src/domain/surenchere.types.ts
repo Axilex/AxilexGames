@@ -75,4 +75,11 @@ export interface SurenchereRoundResult {
   wasForced: boolean;
 }
 
-export type SurenchereRoomDTO = SurenchereRoom;
+/**
+ * Wire-safe DTO: strips `voteMap` (socketId keys) and hides `currentWords` until VOTING phase
+ * to prevent cheating via browser console inspection.
+ */
+export interface SurenchereRoomDTO extends Omit<SurenchereRoom, 'voteMap' | 'currentWords'> {
+  /** Present only during VOTING and ROUND_END phases; null otherwise. */
+  currentWords: string[] | null;
+}

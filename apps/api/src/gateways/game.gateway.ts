@@ -25,9 +25,8 @@ import {
 } from '@wiki-race/shared';
 import { LobbyService } from '../modules/lobby/lobby.service';
 import { GameService } from '../modules/game/game.service';
-import { GameStateService } from '../modules/game/game-state.service';
 import { WsExceptionFilter } from '../filters/ws-exception.filter';
-import { GAME_GATEWAY_CONFIG, RECONNECT_TIMEOUT_MS } from '../common/game-room';
+import { GAME_GATEWAY_CONFIG, RECONNECT_TIMEOUT_MS, RoomTimerService } from '../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -42,7 +41,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly lobby: LobbyService,
     private readonly game: GameService,
-    private readonly gameState: GameStateService,
+    private readonly timer: RoomTimerService,
   ) {}
 
   handleConnection(_client: TypedSocket): void {
@@ -59,7 +58,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(room.code).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
 
     // Purge player after timeout if they don't reconnect
-    this.gameState.startReconnectTimer(client.id, RECONNECT_TIMEOUT_MS, () => {
+    this.timer.start(client.id, 'reconnect', RECONNECT_TIMEOUT_MS, () => {
       const { room: updatedRoom, deleted } = this.lobby.leaveRoom(room.code, client.id);
       if (!deleted && updatedRoom) {
         this.server.to(room.code).emit('wikirace:room:update', this.lobby.toRoomDTO(updatedRoom));
@@ -96,7 +95,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Check if this is a reconnect
     const reconnected = this.lobby.handleReconnect(payload.roomCode, payload.pseudo, client.id);
     if (reconnected) {
-      this.gameState.clearReconnectTimer(client.id);
+      this.timer.clear(client.id, 'reconnect');
       await client.join(payload.roomCode);
       this.server.to(payload.roomCode).emit('wikirace:player:reconnected', payload.pseudo);
       this.server

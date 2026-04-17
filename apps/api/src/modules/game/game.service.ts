@@ -15,7 +15,7 @@ import {
 import { BingoConstraintId, BingoCardEntry } from '@wiki-race/shared';
 import { RoomRegistryService } from '../lobby/room-registry.service';
 import { WikipediaService } from '../wikipedia/wikipedia.service';
-import { GameStateService } from './game-state.service';
+import { RoomTimerService } from '../../common/game-room';
 import { ModeService } from './mode.service';
 
 const NAVIGATION_RATE_LIMIT_MS = 500;
@@ -33,7 +33,7 @@ export class GameService {
   constructor(
     private readonly registry: RoomRegistryService,
     private readonly wikipedia: WikipediaService,
-    private readonly gameState: GameStateService,
+    private readonly timer: RoomTimerService,
     private readonly modeService: ModeService,
   ) {}
 
@@ -98,7 +98,6 @@ export class GameService {
       timeLimitSeconds,
       clickLimit: clickLimit ?? null,
       winnerSocketId: null,
-      timerHandle: null,
       bingoConstraintIds: bingoConstraintIds ?? null,
     };
 
@@ -114,7 +113,7 @@ export class GameService {
     }
 
     if (timeLimitSeconds !== null) {
-      this.gameState.startGameTimer(room.code, timeLimitSeconds, () => {
+      this.timer.start(room.code, 'game', timeLimitSeconds * 1000, () => {
         const summary = this.buildSummary(room);
         this.endGame(room, null);
         onTimerExpire(summary);
@@ -281,7 +280,7 @@ export class GameService {
     room.status = GameStatus.FINISHED;
     room.game!.endTime = Date.now();
     room.game!.winnerSocketId = winnerSocketId;
-    this.gameState.clearGameTimer(room.code);
+    this.timer.clear(room.code, 'game');
   }
 
   private buildSummary(room: Room, winnerSocketId?: string | null): GameSummary {

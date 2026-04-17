@@ -9,7 +9,6 @@ export interface Player {
   currentSlug: string;
   history: NavigationStep[];
   lastNavigationAt: number;
-  disconnectTimer?: ReturnType<typeof setTimeout>;
   // Bingo
   bingoValidated: BingoConstraintId[];
   bingoValidatedOnSlug: Partial<Record<BingoConstraintId, string>>;
@@ -33,7 +32,6 @@ export interface GameSession {
   timeLimitSeconds: number | null;
   clickLimit: number | null; // null for CLASSIC
   winnerSocketId: string | null;
-  timerHandle: ReturnType<typeof setTimeout> | null;
   // Bingo
   bingoConstraintIds: BingoConstraintId[] | null;
 }

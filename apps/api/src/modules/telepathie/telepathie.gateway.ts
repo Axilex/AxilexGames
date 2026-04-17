@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseFilters, UseInterceptors } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -18,9 +18,8 @@ import {
   TelepathieChooseWordPayload,
 } from '@wiki-race/shared';
 import { TelepathieService } from './telepathie.service';
-import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
 import { TelepathieRoomInternal } from './telepathie-room.types';
 
 /** Délai d'affichage du résultat avant de lancer le sous-round suivant (ms) */
@@ -31,7 +30,6 @@ const CHOOSE_TIMER_SECONDS = 30;
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
-@UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class TelepathieGateway implements OnGatewayDisconnect {
@@ -47,6 +45,25 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     const room = this.telepathie.markDisconnected(client.id);
     if (!room) return;
     this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
+
+    // Ghost purge: if the player does not reconnect within 30s, remove them from the room
+    this.timer.start(client.id, 'reconnect', RECONNECT_TIMEOUT_MS, () => {
+      if (!this.telepathie.getRoomBySocket(client.id)) return;
+      const { room: updatedRoom, deleted } = this.telepathie.leaveRoom(client.id);
+      if (deleted || !updatedRoom) return;
+      this.timer.clearAll(updatedRoom.code);
+      this.server.to(updatedRoom.code).emit('telepathie:room-update', this.telepathie.toDTO(updatedRoom));
+      // If all remaining players have submitted in the current sous-round, resolve it
+      if (updatedRoom.phase === 'PLAYING') {
+        const allSubmitted = updatedRoom.players
+          .filter((p) => p.status === 'CONNECTED')
+          .every((p) => p.submittedWord !== null);
+        if (allSubmitted) {
+          this.timer.clear(updatedRoom.code, 'round');
+          this.resolveRound(updatedRoom.code);
+        }
+      }
+    });
   }
 
   @SubscribeMessage('telepathie:create')
@@ -154,10 +171,9 @@ export class TelepathieGateway implements OnGatewayDisconnect {
         this.openChoosing(room);
       } else if (room.phase === 'FINISHED') {
         const rankings = this.telepathie.buildRankings(room);
-        const handle = setTimeout(() => {
+        this.timer.start(room.code, 'gameFinished', 3000, () => {
           this.server.to(room.code).emit('telepathie:game-finished', { rankings });
-        }, 3000);
-        handle.unref();
+        });
       }
     } catch (e: unknown) {
       this.emitError(client, e);
@@ -229,10 +245,9 @@ export class TelepathieGateway implements OnGatewayDisconnect {
         if (gameOver) {
           // Dernière manche : podium après délai
           const rankings = this.telepathie.buildRankings(room);
-          const handle = setTimeout(() => {
+          this.timer.start(roomCode, 'gameFinished', 5000, () => {
             this.server.to(roomCode).emit('telepathie:game-finished', { rankings });
-          }, 5000);
-          handle.unref();
+          });
         }
         // Sinon, on attend que l'hôte appelle next-manche
       } else {

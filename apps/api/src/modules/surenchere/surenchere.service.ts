@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   PlayerStatus,
   SurenchereRoom,
+  SurenchereRoomDTO,
   SurencherePlayer,
   SurenchereRoundResult,
 } from '@wiki-race/shared';
@@ -463,5 +464,14 @@ export class SurenchereService {
 
   rankPlayers(room: SurenchereRoom): SurencherePlayer[] {
     return [...room.players].sort((a, b) => b.score - a.score);
+  }
+
+  toDTO(room: SurenchereRoom): SurenchereRoomDTO {
+    const { voteMap: _, ...rest } = room;
+    return {
+      ...rest,
+      currentWords:
+        room.phase === 'VOTING' || room.phase === 'ROUND_END' ? room.currentWords : null,
+    };
   }
 }

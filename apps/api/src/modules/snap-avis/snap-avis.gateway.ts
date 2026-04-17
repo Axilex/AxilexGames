@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseFilters, UseInterceptors } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -17,15 +17,13 @@ import {
   SnapAvisSubmitWordPayload,
 } from '@wiki-race/shared';
 import { SnapAvisService } from './snap-avis.service';
-import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
 import { SnapAvisRoomInternal } from './snap-avis-room.types';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
-@UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class SnapAvisGateway implements OnGatewayDisconnect {
@@ -41,6 +39,24 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
     const room = this.snapAvis.markDisconnected(client.id);
     if (!room) return;
     this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(room));
+
+    // Ghost purge: if the player does not reconnect within 30s, remove them from the room
+    this.timer.start(client.id, 'reconnect', RECONNECT_TIMEOUT_MS, () => {
+      if (!this.snapAvis.getRoomBySocket(client.id)) return;
+      const { room: updatedRoom, deleted } = this.snapAvis.leaveRoom(client.id);
+      if (deleted || !updatedRoom) return;
+      this.server.to(updatedRoom.code).emit('snapavis:room-update', this.snapAvis.toDTO(updatedRoom));
+      // If all remaining connected players have submitted, resolve the round
+      if (updatedRoom.phase === 'WRITING') {
+        const allSubmitted = updatedRoom.players
+          .filter((p) => p.status === 'CONNECTED')
+          .every((p) => p.currentWord !== null);
+        if (allSubmitted) {
+          this.timer.clear(updatedRoom.code, 'writing');
+          this.resolveRound(updatedRoom.code);
+        }
+      }
+    });
   }
 
   @SubscribeMessage('snapavis:create')
@@ -169,12 +185,9 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
 
       if (this.snapAvis.isGameOver(room)) {
         const rankings = this.snapAvis.buildRankings(room);
-        // Délai de 5s : laisse les joueurs lire les résultats de la dernière manche
-        // avant d'être redirigés vers le podium.
-        const handle = setTimeout(() => {
+        this.timer.start(roomCode, 'gameFinished', 5000, () => {
           this.server.to(roomCode).emit('snapavis:game-finished', { rankings });
-        }, 5000);
-        handle.unref();
+        });
       }
     } catch {
       // Room may have been deleted (everyone left) — ignore

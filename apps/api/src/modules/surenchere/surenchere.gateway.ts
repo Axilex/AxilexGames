@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseFilters, UseInterceptors } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -23,9 +23,8 @@ import {
   SurenchereRoundResult,
 } from '@wiki-race/shared';
 import { SurenchereService } from './surenchere.service';
-import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService } from '../../common/game-room';
+import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -34,7 +33,6 @@ const NEXT_ROUND_DELAY_MS = 4000;
 const CHOOSE_TIMEOUT_MS = 10_000;
 const BID_TIMEOUT_MS = 30_000;
 
-@UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class SurenchereGateway implements OnGatewayDisconnect {
@@ -49,7 +47,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   handleDisconnect(client: TypedSocket): void {
     const room = this.surenchere.markDisconnected(client.id);
     if (!room) return;
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
 
     // If a voter disconnects during VOTING, check if remaining votes are complete
     if (room.phase === 'VOTING') {
@@ -58,6 +56,21 @@ export class SurenchereGateway implements OnGatewayDisconnect {
         this.emitRoundEnd(room, result, finished ?? false, scores, client.id);
       }
     }
+
+    // Ghost purge: if the player does not reconnect within 30s, remove them from the room
+    this.timer.start(client.id, 'reconnect', RECONNECT_TIMEOUT_MS, () => {
+      // getRoomBySocket returns null if the socket was rebound (player reconnected)
+      if (!this.surenchere.getRoomBySocket(client.id)) return;
+      const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
+      if (deleted || !updatedRoom) return;
+      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
+      if (updatedRoom.phase === 'VOTING') {
+        const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
+        if (resolved && result && scores !== undefined) {
+          this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, client.id);
+        }
+      }
+    });
   }
 
   @SubscribeMessage('surenchere:create')
@@ -65,9 +78,13 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereCreatePayload,
   ): Promise<void> {
-    const room = this.surenchere.createRoom(client.id, payload.pseudo, payload.settings ?? {});
-    await client.join(room.code);
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    try {
+      const room = this.surenchere.createRoom(client.id, payload.pseudo, payload.settings ?? {});
+      await client.join(room.code);
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:join')
@@ -78,7 +95,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     try {
       const room = this.surenchere.joinRoom(client.id, payload.roomCode, payload.pseudo);
       await client.join(payload.roomCode);
-      this.server.to(payload.roomCode).emit('surenchere:room:update', room);
+      this.server.to(payload.roomCode).emit('surenchere:room:update', this.surenchere.toDTO(room));
     } catch (err) {
       this.emitError(client, err);
     }
@@ -91,7 +108,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
     if (!deleted && updatedRoom) {
       await client.leave(updatedRoom.code);
-      this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
+      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
     }
   }
 
@@ -100,19 +117,27 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereUpdateSettingsPayload,
   ): void {
-    const room = this.surenchere.updateSettings(client.id, payload);
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    try {
+      const room = this.surenchere.updateSettings(client.id, payload);
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:start')
   handleStart(@ConnectedSocket() client: TypedSocket): void {
-    const room = this.surenchere.startGame(client.id);
-    this.server.to(room.code).emit('surenchere:room:update', room);
-    this.server.to(room.code).emit('surenchere:round:start', {
-      round: room.currentRound,
-      firstBidderSocketId: room.challengeChooserSocketId ?? '',
-    });
-    this.startChooseTimer(room);
+    try {
+      const room = this.surenchere.startGame(client.id);
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      this.server.to(room.code).emit('surenchere:round:start', {
+        round: room.currentRound,
+        firstBidderSocketId: room.challengeChooserSocketId ?? '',
+      });
+      this.startChooseTimer(room);
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:choose_challenge')
@@ -120,14 +145,17 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereChooseChallengePayload,
   ): void {
-    const room = this.surenchere.chooseChallenge(client.id, {
-      challengeId: payload.challengeId,
-      customPhrase: payload.customPhrase,
-    });
-    this.timer.clear(room.code, 'choose');
-    this.server.to(room.code).emit('surenchere:room:update', room);
-    // Start the bid timer after challenge is chosen
-    this.startBidTimer(room);
+    try {
+      const room = this.surenchere.chooseChallenge(client.id, {
+        challengeId: payload.challengeId,
+        customPhrase: payload.customPhrase,
+      });
+      this.timer.clear(room.code, 'choose');
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      this.startBidTimer(room);
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:bid')
@@ -135,36 +163,46 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereBidPayload,
   ): void {
-    const room = this.surenchere.placeBid(client.id, payload.amount);
-    this.server.to(room.code).emit('surenchere:bid:update', {
-      bidderSocketId: client.id,
-      amount: payload.amount,
-    });
-    this.server.to(room.code).emit('surenchere:room:update', room);
-    // Reset bid timer on each new bid
-    this.startBidTimer(room);
+    try {
+      const room = this.surenchere.placeBid(client.id, payload.amount);
+      this.server.to(room.code).emit('surenchere:bid:update', {
+        bidderSocketId: client.id,
+        amount: payload.amount,
+      });
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      this.startBidTimer(room);
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:pass')
   handlePass(@ConnectedSocket() client: TypedSocket): void {
-    const { room, allPassed } = this.surenchere.pass(client.id);
-    this.server.to(room.code).emit('surenchere:pass:update', { socketId: client.id });
-    this.server.to(room.code).emit('surenchere:room:update', room);
-    if (allPassed) {
-      this.timer.clear(room.code, 'bid');
-      this.startWordsTimer(room);
-    } else {
-      // Reset bid timer on each pass (still in bidding)
-      if (room.phase === 'BIDDING') this.startBidTimer(room);
+    try {
+      const { room, allPassed } = this.surenchere.pass(client.id);
+      this.server.to(room.code).emit('surenchere:pass:update', { socketId: client.id });
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      if (allPassed) {
+        this.timer.clear(room.code, 'bid');
+        this.startWordsTimer(room);
+      } else {
+        if (room.phase === 'BIDDING') this.startBidTimer(room);
+      }
+    } catch (err) {
+      this.emitError(client, err);
     }
   }
 
   @SubscribeMessage('surenchere:challenge')
   handleChallenge(@ConnectedSocket() client: TypedSocket): void {
-    const room = this.surenchere.triggerChallenge(client.id);
-    this.timer.clear(room.code, 'bid');
-    this.server.to(room.code).emit('surenchere:room:update', room);
-    this.startWordsTimer(room);
+    try {
+      const room = this.surenchere.triggerChallenge(client.id);
+      this.timer.clear(room.code, 'bid');
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      this.startWordsTimer(room);
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:submit_words')
@@ -172,9 +210,13 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereSubmitWordsPayload,
   ): void {
-    this.clearWordsTimer(client.id);
-    const room = this.surenchere.submitWords(client.id, payload.words);
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    try {
+      this.clearWordsTimer(client.id);
+      const room = this.surenchere.submitWords(client.id, payload.words);
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   @SubscribeMessage('surenchere:vote')
@@ -182,17 +224,19 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: SurenchereVotePayload,
   ): void {
-    const { room, resolved, result, finished, scores } = this.surenchere.vote(
-      client.id,
-      payload.accept,
-    );
-    // Emit vote-update for real-time display (keyed by pseudo)
-    const votes = this.buildVoteDisplay(room);
-    this.server.to(room.code).emit('surenchere:vote-update', { votes });
-    this.server.to(room.code).emit('surenchere:room:update', room);
-
-    if (resolved && result && scores !== undefined) {
-      this.emitRoundEnd(room, result, finished ?? false, scores, client.id);
+    try {
+      const { room, resolved, result, finished, scores } = this.surenchere.vote(
+        client.id,
+        payload.accept,
+      );
+      const votes = this.buildVoteDisplay(room);
+      this.server.to(room.code).emit('surenchere:vote-update', { votes });
+      this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      if (resolved && result && scores !== undefined) {
+        this.emitRoundEnd(room, result, finished ?? false, scores, client.id);
+      }
+    } catch (err) {
+      this.emitError(client, err);
     }
   }
 
@@ -230,7 +274,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     hostId: string,
   ): void {
     this.server.to(room.code).emit('surenchere:round:end', { result, scores });
-    this.server.to(room.code).emit('surenchere:room:update', room);
+    this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
 
     if (finished) {
       this.server.to(room.code).emit('surenchere:game:finished', {
@@ -240,10 +284,10 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       return;
     }
 
-    setTimeout(() => {
+    this.timer.start(room.code, 'nextRound', NEXT_ROUND_DELAY_MS, () => {
       try {
         const nextRoom = this.surenchere.nextRound(hostId);
-        this.server.to(nextRoom.code).emit('surenchere:room:update', nextRoom);
+        this.server.to(nextRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(nextRoom));
         this.server.to(nextRoom.code).emit('surenchere:round:start', {
           round: nextRoom.currentRound,
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
@@ -252,15 +296,19 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       } catch {
         // player left, ignore
       }
-    }, NEXT_ROUND_DELAY_MS);
+    });
   }
 
   @SubscribeMessage('surenchere:reset')
   handleReset(@ConnectedSocket() client: TypedSocket): void {
-    const room = this.surenchere.getRoomBySocket(client.id);
-    if (room) this.timer.clearAll(room.code);
-    const updatedRoom = this.surenchere.resetRoom(client.id);
-    this.server.to(updatedRoom.code).emit('surenchere:room:update', updatedRoom);
+    try {
+      const room = this.surenchere.getRoomBySocket(client.id);
+      if (room) this.timer.clearAll(room.code);
+      const updatedRoom = this.surenchere.resetRoom(client.id);
+      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
+    } catch (err) {
+      this.emitError(client, err);
+    }
   }
 
   // ── Timer helpers ────────────────────────────────────────────────────────────
@@ -277,7 +325,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     if (!room || room.phase !== 'BIDDING' || !room.currentBidderSocketId) return;
     const updatedRoom = this.surenchere.forceToWords(code);
     if (!updatedRoom) return;
-    this.server.to(code).emit('surenchere:room:update', updatedRoom);
+    this.server.to(code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
     this.startWordsTimer(updatedRoom);
   }
 
@@ -294,7 +342,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     if (!room || room.phase !== 'WORDS' || !room.currentBidderSocketId) return;
     try {
       const updatedRoom = this.surenchere.autoSubmitWords(room.currentBidderSocketId);
-      this.server.to(code).emit('surenchere:room:update', updatedRoom);
+      this.server.to(code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
       const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
       if (resolved && result && scores !== undefined) {
         this.emitRoundEnd(
@@ -324,7 +372,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     if (!room || room.phase !== 'CHOOSING_CHALLENGE') return;
     try {
       const updatedRoom = this.surenchere.autoChooseChallenge(code);
-      this.server.to(code).emit('surenchere:room:update', updatedRoom);
+      this.server.to(code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
       this.startBidTimer(updatedRoom);
     } catch {
       // ignore
