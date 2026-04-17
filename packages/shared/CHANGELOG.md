@@ -1,5 +1,12 @@
 # @wiki-race/shared
 
+## 0.5.4
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`b8193c1`](https://github.com/Axilex/AxilexGames/commit/b8193c1) add submittedWordDisplay to TelepathiePlayerInternal and update handling in TelepathieService
+
 ## 0.5.3
 
 ### Patch Changes
