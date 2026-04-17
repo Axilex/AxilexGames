@@ -11,7 +11,11 @@
       <div class="md:col-span-2 flex flex-col gap-4">
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
         <ShareLink :share-url="shareUrl" />
-        <PlayerList :players="store.room?.players ?? []" :my-socket-id="store.mySocketId" />
+        <PlayerList
+          :players="store.room?.players ?? []"
+          :my-pseudo="store.myPseudo"
+          show-score
+        />
       </div>
 
       <div class="flex flex-col gap-4">
@@ -40,7 +44,7 @@ import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
-import PlayerList from '../components/lobby/PlayerList.vue';
+import PlayerList from '@/shared/components/ui/PlayerList.vue';
 import GameSettings from '../components/lobby/GameSettings.vue';
 import { useSurenchereStore } from '../stores/useSurenchereStore';
 import { useSurenchereSessionStore } from '@/shared/stores/useSurenchereSessionStore';

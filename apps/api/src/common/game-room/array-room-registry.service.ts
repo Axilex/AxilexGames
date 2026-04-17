@@ -39,6 +39,13 @@ export abstract class ArrayRoomRegistryService<
     const player = room.players.find((p) => p.socketId === oldSocketId);
     if (!player) return;
     player.socketId = newSocketId;
+    // Rooms that track the host via `hostSocketId` (telepathie, snap-avis) must
+    // follow the rebind too, otherwise the host check on startGame fails after a
+    // common-lobby seed → real-socket swap.
+    const roomWithHost = room as R & { hostSocketId?: string };
+    if (roomWithHost.hostSocketId === oldSocketId) {
+      roomWithHost.hostSocketId = newSocketId;
+    }
     this.unbindSocket(oldSocketId);
     this.bindSocket(newSocketId, code);
   }

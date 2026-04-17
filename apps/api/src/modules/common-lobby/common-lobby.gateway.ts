@@ -138,6 +138,10 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
         this.telepathieService.seedRoom(room.code, seedPlayers);
       }
 
+      // Push the IN_GAME state to clients before redirecting so their common-lobby store
+      // reflects reality. Without this, returning players keep a stale WAITING snapshot
+      // and the onMounted guard skips the rejoin that would show "Choisir un nouveau jeu".
+      this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
       this.server.to(room.code).emit('lobby:redirect', { game: room.gameChoice, code: room.code });
       // Room stays alive in IN_GAME state so players can return to it after the game
     } catch (e: unknown) {

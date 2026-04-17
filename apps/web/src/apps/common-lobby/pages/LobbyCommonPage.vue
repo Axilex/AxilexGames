@@ -12,38 +12,7 @@
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
         <ShareLink :share-url="shareUrl" />
 
-        <!-- Players -->
-        <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3">
-          <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
-            Joueurs ({{ store.room?.players.length ?? 0 }})
-          </span>
-          <ul class="flex flex-col gap-2">
-            <li
-              v-for="p in store.room?.players ?? []"
-              :key="p.pseudo"
-              :class="[
-                'flex items-center gap-2 rounded-lg border px-3 py-2',
-                p.pseudo === store.myPseudo
-                  ? 'bg-amber-50 border-amber-200'
-                  : 'bg-stone-50 border-stone-200',
-              ]"
-            >
-              <span
-                :class="[
-                  'w-2 h-2 rounded-full',
-                  p.status === 'CONNECTED' ? 'bg-emerald-500' : 'bg-stone-300',
-                ]"
-              />
-              <span class="text-sm font-medium text-stone-900">{{ p.pseudo }}</span>
-              <span
-                v-if="p.isHost"
-                class="text-[10px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded"
-              >
-                Host
-              </span>
-            </li>
-          </ul>
-        </div>
+        <PlayerList :players="store.room?.players ?? []" :my-pseudo="store.myPseudo" />
       </div>
 
       <div class="flex flex-col gap-4">
@@ -124,6 +93,7 @@ import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
+import PlayerList from '@/shared/components/ui/PlayerList.vue';
 import { GAME_COLOR_SCHEMES } from '@/shared/constants/game-colors';
 import { useCommonLobbyStore } from '../stores/useCommonLobbyStore';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';

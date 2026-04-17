@@ -12,39 +12,12 @@
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
         <ShareLink :share-url="shareUrl" />
 
-        <!-- Player list -->
-        <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3">
-          <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-            Joueurs ({{ connectedCount }}/8)
-          </p>
-          <ul class="flex flex-col gap-2">
-            <li
-              v-for="player in store.room?.players ?? []"
-              :key="player.socketId"
-              class="flex items-center gap-3"
-            >
-              <span
-                :class="[
-                  'w-2 h-2 rounded-full shrink-0',
-                  player.status === 'CONNECTED' ? 'bg-emerald-400' : 'bg-stone-300',
-                ]"
-              />
-              <span class="text-sm font-medium text-stone-800">{{ player.pseudo }}</span>
-              <span
-                v-if="player.isHost"
-                class="ml-auto text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
-              >
-                Hôte
-              </span>
-              <span
-                v-if="player.socketId === store.mySocketId"
-                class="text-[10px] text-stone-400 ml-auto"
-              >
-                (toi)
-              </span>
-            </li>
-          </ul>
-        </div>
+        <PlayerList
+          :players="store.room?.players ?? []"
+          :my-pseudo="store.myPseudo"
+          :max-players="8"
+          count-connected-only
+        />
       </div>
 
       <div class="flex flex-col gap-4">
@@ -105,6 +78,7 @@ import { useRouter } from 'vue-router';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
+import PlayerList from '@/shared/components/ui/PlayerList.vue';
 import { useSnapAvisStore } from '../stores/useSnapAvisStore';
 import { useSnapAvisSessionStore } from '@/shared/stores/useSnapAvisSessionStore';
 import { snapAvisSocket } from '../services/snap-avis.service';
@@ -119,9 +93,6 @@ const writingDurationSec = ref((store.room?.settings.writingDurationMs ?? 10000)
 
 const canStart = computed(
   () => (store.room?.players.filter((p) => p.status === 'CONNECTED').length ?? 0) >= 2,
-);
-const connectedCount = computed(
-  () => store.room?.players.filter((p) => p.status === 'CONNECTED').length ?? 0,
 );
 
 const shareUrl = computed(

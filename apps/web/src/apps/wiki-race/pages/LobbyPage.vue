@@ -222,9 +222,12 @@
 
       <!-- Right: player list + rules card -->
       <div class="flex flex-col gap-4">
-        <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-4">
-          <PlayerList :players="room.players" />
-        </div>
+        <PlayerList
+          :players="room.players"
+          :my-pseudo="sessionStore.pseudo"
+          :max-players="8"
+          show-full-status
+        />
         <RulesCard />
       </div>
     </div>
@@ -245,7 +248,7 @@ import LoadingSpinner from '@/shared/components/ui/LoadingSpinner.vue';
 import ErrorToast from '@/shared/components/ui/ErrorToast.vue';
 import RoomCodeDisplay from '@/shared/components/ui/RoomCodeDisplay.vue';
 import ShareLink from '@/shared/components/ui/ShareLink.vue';
-import PlayerList from '../components/lobby/PlayerList.vue';
+import PlayerList from '@/shared/components/ui/PlayerList.vue';
 import TimeLimitSelector from '../components/lobby/TimeLimitSelector.vue';
 import WikiPageSearch from '../components/lobby/WikiPageSearch.vue';
 import ModeSelector from '../components/lobby/ModeSelector.vue';
