@@ -1,5 +1,15 @@
 # web
 
+## 0.5.5
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`6e6557f`](https://github.com/Axilex/AxilexGames/commit/6e6557f) enhance game logic by adding game status checks and refactoring word normalization
+  - [`a0b02d6`](https://github.com/Axilex/AxilexGames/commit/a0b02d6) refactor game state management by replacing GameStateService with RoomTimerService and updating related components
+- Updated dependencies
+  - @wiki-race/shared@0.5.5
+
 ## 0.5.4
 
 ### Patch Changes
