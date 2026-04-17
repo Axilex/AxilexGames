@@ -79,6 +79,7 @@ export class TelepathieService {
       p.score = 0;
       p.currentWord = null;
       p.submittedWord = null;
+      p.submittedWordDisplay = null;
       p.hasSubmitted = false;
       p.usedWords = [];
       p.status = PlayerStatus.CONNECTED;
@@ -113,6 +114,7 @@ export class TelepathieService {
     }
 
     player.submittedWord = normalized;
+    player.submittedWordDisplay = word.trim();
     player.hasSubmitted = true;
     player.usedWords.push(normalized);
 
@@ -151,7 +153,8 @@ export class TelepathieService {
 
     const submissions: Record<string, string> = {};
     for (const player of connected) {
-      submissions[player.pseudo] = player.submittedWord ?? '';
+      // Utiliser la valeur avec accents pour l'affichage
+      submissions[player.pseudo] = player.submittedWordDisplay ?? player.submittedWord ?? '';
     }
 
     const roundResult: TelepathieSousRoundResult = {
@@ -165,9 +168,11 @@ export class TelepathieService {
     room.lastRoundResult = roundResult;
     room.sousRoundHistory.push(roundResult);
 
-    // Le mot soumis devient le mot courant pour le sous-round suivant
+    // Le mot soumis devient le mot courant pour le sous-round suivant (valeur d'affichage)
     for (const player of connected) {
-      if (player.submittedWord) {
+      if (player.submittedWordDisplay !== null) {
+        player.currentWord = player.submittedWordDisplay;
+      } else if (player.submittedWord !== null) {
         player.currentWord = player.submittedWord;
       }
     }
@@ -238,6 +243,7 @@ export class TelepathieService {
     for (const p of room.players) {
       p.currentWord = null;
       p.submittedWord = null;
+      p.submittedWordDisplay = null;
       p.hasSubmitted = false;
       p.usedWords = [];
     }
@@ -258,7 +264,13 @@ export class TelepathieService {
     const player = room.players.find((p) => p.socketId === socketId);
     if (!player) throw new Error('PLAYER_NOT_FOUND');
 
-    player.currentWord = this.normalizeWord(word);
+    // Stocker la valeur d'affichage (avec accents) dans currentWord.
+    // Le mot normalisé est ajouté à usedWords pour bloquer sa réutilisation en sous-round.
+    player.currentWord = word.trim();
+    const normalized = this.normalizeWord(word);
+    if (!player.usedWords.includes(normalized)) {
+      player.usedWords.push(normalized);
+    }
 
     const connected = room.players.filter((p) => p.status === PlayerStatus.CONNECTED);
     const allChosen = connected.every((p) => p.currentWord !== null);
@@ -269,8 +281,11 @@ export class TelepathieService {
   /**
    * Ouvre la manche : assigne un mot aléatoire aux joueurs sans mot,
    * remet les soumissions à zéro et passe en phase PLAYING.
+   *
+   * Si 2+ joueurs avaient choisi le même mot de départ, leur soumet directement le mot
+   * afin que `resolveRound` détecte le match immédiatement (hasImmediateMatch = true).
    */
-  openManche(roomCode: string): TelepathieRoomInternal {
+  openManche(roomCode: string): { room: TelepathieRoomInternal; hasImmediateMatch: boolean } {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
@@ -286,10 +301,39 @@ export class TelepathieService {
     }
 
     this.resetSubmissions(room);
+
+    // Bloquer le mot de départ des joueurs qui ont eu un mot assigné aléatoirement
+    // (les joueurs qui ont choisi ont déjà leur mot dans usedWords via chooseWord)
+    const connected = room.players.filter((p) => p.status === PlayerStatus.CONNECTED);
+    for (const player of connected) {
+      const normalized = this.normalizeWord(player.currentWord!);
+      if (!player.usedWords.includes(normalized)) {
+        player.usedWords.push(normalized);
+      }
+    }
+
+    // Détecter un match immédiat : 2+ joueurs avec le même mot de départ
+    const startingWordMap = new Map<string, string[]>();
+    for (const player of connected) {
+      const key = this.normalizeWord(player.currentWord!);
+      if (!startingWordMap.has(key)) startingWordMap.set(key, []);
+      startingWordMap.get(key)!.push(player.pseudo);
+    }
+    const hasImmediateMatch = [...startingWordMap.values()].some((g) => g.length >= 2);
+
+    if (hasImmediateMatch) {
+      // Pré-remplir les soumissions pour que resolveRound fonctionne normalement
+      for (const player of connected) {
+        player.submittedWord = this.normalizeWord(player.currentWord!);
+        player.submittedWordDisplay = player.currentWord;
+        player.hasSubmitted = true;
+      }
+    }
+
     room.roundTimerEndsAt = null;
     room.phase = 'PLAYING';
 
-    return room;
+    return { room, hasImmediateMatch };
   }
 
   isGameOver(room: TelepathieRoomInternal): boolean {
@@ -334,6 +378,7 @@ export class TelepathieService {
       currentWord: null,
       hasSubmitted: false,
       submittedWord: null,
+      submittedWordDisplay: null,
       usedWords: [],
     };
     this.registry.createRoom(code, host);
@@ -349,6 +394,7 @@ export class TelepathieService {
         currentWord: null,
         hasSubmitted: false,
         submittedWord: null,
+        submittedWordDisplay: null,
         usedWords: [],
       });
     }
@@ -371,6 +417,7 @@ export class TelepathieService {
       p.score = 0;
       p.currentWord = null;
       p.submittedWord = null;
+      p.submittedWordDisplay = null;
       p.hasSubmitted = false;
       p.usedWords = [];
       p.status = PlayerStatus.CONNECTED;
@@ -416,6 +463,7 @@ export class TelepathieService {
       currentWord: null,
       hasSubmitted: false,
       submittedWord: null,
+      submittedWordDisplay: null,
       usedWords: [],
     };
   }
@@ -431,6 +479,7 @@ export class TelepathieService {
   private resetSubmissions(room: TelepathieRoomInternal): void {
     for (const player of room.players) {
       player.submittedWord = null;
+      player.submittedWordDisplay = null;
       player.hasSubmitted = false;
     }
   }

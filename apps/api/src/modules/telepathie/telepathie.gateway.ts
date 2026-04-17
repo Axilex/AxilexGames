@@ -191,9 +191,14 @@ export class TelepathieGateway implements OnGatewayDisconnect {
   /** Démarre la manche après la phase CHOOSING. */
   private startManche(roomCode: string): void {
     try {
-      const room = this.telepathie.openManche(roomCode);
+      const { room, hasImmediateMatch } = this.telepathie.openManche(roomCode);
       this.server.to(roomCode).emit('telepathie:room-update', this.telepathie.toDTO(room));
-      this.openSousRound(room);
+      if (hasImmediateMatch) {
+        // Résolution directe : les mots de départ matchent déjà
+        this.resolveRound(room.code);
+      } else {
+        this.openSousRound(room);
+      }
     } catch {
       // Room supprimée
     }
