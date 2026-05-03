@@ -271,6 +271,20 @@ export class SnapAvisService {
   }
 
   /**
+   * Returns the previous socketId of a DISCONNECTED player matching `pseudo`,
+   * or null if none. Used by the gateway to clear the ghost-purge timer keyed
+   * by the old socket id on reconnect (the new socket never had a timer).
+   */
+  findReconnectSocketId(roomCode: string, pseudo: string): string | null {
+    const room = this.registry.findRoom(roomCode);
+    if (!room) return null;
+    const existing = room.players.find(
+      (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
+    );
+    return existing?.socketId ?? null;
+  }
+
+  /**
    * Pré-rempli la room depuis le CommonLobby. Appelé avant le redirect lobby:redirect.
    * La room est créée avec tous les joueurs en état DISCONNECTED — ils rejoindront ensuite
    * via snapavis:join déclenché par le redirect.

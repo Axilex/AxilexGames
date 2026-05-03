@@ -71,6 +71,20 @@ export class CommonLobbyService {
     return this.registry.markDisconnected(socketId);
   }
 
+  /**
+   * Returns the previous socketId of a DISCONNECTED player matching `pseudo`,
+   * or null if none. Used by the gateway to clear the ghost-purge timer keyed
+   * by the old socket id on reconnect (the new socket never had a timer).
+   */
+  findReconnectSocketId(roomCode: string, pseudo: string): string | null {
+    const room = this.registry.findRoom(roomCode);
+    if (!room) return null;
+    const existing = Array.from(room.players.values()).find(
+      (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
+    );
+    return existing?.socketId ?? null;
+  }
+
   chooseGame(socketId: string, game: GameChoice): CommonRoom {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');

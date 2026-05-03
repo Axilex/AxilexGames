@@ -95,7 +95,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Check if this is a reconnect
     const reconnected = this.lobby.handleReconnect(payload.roomCode, payload.pseudo, client.id);
     if (reconnected) {
-      this.timer.clear(client.id, 'reconnect');
+      // Clear the ghost-purge timer armed against the previous socket id; the
+      // new socket id never had one, so clearing on `client.id` was a no-op.
+      this.timer.clear(reconnected.previousSocketId, 'reconnect');
       await client.join(payload.roomCode);
       this.server.to(payload.roomCode).emit('wikirace:player:reconnected', payload.pseudo);
       this.server

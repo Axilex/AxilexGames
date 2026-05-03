@@ -93,7 +93,12 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @MessageBody() payload: SurenchereJoinPayload,
   ): Promise<void> {
     try {
+      const previousSocketId = this.surenchere.findReconnectSocketId(
+        payload.roomCode,
+        payload.pseudo,
+      );
       const room = this.surenchere.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(payload.roomCode);
       this.server.to(payload.roomCode).emit('surenchere:room:update', this.surenchere.toDTO(room));
     } catch (err) {

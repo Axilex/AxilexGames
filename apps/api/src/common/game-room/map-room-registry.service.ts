@@ -56,10 +56,17 @@ export abstract class MapRoomRegistryService<
     return room;
   }
 
-  /** Assigns the next available player as host when the current host leaves. */
+  /**
+   * Assigns the next available player as host when the current host leaves.
+   * Prefers a CONNECTED player so the new host can actually act; falls back to
+   * the first remaining player only if none are connected (room is dormant anyway).
+   */
   transferHostIfNeeded(room: R, leavingSocketId: string): void {
-    if (room.hostSocketId === leavingSocketId && room.players.size > 0) {
-      room.hostSocketId = room.players.values().next().value!.socketId;
-    }
+    if (room.hostSocketId !== leavingSocketId || room.players.size === 0) return;
+    const connected = Array.from(room.players.values()).find(
+      (p) => p.status === PlayerStatus.CONNECTED,
+    );
+    const next = connected ?? room.players.values().next().value!;
+    room.hostSocketId = next.socketId;
   }
 }

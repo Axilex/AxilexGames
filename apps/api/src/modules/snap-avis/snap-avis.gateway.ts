@@ -79,7 +79,12 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
     @MessageBody() payload: SnapAvisJoinPayload,
   ): Promise<void> {
     try {
+      const previousSocketId = this.snapAvis.findReconnectSocketId(
+        payload.roomCode,
+        payload.pseudo,
+      );
       const room = this.snapAvis.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(room));
     } catch (e: unknown) {

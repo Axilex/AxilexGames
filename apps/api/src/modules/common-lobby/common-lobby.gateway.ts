@@ -90,7 +90,12 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
     @MessageBody() payload: LobbyJoinPayload,
   ): Promise<void> {
     try {
+      const previousSocketId = this.lobbyService.findReconnectSocketId(
+        payload.roomCode,
+        payload.pseudo,
+      );
       const room = this.lobbyService.joinRoom(payload.roomCode, payload.pseudo, client.id);
+      if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
     } catch (e: unknown) {

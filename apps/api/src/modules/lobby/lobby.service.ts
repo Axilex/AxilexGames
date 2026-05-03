@@ -86,7 +86,7 @@ export class LobbyService {
     roomCode: string,
     pseudo: string,
     newSocketId: string,
-  ): { room: Room; player: Player } | null {
+  ): { room: Room; player: Player; previousSocketId: string } | null {
     const room = this.registry.findRoom(roomCode);
     if (!room) return null;
 
@@ -95,9 +95,10 @@ export class LobbyService {
     );
     if (!existing) return null;
 
-    this.registry.rebindSocket(existing.socketId, newSocketId, roomCode);
+    const previousSocketId = existing.socketId;
+    this.registry.rebindSocket(previousSocketId, newSocketId, roomCode);
     existing.status = PlayerStatus.CONNECTED;
-    return { room, player: existing };
+    return { room, player: existing, previousSocketId };
   }
 
   resetRoom(roomCode: string, socketId: string): Room {

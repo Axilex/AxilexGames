@@ -86,7 +86,12 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     @MessageBody() payload: TelepathieJoinPayload,
   ): Promise<void> {
     try {
+      const previousSocketId = this.telepathie.findReconnectSocketId(
+        payload.roomCode,
+        payload.pseudo,
+      );
       const room = this.telepathie.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
     } catch (e: unknown) {

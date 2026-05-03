@@ -110,13 +110,30 @@ export class SurenchereService {
       return { room: null, wasHost, deleted: true };
     }
     if (wasHost) {
-      room.players[0].isHost = true;
+      // Prefer a CONNECTED player so the new host can actually act
+      const next =
+        room.players.find((p) => p.status === PlayerStatus.CONNECTED) ?? room.players[0];
+      next.isHost = true;
     }
     return { room, wasHost, deleted: false };
   }
 
   markDisconnected(socketId: string): SurenchereRoom | null {
     return this.registry.markDisconnected(socketId);
+  }
+
+  /**
+   * Returns the previous socketId of a DISCONNECTED player matching `pseudo`,
+   * or null if none. Used by the gateway to clear the ghost-purge timer keyed
+   * by the old socket id on reconnect (the new socket never had a timer).
+   */
+  findReconnectSocketId(roomCode: string, pseudo: string): string | null {
+    const room = this.registry.findRoom(roomCode);
+    if (!room) return null;
+    const existing = room.players.find(
+      (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
+    );
+    return existing?.socketId ?? null;
   }
 
   updateSettings(
