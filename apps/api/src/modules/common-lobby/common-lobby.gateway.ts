@@ -17,7 +17,12 @@ import {
   LobbyJoinPayload,
   LobbyChooseGamePayload,
 } from '@wiki-race/shared';
-import { GAME_GATEWAY_CONFIG, extractErrorCode } from '../../common/game-room';
+import {
+  GAME_GATEWAY_CONFIG,
+  RECONNECT_TIMEOUT_MS,
+  RoomTimerService,
+  extractErrorCode,
+} from '../../common/game-room';
 import { CommonLobbyService } from './common-lobby.service';
 import { CommonLobbyRegistryService } from './common-lobby-registry.service';
 import { SurenchereService } from '../surenchere/surenchere.service';
@@ -42,6 +47,7 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
     private readonly wikiLobbyService: LobbyService,
     private readonly snapAvisService: SnapAvisService,
     private readonly telepathieService: TelepathieService,
+    private readonly timer: RoomTimerService,
   ) {}
 
   handleDisconnect(client: TypedSocket): void {
@@ -49,6 +55,16 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
       const room = this.lobbyService.markDisconnected(client.id);
       if (!room) return;
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
+
+      // Ghost purge: if the player does not reconnect within 30s, remove them so the
+      // room (and host slot) does not stay locked by a disconnected player.
+      this.timer.start(client.id, 'reconnect', RECONNECT_TIMEOUT_MS, () => {
+        if (!this.lobbyService.getRoom(client.id)) return;
+        const { room: updated, deleted } = this.lobbyService.leaveRoom(client.id);
+        if (!deleted && updated) {
+          this.server.to(updated.code).emit('lobby:room-update', this.registry.toDTO(updated));
+        }
+      });
     } catch {
       // ignore
     }

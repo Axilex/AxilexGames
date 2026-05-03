@@ -6,9 +6,15 @@ import { SurenchereModule } from '../surenchere/surenchere.module';
 import { LobbyModule } from '../lobby/lobby.module';
 import { SnapAvisModule } from '../snap-avis/snap-avis.module';
 import { TelepathieModule } from '../telepathie/telepathie.module';
+import { RoomTimerService } from '../../common/game-room';
 
 @Module({
   imports: [SurenchereModule, LobbyModule, SnapAvisModule, TelepathieModule],
-  providers: [CommonLobbyService, CommonLobbyRegistryService, CommonLobbyGateway],
+  providers: [
+    CommonLobbyService,
+    CommonLobbyRegistryService,
+    CommonLobbyGateway,
+    RoomTimerService,
+  ],
 })
 export class CommonLobbyModule {}

@@ -71,7 +71,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         (p) => p.status === PlayerStatus.CONNECTED,
       );
       if (active.length === 0 && room.game) {
-        const summary = this.game.buildSummaryPublic(room);
+        const summary = this.game.abandonGame(room);
         this.server.to(room.code).emit('wikirace:game:finished', summary);
       }
     }

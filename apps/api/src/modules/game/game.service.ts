@@ -339,8 +339,16 @@ export class GameService {
     };
   }
 
-  buildSummaryPublic(room: Room): GameSummary {
-    return this.buildSummary(room);
+  /**
+   * Builds the game summary AND ends the game cleanly (status=FINISHED, endTime set,
+   * game timer cleared). Used when the gateway detects every player has dropped:
+   * we must wrap up so the dangling time-limit timer does not fire a second
+   * `game:finished` later, and reconnecting players see a coherent state.
+   */
+  abandonGame(room: Room): GameSummary {
+    const summary = this.buildSummary(room);
+    this.endGame(room, null);
+    return summary;
   }
 
   private getRoom(roomCode: string): Room {
