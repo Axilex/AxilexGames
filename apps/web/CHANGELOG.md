@@ -1,5 +1,26 @@
 # web
 
+## 0.5.6
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`6e86d72`](https://github.com/Axilex/AxilexGames/commit/6e86d72) implement session token for player reconnection across games
+  - [`85c3e8f`](https://github.com/Axilex/AxilexGames/commit/85c3e8f) add WikiRace module and gateway, implement reconnection and game handling logic
+  - [`bea653d`](https://github.com/Axilex/AxilexGames/commit/bea653d) implement reconnect handling by adding findReconnectSocketId method and updating ghost-purge timer logic
+  - [`15716ed`](https://github.com/Axilex/AxilexGames/commit/15716ed) implement game abandonment logic and integrate RoomTimerService for player reconnection handling
+
+  ### ♻️ Refactoring
+  - [`c45cd2e`](https://github.com/Axilex/AxilexGames/commit/c45cd2e) clean up code formatting and improve readability across multiple files
+
+  ### 🔧 Maintenance
+  - [`f4e59b9`](https://github.com/Axilex/AxilexGames/commit/f4e59b9) update error handling and session security in WikiRace gateway documentation
+  - [`64801a2`](https://github.com/Axilex/AxilexGames/commit/64801a2) upgrade dependencies
+  - [`504f87e`](https://github.com/Axilex/AxilexGames/commit/504f87e) remove claude from gitignore
+
+- Updated dependencies
+  - @wiki-race/shared@0.5.6
+
 ## 0.5.5
 
 ### Patch Changes
