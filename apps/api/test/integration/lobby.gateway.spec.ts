@@ -88,7 +88,7 @@ describe('LobbyGateway (integration)', () => {
     const errorPromise = waitForEvent(guest, 'error');
     guest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Alice' });
     const err = await errorPromise;
-    expect(err).toContain('PSEUDO_TAKEN');
+    expect(err.message).toContain('PSEUDO_TAKEN');
 
     disconnectAll(host, guest);
   });
@@ -100,7 +100,7 @@ describe('LobbyGateway (integration)', () => {
     const errorPromise = waitForEvent(client, 'error');
     client.emit('wikirace:room:join', { roomCode: 'XXXXXX', pseudo: 'Bob' });
     const err = await errorPromise;
-    expect(err).toContain('ROOM_NOT_FOUND');
+    expect(err.message).toContain('ROOM_NOT_FOUND');
 
     disconnectAll(client);
   });

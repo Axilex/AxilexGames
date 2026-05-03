@@ -147,7 +147,7 @@ describe('GameGateway — game flow (integration)', () => {
     const errorPromise = waitForEvent(guest, 'error');
     guest.emit('wikirace:game:start', { roomCode: code });
     const err = await errorPromise;
-    expect(err).toContain('NOT_HOST');
+    expect(err.message).toContain('NOT_HOST');
 
     disconnectAll(host, guest);
   });
@@ -179,7 +179,7 @@ describe('GameGateway — game flow (integration)', () => {
     const errorPromise = waitForEvent(host, 'error');
     host.emit('wikirace:game:navigate', { roomCode: code, targetSlug: 'Allemagne' });
     const err = await errorPromise;
-    expect(err).toContain('INVALID_NAVIGATION');
+    expect(err.message).toContain('INVALID_NAVIGATION');
 
     disconnectAll(host, guest);
   });

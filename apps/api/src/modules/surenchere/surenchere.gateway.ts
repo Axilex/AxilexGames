@@ -24,7 +24,12 @@ import {
 } from '@wiki-race/shared';
 import { SurenchereService } from './surenchere.service';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
+import {
+  GAME_GATEWAY_CONFIG,
+  extractErrorCode,
+  RoomTimerService,
+  RECONNECT_TIMEOUT_MS,
+} from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -65,9 +70,12 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       if (!this.surenchere.getRoomBySocket(client.id)) return;
       const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
       if (deleted || !updatedRoom) return;
-      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
+      this.server
+        .to(updatedRoom.code)
+        .emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
       if (updatedRoom.phase === 'VOTING') {
-        const { resolved, result, finished, scores } = this.surenchere.tryResolveVoting(updatedRoom);
+        const { resolved, result, finished, scores } =
+          this.surenchere.tryResolveVoting(updatedRoom);
         if (resolved && result && scores !== undefined) {
           this.emitRoundEnd(updatedRoom, result, finished ?? false, scores, client.id);
         }
@@ -115,7 +123,9 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     const { room: updatedRoom, deleted } = this.surenchere.leaveRoom(client.id);
     if (!deleted && updatedRoom) {
       await client.leave(updatedRoom.code);
-      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
+      this.server
+        .to(updatedRoom.code)
+        .emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
     }
   }
 
@@ -294,7 +304,9 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     this.timer.start(room.code, 'nextRound', NEXT_ROUND_DELAY_MS, () => {
       try {
         const nextRoom = this.surenchere.nextRound(hostId);
-        this.server.to(nextRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(nextRoom));
+        this.server
+          .to(nextRoom.code)
+          .emit('surenchere:room:update', this.surenchere.toDTO(nextRoom));
         this.server.to(nextRoom.code).emit('surenchere:round:start', {
           round: nextRoom.currentRound,
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
@@ -312,7 +324,9 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       const room = this.surenchere.getRoomBySocket(client.id);
       if (room) this.timer.clearAll(room.code);
       const updatedRoom = this.surenchere.resetRoom(client.id);
-      this.server.to(updatedRoom.code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
+      this.server
+        .to(updatedRoom.code)
+        .emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
     } catch (err) {
       this.emitError(client, err);
     }

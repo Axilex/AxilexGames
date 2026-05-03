@@ -111,8 +111,7 @@ export class SurenchereService {
     }
     if (wasHost) {
       // Prefer a CONNECTED player so the new host can actually act
-      const next =
-        room.players.find((p) => p.status === PlayerStatus.CONNECTED) ?? room.players[0];
+      const next = room.players.find((p) => p.status === PlayerStatus.CONNECTED) ?? room.players[0];
       next.isHost = true;
     }
     return { room, wasHost, deleted: false };

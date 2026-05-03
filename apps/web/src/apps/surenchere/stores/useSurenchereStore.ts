@@ -94,8 +94,7 @@ export const useSurenchereStore = defineStore('surenchere', () => {
 
   const isChallengeChooser = computed(
     () =>
-      phase.value === 'CHOOSING_CHALLENGE' &&
-      mySocketId.value === challengeChooserSocketId.value,
+      phase.value === 'CHOOSING_CHALLENGE' && mySocketId.value === challengeChooserSocketId.value,
   );
 
   const canSubmitWords = computed(

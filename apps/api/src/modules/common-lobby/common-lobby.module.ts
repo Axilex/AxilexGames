@@ -10,11 +10,6 @@ import { RoomTimerService } from '../../common/game-room';
 
 @Module({
   imports: [SurenchereModule, LobbyModule, SnapAvisModule, TelepathieModule],
-  providers: [
-    CommonLobbyService,
-    CommonLobbyRegistryService,
-    CommonLobbyGateway,
-    RoomTimerService,
-  ],
+  providers: [CommonLobbyService, CommonLobbyRegistryService, CommonLobbyGateway, RoomTimerService],
 })
 export class CommonLobbyModule {}

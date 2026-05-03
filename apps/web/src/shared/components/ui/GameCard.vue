@@ -10,7 +10,12 @@
     ]"
   >
     <!-- Banner -->
-    <div :class="['relative h-28 bg-gradient-to-br p-5 overflow-hidden flex items-end', colorScheme.gradient]">
+    <div
+      :class="[
+        'relative h-28 bg-gradient-to-br p-5 overflow-hidden flex items-end',
+        colorScheme.gradient,
+      ]"
+    >
       <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10" />
       <div class="absolute right-5 bottom-4 w-12 h-12 rounded-full bg-white/10" />
 
@@ -140,7 +145,10 @@
       <div class="mt-auto pt-2">
         <span
           v-if="live"
-          :class="['inline-flex items-center gap-1.5 text-sm font-bold transition-colors', colorScheme.cta]"
+          :class="[
+            'inline-flex items-center gap-1.5 text-sm font-bold transition-colors',
+            colorScheme.cta,
+          ]"
         >
           Jouer
           <svg

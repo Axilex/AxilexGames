@@ -11,11 +11,7 @@
       <div class="md:col-span-2 flex flex-col gap-4">
         <RoomCodeDisplay :code="store.room?.code ?? ''" />
         <ShareLink :share-url="shareUrl" />
-        <PlayerList
-          :players="store.room?.players ?? []"
-          :my-pseudo="store.myPseudo"
-          show-score
-        />
+        <PlayerList :players="store.room?.players ?? []" :my-pseudo="store.myPseudo" show-score />
       </div>
 
       <div class="flex flex-col gap-4">

@@ -20,7 +20,8 @@
           v-if="showMeLabel && player.pseudo === myPseudo"
           class="text-[10px] font-medium text-amber-600 shrink-0"
           aria-hidden="true"
-        >(toi)</span>
+          >(toi)</span
+        >
         <span v-if="showMeLabel && player.pseudo === myPseudo" class="sr-only"> (vous)</span>
         <span
           v-if="player.isHost"

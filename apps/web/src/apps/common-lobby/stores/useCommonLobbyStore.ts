@@ -20,9 +20,7 @@ export const useCommonLobbyStore = defineStore('common-lobby', () => {
   const connectedCount = computed(
     () => room.value?.players.filter((p) => p.status === 'CONNECTED').length ?? 0,
   );
-  const canStart = computed(
-    () => isHost.value && !!gameChoice.value && connectedCount.value >= 2,
-  );
+  const canStart = computed(() => isHost.value && !!gameChoice.value && connectedCount.value >= 2);
 
   /** Human-readable reason the start button is disabled, or null if startable. */
   const startBlockedReason = computed<string | null>(() => {

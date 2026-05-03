@@ -240,5 +240,4 @@ export class WikiRaceGateway implements OnGatewayConnection, OnGatewayDisconnect
       this.server.to(payload.roomCode).emit('wikirace:game:finished', result.summary);
     }
   }
-
 }

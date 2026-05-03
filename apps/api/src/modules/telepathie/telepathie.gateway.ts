@@ -19,7 +19,12 @@ import {
 } from '@wiki-race/shared';
 import { TelepathieService } from './telepathie.service';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
+import {
+  GAME_GATEWAY_CONFIG,
+  extractErrorCode,
+  RoomTimerService,
+  RECONNECT_TIMEOUT_MS,
+} from '../../common/game-room';
 import { TelepathieRoomInternal } from './telepathie-room.types';
 
 /** Délai d'affichage du résultat avant de lancer le sous-round suivant (ms) */
@@ -54,7 +59,9 @@ export class TelepathieGateway implements OnGatewayDisconnect {
       const { room: updatedRoom, deleted } = this.telepathie.leaveRoom(client.id);
       if (deleted || !updatedRoom) return;
       this.timer.clearAll(updatedRoom.code);
-      this.server.to(updatedRoom.code).emit('telepathie:room-update', this.telepathie.toDTO(updatedRoom));
+      this.server
+        .to(updatedRoom.code)
+        .emit('telepathie:room-update', this.telepathie.toDTO(updatedRoom));
       // If all remaining players have submitted in the current sous-round, resolve it
       if (updatedRoom.phase === 'PLAYING') {
         const allSubmitted = updatedRoom.players

@@ -18,7 +18,12 @@ import {
 } from '@wiki-race/shared';
 import { SnapAvisService } from './snap-avis.service';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { GAME_GATEWAY_CONFIG, extractErrorCode, RoomTimerService, RECONNECT_TIMEOUT_MS } from '../../common/game-room';
+import {
+  GAME_GATEWAY_CONFIG,
+  extractErrorCode,
+  RoomTimerService,
+  RECONNECT_TIMEOUT_MS,
+} from '../../common/game-room';
 import { SnapAvisRoomInternal } from './snap-avis-room.types';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -47,7 +52,9 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
       if (!this.snapAvis.getRoomBySocket(client.id)) return;
       const { room: updatedRoom, deleted } = this.snapAvis.leaveRoom(client.id);
       if (deleted || !updatedRoom) return;
-      this.server.to(updatedRoom.code).emit('snapavis:room-update', this.snapAvis.toDTO(updatedRoom));
+      this.server
+        .to(updatedRoom.code)
+        .emit('snapavis:room-update', this.snapAvis.toDTO(updatedRoom));
       // If all remaining connected players have submitted, resolve the round
       if (updatedRoom.phase === 'WRITING') {
         const allSubmitted = updatedRoom.players

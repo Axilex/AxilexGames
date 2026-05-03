@@ -17,10 +17,7 @@
         <span class="text-xs font-semibold text-stone-500">
           Manche {{ manche.mancheResult?.manche ?? mIdx + 1 }}
         </span>
-        <span
-          v-if="manche.mancheResult?.hasMatch"
-          class="text-xs text-teal-600 font-semibold"
-        >
+        <span v-if="manche.mancheResult?.hasMatch" class="text-xs text-teal-600 font-semibold">
           🎯 Match en {{ manche.mancheResult.sousRoundsPlayed }} sous-round{{
             manche.mancheResult.sousRoundsPlayed > 1 ? 's' : ''
           }}
@@ -52,10 +49,7 @@
             <span class="text-[11px] font-semibold text-stone-400">
               Sous-round {{ sr.sousRound }}
             </span>
-            <span
-              v-if="sr.hasMatch"
-              class="text-[11px] text-teal-600 font-semibold"
-            >
+            <span v-if="sr.hasMatch" class="text-[11px] text-teal-600 font-semibold">
               Match !
             </span>
           </div>
@@ -110,9 +104,7 @@ const groupedByManche = computed<MancheGroup[]>(() => {
     });
   }
 
-  return manches.sort(
-    (a, b) => (a.mancheResult?.manche ?? 0) - (b.mancheResult?.manche ?? 0),
-  );
+  return manches.sort((a, b) => (a.mancheResult?.manche ?? 0) - (b.mancheResult?.manche ?? 0));
 });
 
 function isInWinnerGroup(sr: TelepathieSousRoundResult, pseudo: string): boolean {
