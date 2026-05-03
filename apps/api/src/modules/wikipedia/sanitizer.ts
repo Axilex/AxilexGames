@@ -53,10 +53,14 @@ function isBlocked(wikiPath: string): boolean {
 /**
  * Removes all <a> tags inside <sup> elements so footnote markers are not
  * clickable navigation links. Text content is preserved.
+ *
+ * The non-greedy `[\s\S]*?` matches the shortest closing `</sup>`, with no
+ * artificial length cap (Wikipedia's `<sup>` blocks are short in practice but
+ * a hard cap would silently skip any over-the-limit element).
  */
 function stripLinksInSup(html: string): string {
   return html.replace(
-    /(<sup\b[^>]*>)([\s\S]{0,500}?)(<\/sup>)/gi,
+    /(<sup\b[^>]*>)([\s\S]*?)(<\/sup>)/gi,
     (_m, open: string, inner: string, close: string) =>
       open + inner.replace(/<\/?a\b[^>]*>/gi, '') + close,
   );

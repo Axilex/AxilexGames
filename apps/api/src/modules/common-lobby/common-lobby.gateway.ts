@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseFilters, UseInterceptors } from '@nestjs/common';
+import { Logger, UseFilters, UseInterceptors } from '@nestjs/common';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
 import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { Server, Socket } from 'socket.io';
@@ -40,6 +40,8 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
 
+  private readonly logger = new Logger(CommonLobbyGateway.name);
+
   constructor(
     private readonly lobbyService: CommonLobbyService,
     private readonly registry: CommonLobbyRegistryService,
@@ -65,8 +67,8 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
           this.server.to(updated.code).emit('lobby:room-update', this.registry.toDTO(updated));
         }
       });
-    } catch {
-      // ignore
+    } catch (e) {
+      this.logger.debug(`handleDisconnect swallowed: ${extractErrorCode(e)}`);
     }
   }
 
@@ -111,8 +113,8 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
         await client.leave(room.code);
         this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      this.logger.debug(`handleLeave swallowed: ${extractErrorCode(e)}`);
     }
   }
 

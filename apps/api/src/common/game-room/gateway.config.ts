@@ -1,5 +1,16 @@
 import type { GatewayMetadata } from '@nestjs/websockets';
 
+/**
+ * Shared Socket.IO gateway config. Every game gateway uses these settings so
+ * ping cadence, transport list and CORS stay in sync across modules.
+ *
+ * `transports: ['websocket']` (no long-polling fallback) is intentional: the
+ * documented deployment stack (Caddy / Render / Cloud Run) supports WS natively
+ * and skipping the polling handshake removes a round-trip on connect. Networks
+ * that strip WebSocket upgrades will fail to connect — if that becomes an
+ * issue, add `'polling'` here AND keep `transports: ['websocket']` on the
+ * client (`apps/web/src/shared/services/socket.service.ts`) in sync.
+ */
 export const GAME_GATEWAY_CONFIG: GatewayMetadata = {
   pingInterval: 10000,
   pingTimeout: 5000,

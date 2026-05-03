@@ -374,18 +374,9 @@ export class SurenchereService {
     const validatedCount = wordVerdicts.filter(Boolean).length;
     const missingCount = room.currentBid - validatedCount;
 
-    let scoreDelta: number;
-    if (missingCount === 0) {
-      // Full success: award the bid (+1 bonus if forced)
-      scoreDelta = room.currentBid + (room.wasForced ? 1 : 0);
-    } else if (missingCount < room.currentBid) {
-      // Partial failure: -1 per missing word.
-      // Note: unreachable with block vote (missingCount is always 0 or currentBid).
-      scoreDelta = -1 * missingCount;
-    } else {
-      // Total failure: no penalty
-      scoreDelta = 0;
-    }
+    // Block vote: verdict is binary, so missingCount is always 0 (full success) or
+    // currentBid (total failure). No partial-failure branch needed.
+    const scoreDelta = missingCount === 0 ? room.currentBid + (room.wasForced ? 1 : 0) : 0;
     bidder.score += scoreDelta;
 
     const result: SurenchereRoundResult = {

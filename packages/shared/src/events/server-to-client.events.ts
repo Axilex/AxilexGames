@@ -79,5 +79,9 @@ export interface ServerToClientEvents {
   'telepathie:manche-result': (result: TelepathieMancheResult) => void;
   'telepathie:game-finished': (payload: { rankings: TelepathieRankEntry[] }) => void;
   'telepathie:error': (payload: { code: string; message: string }) => void;
-  error: (message: string) => void;
+  /**
+   * Generic error channel — currently only emitted by `WsExceptionFilter` on the
+   * wikirace gateway. Same shape as the per-game `*:error` events for consistency.
+   */
+  error: (payload: { code: string; message: string }) => void;
 }

@@ -64,7 +64,7 @@ export function useSocketListeners() {
   });
 
   // Errors
-  socketService.on('error', (message) => {
+  socketService.on('error', ({ message }) => {
     if (STALE_SESSION_ERRORS.some((e) => message.includes(e))) {
       // Room no longer exists (backend restarted or room expired) — clear stale session
       sessionStore.clearSession();

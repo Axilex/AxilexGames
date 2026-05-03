@@ -8,7 +8,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { UseFilters, UseInterceptors } from '@nestjs/common';
-import { WsLoggingInterceptor } from '../interceptors/ws-logging.interceptor';
+import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
 import { Server, Socket } from 'socket.io';
 import {
   ServerToClientEvents,
@@ -23,10 +23,14 @@ import {
   PlayerStatus,
   GameMode,
 } from '@wiki-race/shared';
-import { LobbyService } from '../modules/lobby/lobby.service';
-import { GameService } from '../modules/game/game.service';
-import { WsExceptionFilter } from '../filters/ws-exception.filter';
-import { GAME_GATEWAY_CONFIG, RECONNECT_TIMEOUT_MS, RoomTimerService } from '../common/game-room';
+import { LobbyService } from '../lobby/lobby.service';
+import { GameService } from '../game/game.service';
+import { WsExceptionFilter } from '../../filters/ws-exception.filter';
+import {
+  GAME_GATEWAY_CONFIG,
+  RECONNECT_TIMEOUT_MS,
+  RoomTimerService,
+} from '../../common/game-room';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -34,7 +38,7 @@ type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 @UseFilters(WsExceptionFilter)
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway(GAME_GATEWAY_CONFIG)
-export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class WikiRaceGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
 
@@ -52,9 +56,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = this.lobby.markDisconnected(client.id);
     if (!room) return;
 
-    this.server
-      .to(room.code)
-      .emit('wikirace:player:disconnected', this.getPlayerPseudo(client.id, room));
+    const pseudo = room.players.get(client.id)?.pseudo ?? '';
+    this.server.to(room.code).emit('wikirace:player:disconnected', pseudo);
     this.server.to(room.code).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
 
     // Purge player after timeout if they don't reconnect
@@ -166,7 +169,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (mode === GameMode.BINGO) {
       const n = payload.bingoConstraintIds?.length ?? 0;
       if (n < 4 || n > 6) {
-        client.emit('error', 'BINGO_INVALID_CONSTRAINTS');
+        client.emit('error', {
+          code: 'BINGO_INVALID_CONSTRAINTS',
+          message: 'BINGO_INVALID_CONSTRAINTS',
+        });
         return;
       }
     }
@@ -235,10 +241,4 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  private getPlayerPseudo(
-    socketId: string,
-    room: { players: Map<string, { pseudo: string }> },
-  ): string {
-    return room.players.get(socketId)?.pseudo ?? '';
-  }
 }

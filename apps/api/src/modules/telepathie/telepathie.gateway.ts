@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseInterceptors } from '@nestjs/common';
+import { Logger, UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -35,6 +35,8 @@ type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 export class TelepathieGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
+
+  private readonly logger = new Logger(TelepathieGateway.name);
 
   constructor(
     private readonly telepathie: TelepathieService,
@@ -108,8 +110,8 @@ export class TelepathieGateway implements OnGatewayDisconnect {
         this.timer.clearAll(room.code);
         this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      this.logger.debug(`handleLeave swallowed: ${extractErrorCode(e)}`);
     }
   }
 
@@ -220,8 +222,8 @@ export class TelepathieGateway implements OnGatewayDisconnect {
       } else {
         this.openSousRound(room);
       }
-    } catch {
-      // Room supprimée
+    } catch (e) {
+      this.logger.debug(`startManche swallowed: ${extractErrorCode(e)}`);
     }
   }
 
@@ -264,13 +266,13 @@ export class TelepathieGateway implements OnGatewayDisconnect {
             this.server
               .to(roomCode)
               .emit('telepathie:room-update', this.telepathie.toDTO(updatedRoom));
-          } catch {
-            // Room peut avoir disparu
+          } catch (e) {
+            this.logger.debug(`autoNext swallowed: ${extractErrorCode(e)}`);
           }
         });
       }
-    } catch {
-      // Room supprimée (tout le monde parti)
+    } catch (e) {
+      this.logger.debug(`resolveRound swallowed: ${extractErrorCode(e)}`);
     }
   }
 

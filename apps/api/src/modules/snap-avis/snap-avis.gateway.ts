@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseInterceptors } from '@nestjs/common';
+import { Logger, UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -29,6 +29,8 @@ type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 export class SnapAvisGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
+
+  private readonly logger = new Logger(SnapAvisGateway.name);
 
   constructor(
     private readonly snapAvis: SnapAvisService,
@@ -194,8 +196,8 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
           this.server.to(roomCode).emit('snapavis:game-finished', { rankings });
         });
       }
-    } catch {
-      // Room may have been deleted (everyone left) — ignore
+    } catch (e) {
+      this.logger.debug(`resolveRound swallowed: ${extractErrorCode(e)}`);
     }
   }
 

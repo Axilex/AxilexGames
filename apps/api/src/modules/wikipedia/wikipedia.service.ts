@@ -54,13 +54,8 @@ export class WikipediaService {
 
   async fetchPage(slug: string): Promise<WikipediaPage> {
     const normalized = this.normalizeSlug(slug);
-    const cached = this.cache.get(normalized);
-    if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-      // Refresh insertion order so this entry is not the next eviction candidate
-      this.cache.delete(normalized);
-      this.cache.set(normalized, cached);
-      return cached.page;
-    }
+    const cached = this.touch(normalized);
+    if (cached) return cached.page;
 
     const rawHtml = await this.fetchWithRetry(normalized);
     const htmlContent = sanitizeWikipediaHtml(rawHtml);
@@ -83,16 +78,24 @@ export class WikipediaService {
   async isValidNavigation(fromSlug: string, toSlug: string): Promise<boolean> {
     const from = this.normalizeSlug(fromSlug);
     const to = this.normalizeSlug(toSlug);
-    const cached = this.cache.get(from);
-    if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-      this.cache.delete(from);
-      this.cache.set(from, cached);
-      return cached.links.has(to);
-    }
+    const cached = this.touch(from);
+    if (cached) return cached.links.has(to);
     // Not cached — fetch and check
     await this.fetchPage(from);
     const entry = this.cache.get(from);
     return entry ? entry.links.has(to) : false;
+  }
+
+  /**
+   * Returns the cache entry for `slug` if fresh, refreshing its LRU position.
+   * Returns null if missing or expired (caller should re-fetch).
+   */
+  private touch(slug: string): CacheEntry | null {
+    const entry = this.cache.get(slug);
+    if (!entry || Date.now() - entry.fetchedAt >= CACHE_TTL_MS) return null;
+    this.cache.delete(slug);
+    this.cache.set(slug, entry);
+    return entry;
   }
 
   private normalizeSlug(slug: string): string {

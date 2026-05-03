@@ -14,6 +14,10 @@ class SocketService {
       autoConnect: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      // Default is 20s — make it explicit so the contract is documented in code.
+      // Server pingInterval is 10s + pingTimeout 5s, so 20s gives one missed ping
+      // worth of slack before declaring the connection dead.
+      timeout: 20_000,
     });
   }
 

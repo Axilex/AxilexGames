@@ -37,33 +37,28 @@ const commonSession = useCommonSessionStore();
 const snapAvisSession = useSnapAvisSessionStore();
 const telepathieSession = useTelepathieSessionStore();
 
-// One reconnection watcher per game — whichever session has an active roomCode drives the rejoin.
-const { doRejoin: rejoinWiki } = useReconnection(
-  () => ({ pseudo: wikiSession.pseudo, roomCode: wikiSession.roomCode }),
-  (roomCode, pseudo) => lobbyService.joinRoom(roomCode, pseudo),
-);
-const { doRejoin: rejoinSurenchere } = useReconnection(
-  () => ({ pseudo: surenchereSession.pseudo, roomCode: surenchereSession.roomCode }),
-  (roomCode, pseudo) => surenchereSocket.join(roomCode, pseudo),
-);
-const { doRejoin: rejoinCommonLobby } = useReconnection(
-  () => ({ pseudo: commonSession.pseudo, roomCode: commonSession.roomCode }),
-  (roomCode, pseudo) => lobbySocket.join(roomCode, pseudo),
-);
-const { doRejoin: rejoinSnapAvis } = useReconnection(
-  () => ({ pseudo: snapAvisSession.pseudo, roomCode: snapAvisSession.roomCode }),
-  (roomCode, pseudo) => snapAvisSocket.join(roomCode, pseudo),
-);
-const { doRejoin: rejoinTelepathie } = useReconnection(
-  () => ({ pseudo: telepathieSession.pseudo, roomCode: telepathieSession.roomCode }),
-  (roomCode, pseudo) => telepathieSocket.join(roomCode, pseudo),
-);
+// Single reconnection watcher: whichever session has an active roomCode drives
+// the rejoin. Common-lobby takes precedence so a player on the lobby page after
+// a redirect doesn't get pulled back into the previous game's session.
+const sessionPrecedence = [
+  { session: commonSession, rejoin: lobbySocket.join.bind(lobbySocket) },
+  { session: wikiSession, rejoin: lobbyService.joinRoom.bind(lobbyService) },
+  { session: surenchereSession, rejoin: surenchereSocket.join.bind(surenchereSocket) },
+  { session: snapAvisSession, rejoin: snapAvisSocket.join.bind(snapAvisSocket) },
+  { session: telepathieSession, rejoin: telepathieSocket.join.bind(telepathieSocket) },
+];
 
-function doRejoin(): void {
-  if (commonSession.roomCode) rejoinCommonLobby();
-  else if (wikiSession.roomCode) rejoinWiki();
-  else if (surenchereSession.roomCode) rejoinSurenchere();
-  else if (snapAvisSession.roomCode) rejoinSnapAvis();
-  else if (telepathieSession.roomCode) rejoinTelepathie();
+function activeSession() {
+  return sessionPrecedence.find((entry) => entry.session.roomCode);
 }
+
+const { doRejoin } = useReconnection(
+  () => {
+    const active = activeSession();
+    return active
+      ? { pseudo: active.session.pseudo, roomCode: active.session.roomCode }
+      : { pseudo: '', roomCode: '' };
+  },
+  (roomCode, pseudo) => activeSession()?.rejoin(roomCode, pseudo),
+);
 </script>

@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseInterceptors } from '@nestjs/common';
+import { Logger, UseInterceptors } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import {
   ClientToServerEvents,
@@ -38,6 +38,8 @@ const BID_TIMEOUT_MS = 30_000;
 export class SurenchereGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: TypedServer;
+
+  private readonly logger = new Logger(SurenchereGateway.name);
 
   constructor(
     private readonly surenchere: SurenchereService,
@@ -298,8 +300,8 @@ export class SurenchereGateway implements OnGatewayDisconnect {
           firstBidderSocketId: nextRoom.challengeChooserSocketId ?? '',
         });
         this.startChooseTimer(nextRoom);
-      } catch {
-        // player left, ignore
+      } catch (e) {
+        this.logger.debug(`nextRound timer swallowed: ${extractErrorCode(e)}`);
       }
     });
   }
@@ -358,8 +360,8 @@ export class SurenchereGateway implements OnGatewayDisconnect {
           room.currentBidderSocketId,
         );
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      this.logger.debug(`onWordsTimerExpired swallowed: ${extractErrorCode(e)}`);
     }
   }
 
@@ -379,8 +381,8 @@ export class SurenchereGateway implements OnGatewayDisconnect {
       const updatedRoom = this.surenchere.autoChooseChallenge(code);
       this.server.to(code).emit('surenchere:room:update', this.surenchere.toDTO(updatedRoom));
       this.startBidTimer(updatedRoom);
-    } catch {
-      // ignore
+    } catch (e) {
+      this.logger.debug(`onChooseTimerExpired swallowed: ${extractErrorCode(e)}`);
     }
   }
 
