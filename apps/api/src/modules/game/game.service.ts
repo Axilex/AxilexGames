@@ -15,7 +15,7 @@ import {
 import { BingoConstraintId, BingoCardEntry } from '@wiki-race/shared';
 import { RoomRegistryService } from '../lobby/room-registry.service';
 import { WikipediaService } from '../wikipedia/wikipedia.service';
-import { RoomTimerService } from '../../common/game-room';
+import { RoomTimerService, assertBounds } from '../../common/game-room';
 import { ModeService } from './mode.service';
 
 const NAVIGATION_RATE_LIMIT_MS = 500;
@@ -51,6 +51,12 @@ export class GameService {
     const room = this.getRoom(roomCode);
     if (room.chooserSocketId !== socketId) throw new Error('NOT_CHOOSER');
     if (room.status !== GameStatus.CHOOSING) throw new Error('NOT_IN_CHOOSING_PHASE');
+
+    if (timeLimitSeconds !== null) assertBounds(timeLimitSeconds, 10, 7200, 'INVALID_TIME_LIMIT');
+    if (clickLimit !== null && clickLimit !== undefined) {
+      assertBounds(clickLimit, 1, 1000, 'INVALID_CLICK_LIMIT');
+    }
+
     return this.runStartGame(
       room,
       mode,

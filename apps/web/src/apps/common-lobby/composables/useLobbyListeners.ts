@@ -20,6 +20,10 @@ export function useLobbyListeners(): void {
   const telepathieSession = useTelepathieSessionStore();
   const router = useRouter();
 
+  socketService.on('lobby:session', ({ token }) => {
+    session.setSessionToken(token);
+  });
+
   socketService.on('lobby:room-update', (room) => {
     store.setRoom(room);
     // Only persist when we own a pseudo for this room — overhearing a stale broadcast

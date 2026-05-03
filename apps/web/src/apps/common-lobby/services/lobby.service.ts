@@ -4,8 +4,8 @@ export const lobbySocket = {
   create(pseudo: string): void {
     socketService.emit('lobby:create', { pseudo });
   },
-  join(roomCode: string, pseudo: string): void {
-    socketService.emit('lobby:join', { roomCode, pseudo });
+  join(roomCode: string, pseudo: string, sessionToken?: string): void {
+    socketService.emit('lobby:join', { roomCode, pseudo, sessionToken });
   },
   leave(): void {
     socketService.emit('lobby:leave', undefined as never);

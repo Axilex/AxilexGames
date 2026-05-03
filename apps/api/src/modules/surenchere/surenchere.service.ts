@@ -1,19 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import {
   PlayerStatus,
-  SurenchereRoom,
   SurenchereRoomDTO,
   SurencherePlayer,
   SurenchereRoundResult,
 } from '@wiki-race/shared';
 import { randomUUID } from 'crypto';
 import { SurenchereRegistryService } from './surenchere-registry.service';
+import { SurenchereRoomInternal, SurencherePlayerInternal } from './surenchere-room.types';
 import { pickRandomChallenges } from './challenges.data';
+import { assertBounds } from '../../common/game-room';
 
 const MAX_PLAYERS = 8;
 const DEFAULT_ROUNDS = 3;
 const DEFAULT_START_BID = 1;
 const CHALLENGE_OPTIONS_COUNT = 3;
+const MAX_BID = 100;
+const MAX_WORDS_PER_SUBMIT = 100;
+const MAX_WORD_LENGTH = 100;
+const MAX_TOTAL_ROUNDS = 50;
 
 @Injectable()
 export class SurenchereService {
@@ -23,21 +28,23 @@ export class SurenchereService {
     socketId: string,
     pseudo: string,
     settings: Partial<{ totalRounds: number; startBid: number }> = {},
-  ): SurenchereRoom {
+  ): { room: SurenchereRoomInternal; sessionToken: string } {
     const code = this.registry.generateCode();
-    const host: SurencherePlayer = {
+    const host: SurencherePlayerInternal = {
       socketId,
       pseudo,
       score: 0,
       isHost: true,
       status: PlayerStatus.CONNECTED,
+      sessionToken: randomUUID(),
     };
-    return this.registry.createRoom(
+    const room = this.registry.createRoom(
       code,
       host,
       settings.totalRounds ?? DEFAULT_ROUNDS,
       settings.startBid ?? DEFAULT_START_BID,
     );
+    return { room, sessionToken: host.sessionToken! };
   }
 
   seedRoom(
@@ -47,12 +54,13 @@ export class SurenchereService {
   ): void {
     this.registry.deleteRoom(code); // clean up any previous room with this code
     const hostPlayer = players.find((p) => p.isHost) ?? players[0];
-    const host: SurencherePlayer = {
+    const host: SurencherePlayerInternal = {
       socketId: `seed-${hostPlayer.pseudo}`,
       pseudo: hostPlayer.pseudo,
       score: 0,
       isHost: true,
       status: PlayerStatus.DISCONNECTED,
+      sessionToken: null,
     };
     this.registry.createRoom(
       code,
@@ -67,11 +75,17 @@ export class SurenchereService {
         score: 0,
         isHost: false,
         status: PlayerStatus.DISCONNECTED,
+        sessionToken: null,
       });
     }
   }
 
-  joinRoom(socketId: string, roomCode: string, pseudo: string): SurenchereRoom {
+  joinRoom(
+    socketId: string,
+    roomCode: string,
+    pseudo: string,
+    sessionToken?: string,
+  ): { room: SurenchereRoomInternal; sessionToken: string } {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
@@ -79,27 +93,32 @@ export class SurenchereService {
       (p) => p.pseudo === pseudo && p.status === PlayerStatus.DISCONNECTED,
     );
     if (existing) {
+      if (existing.sessionToken !== null && sessionToken !== existing.sessionToken) {
+        throw new Error('INVALID_SESSION_TOKEN');
+      }
+      if (existing.sessionToken === null) existing.sessionToken = randomUUID();
       this.registry.rebindSocket(existing.socketId, socketId, roomCode);
       existing.status = PlayerStatus.CONNECTED;
-      return room;
+      return { room, sessionToken: existing.sessionToken };
     }
 
     if (room.phase !== 'WAITING') throw new Error('GAME_IN_PROGRESS');
     if (room.players.length >= MAX_PLAYERS) throw new Error('ROOM_FULL');
     if (room.players.some((p) => p.pseudo === pseudo)) throw new Error('PSEUDO_TAKEN');
 
-    const player: SurencherePlayer = {
+    const player: SurencherePlayerInternal = {
       socketId,
       pseudo,
       score: 0,
       isHost: false,
       status: PlayerStatus.CONNECTED,
+      sessionToken: randomUUID(),
     };
     this.registry.addPlayer(roomCode, player);
-    return room;
+    return { room, sessionToken: player.sessionToken! };
   }
 
-  leaveRoom(socketId: string): { room: SurenchereRoom | null; wasHost: boolean; deleted: boolean } {
+  leaveRoom(socketId: string): { room: SurenchereRoomInternal | null; wasHost: boolean; deleted: boolean } {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) return { room: null, wasHost: false, deleted: true };
     const player = room.players.find((p) => p.socketId === socketId);
@@ -117,7 +136,7 @@ export class SurenchereService {
     return { room, wasHost, deleted: false };
   }
 
-  markDisconnected(socketId: string): SurenchereRoom | null {
+  markDisconnected(socketId: string): SurenchereRoomInternal | null {
     return this.registry.markDisconnected(socketId);
   }
 
@@ -138,18 +157,20 @@ export class SurenchereService {
   updateSettings(
     socketId: string,
     settings: { totalRounds: number; startBid: number },
-  ): SurenchereRoom {
+  ): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     const player = room.players.find((p) => p.socketId === socketId);
     if (!player?.isHost) throw new Error('NOT_HOST');
     if (room.phase !== 'WAITING') throw new Error('GAME_IN_PROGRESS');
+    assertBounds(settings.totalRounds, 1, MAX_TOTAL_ROUNDS, 'INVALID_TOTAL_ROUNDS');
+    assertBounds(settings.startBid, 1, MAX_BID, 'INVALID_START_BID');
     room.settings.totalRounds = settings.totalRounds;
     room.settings.startBid = settings.startBid;
     return room;
   }
 
-  startGame(socketId: string): SurenchereRoom {
+  startGame(socketId: string): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     const player = room.players.find((p) => p.socketId === socketId);
@@ -165,7 +186,7 @@ export class SurenchereService {
     return room;
   }
 
-  private initRound(room: SurenchereRoom): void {
+  private initRound(room: SurenchereRoomInternal): void {
     room.challengeOptions = pickRandomChallenges(CHALLENGE_OPTIONS_COUNT);
     room.challengeChooserSocketId =
       room.players[room.roundStarterIndex % room.players.length]?.socketId ?? null;
@@ -182,7 +203,7 @@ export class SurenchereService {
     room.phase = 'CHOOSING_CHALLENGE';
   }
 
-  autoChooseChallenge(roomCode: string): SurenchereRoom {
+  autoChooseChallenge(roomCode: string): SurenchereRoomInternal {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
@@ -198,7 +219,7 @@ export class SurenchereService {
   chooseChallenge(
     socketId: string,
     options: { challengeId?: string; customPhrase?: string },
-  ): SurenchereRoom {
+  ): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'CHOOSING_CHALLENGE') throw new Error('NOT_CHOOSING');
@@ -227,13 +248,14 @@ export class SurenchereService {
     return room;
   }
 
-  placeBid(socketId: string, amount: number): SurenchereRoom {
+  placeBid(socketId: string, amount: number): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'BIDDING') throw new Error('NOT_BIDDING');
     const player = room.players.find((p) => p.socketId === socketId);
     if (!player) throw new Error('PLAYER_NOT_FOUND');
     if (room.passedSocketIds.includes(socketId)) throw new Error('ALREADY_PASSED');
+    assertBounds(amount, 1, MAX_BID, 'INVALID_BID');
     if (amount <= room.currentBid) throw new Error('BID_TOO_LOW');
     if (room.currentBidderSocketId === socketId) throw new Error('CANNOT_BID_ON_SELF');
     room.currentBid = amount;
@@ -241,7 +263,7 @@ export class SurenchereService {
     return room;
   }
 
-  pass(socketId: string): { room: SurenchereRoom; allPassed: boolean } {
+  pass(socketId: string): { room: SurenchereRoomInternal; allPassed: boolean } {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'BIDDING') throw new Error('NOT_BIDDING');
@@ -283,7 +305,7 @@ export class SurenchereService {
     return { room, allPassed };
   }
 
-  triggerChallenge(socketId: string): SurenchereRoom {
+  triggerChallenge(socketId: string): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'BIDDING') throw new Error('NOT_BIDDING');
@@ -293,11 +315,17 @@ export class SurenchereService {
     return room;
   }
 
-  submitWords(socketId: string, words: string[]): SurenchereRoom {
+  submitWords(socketId: string, words: string[]): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'WORDS') throw new Error('NOT_IN_WORDS');
     if (room.currentBidderSocketId !== socketId) throw new Error('NOT_CURRENT_BIDDER');
+    if (!Array.isArray(words) || words.length > MAX_WORDS_PER_SUBMIT) {
+      throw new Error('TOO_MANY_WORDS');
+    }
+    if (words.some((w) => typeof w !== 'string' || w.length > MAX_WORD_LENGTH)) {
+      throw new Error('WORD_TOO_LONG');
+    }
     const cleaned = words.map((w) => w.trim()).filter((w) => w.length > 0);
     if (cleaned.length < room.currentBid) throw new Error('NOT_ENOUGH_WORDS');
     room.currentWords = cleaned;
@@ -310,7 +338,7 @@ export class SurenchereService {
     socketId: string,
     accept: boolean,
   ): {
-    room: SurenchereRoom;
+    room: SurenchereRoomInternal;
     resolved: boolean;
     result?: SurenchereRoundResult;
     finished?: boolean;
@@ -326,8 +354,8 @@ export class SurenchereService {
     return this.tryResolveVoting(room);
   }
 
-  tryResolveVoting(room: SurenchereRoom): {
-    room: SurenchereRoom;
+  tryResolveVoting(room: SurenchereRoomInternal): {
+    room: SurenchereRoomInternal;
     resolved: boolean;
     result?: SurenchereRoundResult;
     finished?: boolean;
@@ -360,7 +388,7 @@ export class SurenchereService {
   }
 
   private applyVerdictResult(
-    room: SurenchereRoom,
+    room: SurenchereRoomInternal,
     success: boolean,
     wordVerdicts: boolean[],
   ): { result: SurenchereRoundResult; finished: boolean } {
@@ -398,7 +426,7 @@ export class SurenchereService {
     return { result, finished };
   }
 
-  nextRound(socketId: string): SurenchereRoom {
+  nextRound(socketId: string): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'ROUND_END') throw new Error('NOT_AT_ROUND_END');
@@ -408,7 +436,7 @@ export class SurenchereService {
     return room;
   }
 
-  resetRoom(socketId: string): SurenchereRoom {
+  resetRoom(socketId: string): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     const caller = room.players.find((p) => p.socketId === socketId);
@@ -432,16 +460,16 @@ export class SurenchereService {
     return room;
   }
 
-  getRoomBySocket(socketId: string): SurenchereRoom | undefined {
+  getRoomBySocket(socketId: string): SurenchereRoomInternal | undefined {
     return this.registry.findRoomBySocketId(socketId);
   }
 
-  getRoomByCode(code: string): SurenchereRoom | undefined {
+  getRoomByCode(code: string): SurenchereRoomInternal | undefined {
     return this.registry.findRoom(code);
   }
 
   /** Called when the bid timer expires: force current bidder to WORDS phase. */
-  forceToWords(code: string): SurenchereRoom | null {
+  forceToWords(code: string): SurenchereRoomInternal | null {
     const room = this.registry.findRoom(code);
     if (!room || room.phase !== 'BIDDING' || !room.currentBidderSocketId) return null;
     room.wasForced = true;
@@ -451,7 +479,7 @@ export class SurenchereService {
   }
 
   /** Called when the words timer expires: submit empty words and move to VOTING. */
-  autoSubmitWords(socketId: string): SurenchereRoom {
+  autoSubmitWords(socketId: string): SurenchereRoomInternal {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'WORDS') throw new Error('NOT_IN_WORDS');
@@ -463,20 +491,22 @@ export class SurenchereService {
     return room;
   }
 
-  toScores(room: SurenchereRoom): Record<string, number> {
+  toScores(room: SurenchereRoomInternal): Record<string, number> {
     const scores: Record<string, number> = {};
     for (const p of room.players) scores[p.pseudo] = p.score;
     return scores;
   }
 
-  rankPlayers(room: SurenchereRoom): SurencherePlayer[] {
+  rankPlayers(room: SurenchereRoomInternal): SurencherePlayer[] {
     return [...room.players].sort((a, b) => b.score - a.score);
   }
 
-  toDTO(room: SurenchereRoom): SurenchereRoomDTO {
-    const { voteMap: _, ...rest } = room;
+  toDTO(room: SurenchereRoomInternal): SurenchereRoomDTO {
+    const { voteMap: _, players, ...rest } = room;
     return {
       ...rest,
+      // Strip per-player sessionToken — server-side only.
+      players: players.map(({ sessionToken: _t, ...p }) => p),
       currentWords:
         room.phase === 'VOTING' || room.phase === 'ROUND_END' ? room.currentWords : null,
     };

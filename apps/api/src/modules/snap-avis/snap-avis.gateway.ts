@@ -74,9 +74,10 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
     @MessageBody() payload: SnapAvisCreatePayload,
   ): Promise<void> {
     try {
-      const room = this.snapAvis.createRoom(client.id, payload.pseudo);
+      const { room, sessionToken } = this.snapAvis.createRoom(client.id, payload.pseudo);
       await client.join(room.code);
       client.emit('snapavis:room-update', this.snapAvis.toDTO(room));
+      client.emit('snapavis:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }
@@ -92,10 +93,16 @@ export class SnapAvisGateway implements OnGatewayDisconnect {
         payload.roomCode,
         payload.pseudo,
       );
-      const room = this.snapAvis.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      const { room, sessionToken } = this.snapAvis.joinRoom(
+        client.id,
+        payload.roomCode,
+        payload.pseudo,
+        payload.sessionToken,
+      );
       if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('snapavis:room-update', this.snapAvis.toDTO(room));
+      if (sessionToken) client.emit('snapavis:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }

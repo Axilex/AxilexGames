@@ -5,8 +5,8 @@ export const telepathieSocket = {
   create(pseudo: string): void {
     socketService.emit('telepathie:create', { pseudo });
   },
-  join(roomCode: string, pseudo: string): void {
-    socketService.emit('telepathie:join', { roomCode, pseudo });
+  join(roomCode: string, pseudo: string, sessionToken?: string): void {
+    socketService.emit('telepathie:join', { roomCode, pseudo, sessionToken });
   },
   leave(): void {
     socketService.emit('telepathie:leave', undefined as never);

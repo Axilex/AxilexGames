@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { PlayerStatus } from '@wiki-race/shared';
 import { GameChoice } from '@wiki-race/shared';
 import { CommonLobbyRegistryService } from './common-lobby-registry.service';
@@ -10,13 +11,24 @@ const MAX_PLAYERS = 8;
 export class CommonLobbyService {
   constructor(private readonly registry: CommonLobbyRegistryService) {}
 
-  createRoom(pseudo: string, socketId: string): CommonRoom {
+  createRoom(pseudo: string, socketId: string): { room: CommonRoom; sessionToken: string } {
     const code = this.registry.generateCode();
-    const host: CommonPlayer = { socketId, pseudo, status: PlayerStatus.CONNECTED, isHost: true };
-    return this.registry.createRoom(code, host);
+    const host: CommonPlayer = {
+      socketId,
+      pseudo,
+      status: PlayerStatus.CONNECTED,
+      isHost: true,
+      sessionToken: randomUUID(),
+    };
+    return { room: this.registry.createRoom(code, host), sessionToken: host.sessionToken! };
   }
 
-  joinRoom(roomCode: string, pseudo: string, socketId: string): CommonRoom {
+  joinRoom(
+    roomCode: string,
+    pseudo: string,
+    socketId: string,
+    sessionToken?: string,
+  ): { room: CommonRoom; sessionToken: string } {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
@@ -26,16 +38,20 @@ export class CommonLobbyService {
       // Same socket re-emitting join (e.g. page mount after create) — no-op.
       if (existing.socketId === socketId) {
         existing.status = PlayerStatus.CONNECTED;
-        return room;
+        return { room, sessionToken: existing.sessionToken ?? '' };
       }
       // Different socket trying to claim a CONNECTED pseudo = impersonation. Refuse.
       if (existing.status === PlayerStatus.CONNECTED) {
         throw new Error('PSEUDO_TAKEN');
       }
-      // Legitimate reconnection of a DISCONNECTED player.
+      // Legitimate reconnection of a DISCONNECTED player — must present matching token.
+      if (existing.sessionToken !== null && sessionToken !== existing.sessionToken) {
+        throw new Error('INVALID_SESSION_TOKEN');
+      }
+      if (existing.sessionToken === null) existing.sessionToken = randomUUID();
       this.registry.rebindSocket(existing.socketId, socketId, roomCode);
       existing.status = PlayerStatus.CONNECTED;
-      return room;
+      return { room, sessionToken: existing.sessionToken };
     }
 
     // New player: cannot join while a game is in progress
@@ -47,9 +63,10 @@ export class CommonLobbyService {
       pseudo,
       status: PlayerStatus.CONNECTED,
       isHost: false,
+      sessionToken: randomUUID(),
     };
     this.registry.addPlayer(roomCode, player);
-    return room;
+    return { room, sessionToken: player.sessionToken! };
   }
 
   leaveRoom(socketId: string): { room: CommonRoom | null; deleted: boolean } {

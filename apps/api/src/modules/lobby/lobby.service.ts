@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Room, Player, RoomDTO, PlayerDTO, GameStatus, PlayerStatus } from '@wiki-race/shared';
 import { RoomRegistryService } from './room-registry.service';
 
@@ -14,21 +15,23 @@ export class LobbyService {
     const host = {
       ...this.makePlayer(`seed-${hostPlayer.pseudo}`, hostPlayer.pseudo),
       status: PlayerStatus.DISCONNECTED,
+      sessionToken: null,
     };
     this.registry.createRoom(code, host);
     for (const p of players.filter((pl) => !pl.isHost)) {
       this.registry.addPlayer(code, {
         ...this.makePlayer(`seed-${p.pseudo}`, p.pseudo),
         status: PlayerStatus.DISCONNECTED,
+        sessionToken: null,
       });
     }
   }
 
-  createRoom(pseudo: string, socketId: string): { room: Room; code: string } {
+  createRoom(pseudo: string, socketId: string): { room: Room; code: string; sessionToken: string } {
     const code = this.registry.generateCode();
     const host = this.makePlayer(socketId, pseudo);
     const room = this.registry.createRoom(code, host);
-    return { room, code };
+    return { room, code, sessionToken: host.sessionToken! };
   }
 
   startChoosing(roomCode: string, hostSocketId: string): Room {
@@ -48,7 +51,11 @@ export class LobbyService {
     return room;
   }
 
-  joinRoom(roomCode: string, pseudo: string, socketId: string): Room {
+  joinRoom(
+    roomCode: string,
+    pseudo: string,
+    socketId: string,
+  ): { room: Room; sessionToken: string } {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.status === GameStatus.IN_PROGRESS || room.status === GameStatus.CHOOSING)
@@ -60,7 +67,7 @@ export class LobbyService {
 
     const player = this.makePlayer(socketId, pseudo);
     this.registry.addPlayer(roomCode, player);
-    return room;
+    return { room, sessionToken: player.sessionToken! };
   }
 
   leaveRoom(roomCode: string, socketId: string): { room: Room | null; deleted: boolean } {
@@ -86,7 +93,13 @@ export class LobbyService {
     roomCode: string,
     pseudo: string,
     newSocketId: string,
-  ): { room: Room; player: Player; previousSocketId: string } | null {
+    sessionToken?: string,
+  ): {
+    room: Room;
+    player: Player;
+    previousSocketId: string;
+    sessionToken: string;
+  } | null {
     const room = this.registry.findRoom(roomCode);
     if (!room) return null;
 
@@ -95,10 +108,22 @@ export class LobbyService {
     );
     if (!existing) return null;
 
+    // Seed players (created by common-lobby redirect) have a null token until
+    // the first claim. For everyone else, the client must present the token
+    // we issued at create/join time — otherwise this is a hijack attempt.
+    if (existing.sessionToken !== null) {
+      if (sessionToken !== existing.sessionToken) {
+        throw new Error('INVALID_SESSION_TOKEN');
+      }
+    } else {
+      // First claim of a seeded slot — issue a fresh token.
+      existing.sessionToken = randomUUID();
+    }
+
     const previousSocketId = existing.socketId;
     this.registry.rebindSocket(previousSocketId, newSocketId, roomCode);
     existing.status = PlayerStatus.CONNECTED;
-    return { room, player: existing, previousSocketId };
+    return { room, player: existing, previousSocketId, sessionToken: existing.sessionToken };
   }
 
   resetRoom(roomCode: string, socketId: string): Room {
@@ -150,6 +175,7 @@ export class LobbyService {
       lastNavigationAt: 0,
       bingoValidated: [],
       bingoValidatedOnSlug: {},
+      sessionToken: randomUUID(),
     };
   }
 }

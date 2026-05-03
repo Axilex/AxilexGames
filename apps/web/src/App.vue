@@ -39,8 +39,14 @@ const telepathieSession = useTelepathieSessionStore();
 
 // Single reconnection watcher: whichever session has an active roomCode drives
 // the rejoin. Common-lobby takes precedence so a player on the lobby page after
-// a redirect doesn't get pulled back into the previous game's session.
-const sessionPrecedence = [
+// a redirect doesn't get pulled back into the previous game's session. Each
+// rejoin replays the persisted `sessionToken` so the server can re-bind the
+// disconnected slot rather than treat it as a fresh impersonation attempt.
+type Rejoin = (roomCode: string, pseudo: string, sessionToken?: string) => void;
+const sessionPrecedence: Array<{
+  session: { roomCode: string; pseudo: string; sessionToken: string };
+  rejoin: Rejoin;
+}> = [
   { session: commonSession, rejoin: lobbySocket.join.bind(lobbySocket) },
   { session: wikiSession, rejoin: lobbyService.joinRoom.bind(lobbyService) },
   { session: surenchereSession, rejoin: surenchereSocket.join.bind(surenchereSocket) },
@@ -59,6 +65,10 @@ const { doRejoin } = useReconnection(
       ? { pseudo: active.session.pseudo, roomCode: active.session.roomCode }
       : { pseudo: '', roomCode: '' };
   },
-  (roomCode, pseudo) => activeSession()?.rejoin(roomCode, pseudo),
+  (roomCode, pseudo) => {
+    const active = activeSession();
+    if (!active) return;
+    active.rejoin(roomCode, pseudo, active.session.sessionToken || undefined);
+  },
 );
 </script>

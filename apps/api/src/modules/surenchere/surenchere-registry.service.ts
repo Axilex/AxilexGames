@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { SurenchereRoom, SurencherePlayer } from '@wiki-race/shared';
 import { ArrayRoomRegistryService } from '../../common/game-room';
+import { SurenchereRoomInternal, SurencherePlayerInternal } from './surenchere-room.types';
 
 @Injectable()
 export class SurenchereRegistryService extends ArrayRoomRegistryService<
-  SurencherePlayer,
-  SurenchereRoom
+  SurencherePlayerInternal,
+  SurenchereRoomInternal
 > {
   createRoom(
     code: string,
-    host: SurencherePlayer,
+    host: SurencherePlayerInternal,
     totalRounds: number,
     startBid: number,
     wordTimerSeconds = 60,
-  ): SurenchereRoom {
-    const room: SurenchereRoom = {
+  ): SurenchereRoomInternal {
+    const room: SurenchereRoomInternal = {
       code,
       phase: 'WAITING',
       players: [host],

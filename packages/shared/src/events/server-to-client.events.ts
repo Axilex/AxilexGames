@@ -31,10 +31,21 @@ export interface BingoValidatedPayload {
   slug: string;
 }
 
+/**
+ * Sent only to the joining client right after `*:create` or `*:join` (whether
+ * a new join or a successful reconnect with a fresh token rotation). The
+ * client persists the token in `sessionStorage` and replays it on every
+ * subsequent join from the same browser tab.
+ */
+export interface SessionTokenPayload {
+  token: string;
+}
+
 export interface ServerToClientEvents {
   'lobby:room-update': (room: CommonRoomDTO) => void;
   'lobby:error': (payload: { code: string; message: string }) => void;
   'lobby:redirect': (payload: { game: GameChoice; code: string }) => void;
+  'lobby:session': (payload: SessionTokenPayload) => void;
   'wikirace:room:update': (room: RoomDTO) => void;
   'wikirace:game:state': (state: GameStateDTO) => void;
   'wikirace:game:page': (page: WikipediaPage) => void;
@@ -45,6 +56,7 @@ export interface ServerToClientEvents {
   'wikirace:player:reconnected': (pseudo: string) => void;
   'wikirace:bingo:validated': (payload: BingoValidatedPayload) => void;
   'wikirace:choosing:preview': (data: ChoosingPreviewData) => void;
+  'wikirace:session': (payload: SessionTokenPayload) => void;
   'surenchere:room:update': (room: SurenchereRoomDTO) => void;
   'surenchere:round:start': (payload: { round: number; firstBidderSocketId: string }) => void;
   'surenchere:bid:update': (payload: { bidderSocketId: string; amount: number }) => void;
@@ -64,6 +76,7 @@ export interface ServerToClientEvents {
   'surenchere:vote-update': (payload: { votes: Record<string, boolean | null> }) => void;
   'surenchere:typing-update': (payload: { pseudo: string; text: string }) => void;
   'surenchere:error': (payload: { code: string; message: string }) => void;
+  'surenchere:session': (payload: SessionTokenPayload) => void;
   'snapavis:room-update': (room: SnapAvisRoomDTO) => void;
   'snapavis:round-start': (payload: { round: number; total: number; imageUrl: string }) => void;
   'snapavis:writing-start': (payload: { endsAt: number }) => void;
@@ -71,6 +84,7 @@ export interface ServerToClientEvents {
   'snapavis:results': (result: SnapAvisRoundResult) => void;
   'snapavis:game-finished': (payload: { rankings: SnapAvisRankEntry[] }) => void;
   'snapavis:error': (payload: { code: string; message: string }) => void;
+  'snapavis:session': (payload: SessionTokenPayload) => void;
   'telepathie:room-update': (room: TelepathieRoomDTO) => void;
   'telepathie:choose-open': (payload: { endsAt: number }) => void;
   'telepathie:input-open': (payload: { endsAt: number }) => void;
@@ -79,6 +93,7 @@ export interface ServerToClientEvents {
   'telepathie:manche-result': (result: TelepathieMancheResult) => void;
   'telepathie:game-finished': (payload: { rankings: TelepathieRankEntry[] }) => void;
   'telepathie:error': (payload: { code: string; message: string }) => void;
+  'telepathie:session': (payload: SessionTokenPayload) => void;
   /**
    * Generic error channel — currently only emitted by `WsExceptionFilter` on the
    * wikirace gateway. Same shape as the per-game `*:error` events for consistency.

@@ -81,9 +81,10 @@ export class TelepathieGateway implements OnGatewayDisconnect {
     @MessageBody() payload: TelepathieCreatePayload,
   ): Promise<void> {
     try {
-      const room = this.telepathie.createRoom(client.id, payload.pseudo);
+      const { room, sessionToken } = this.telepathie.createRoom(client.id, payload.pseudo);
       await client.join(room.code);
       client.emit('telepathie:room-update', this.telepathie.toDTO(room));
+      client.emit('telepathie:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }
@@ -99,10 +100,16 @@ export class TelepathieGateway implements OnGatewayDisconnect {
         payload.roomCode,
         payload.pseudo,
       );
-      const room = this.telepathie.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      const { room, sessionToken } = this.telepathie.joinRoom(
+        client.id,
+        payload.roomCode,
+        payload.pseudo,
+        payload.sessionToken,
+      );
       if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('telepathie:room-update', this.telepathie.toDTO(room));
+      if (sessionToken) client.emit('telepathie:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }

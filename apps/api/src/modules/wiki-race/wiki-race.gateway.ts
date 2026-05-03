@@ -85,9 +85,10 @@ export class WikiRaceGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: RoomCreatePayload,
   ): Promise<void> {
-    const { room, code } = this.lobby.createRoom(payload.pseudo, client.id);
+    const { room, code, sessionToken } = this.lobby.createRoom(payload.pseudo, client.id);
     await client.join(code);
     this.server.to(code).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
+    client.emit('wikirace:session', { token: sessionToken });
   }
 
   @SubscribeMessage('wikirace:room:join')
@@ -95,8 +96,14 @@ export class WikiRaceGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: TypedSocket,
     @MessageBody() payload: RoomJoinPayload,
   ): Promise<void> {
-    // Check if this is a reconnect
-    const reconnected = this.lobby.handleReconnect(payload.roomCode, payload.pseudo, client.id);
+    // Check if this is a reconnect (will throw INVALID_SESSION_TOKEN on token
+    // mismatch — caught by WsExceptionFilter and surfaced as `error`).
+    const reconnected = this.lobby.handleReconnect(
+      payload.roomCode,
+      payload.pseudo,
+      client.id,
+      payload.sessionToken,
+    );
     if (reconnected) {
       // Clear the ghost-purge timer armed against the previous socket id; the
       // new socket id never had one, so clearing on `client.id` was a no-op.
@@ -111,12 +118,18 @@ export class WikiRaceGateway implements OnGatewayConnection, OnGatewayDisconnect
           .to(payload.roomCode)
           .emit('wikirace:game:state', this.game.toGameStateDTO(reconnected.room));
       }
+      client.emit('wikirace:session', { token: reconnected.sessionToken });
       return;
     }
 
-    const room = this.lobby.joinRoom(payload.roomCode, payload.pseudo, client.id);
+    const { room, sessionToken } = this.lobby.joinRoom(
+      payload.roomCode,
+      payload.pseudo,
+      client.id,
+    );
     await client.join(payload.roomCode);
     this.server.to(payload.roomCode).emit('wikirace:room:update', this.lobby.toRoomDTO(room));
+    client.emit('wikirace:session', { token: sessionToken });
   }
 
   @SubscribeMessage('wikirace:room:reset')

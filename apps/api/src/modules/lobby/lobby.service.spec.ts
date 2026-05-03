@@ -85,14 +85,28 @@ describe('LobbyService', () => {
   it('handles reconnect — restores player with new socket id', async () => {
     const { service } = await setup();
     const { room, code } = service.createRoom('Alice', 'socket1');
-    service.joinRoom(code, 'Bob', 'socket2');
+    const { sessionToken } = service.joinRoom(code, 'Bob', 'socket2');
     service.markDisconnected('socket2');
 
-    const result = service.handleReconnect(code, 'Bob', 'socket2-new');
+    const result = service.handleReconnect(code, 'Bob', 'socket2-new', sessionToken);
     expect(result).not.toBeNull();
     expect(result!.player.status).toBe(PlayerStatus.CONNECTED);
     expect(room.players.has('socket2-new')).toBe(true);
     expect(room.players.has('socket2')).toBe(false);
+  });
+
+  it('rejects reconnect when session token is missing or wrong', async () => {
+    const { service } = await setup();
+    const { code } = service.createRoom('Alice', 'socket1');
+    service.joinRoom(code, 'Bob', 'socket2');
+    service.markDisconnected('socket2');
+
+    expect(() => service.handleReconnect(code, 'Bob', 'socket2-new')).toThrow(
+      'INVALID_SESSION_TOKEN',
+    );
+    expect(() => service.handleReconnect(code, 'Bob', 'socket2-new', 'wrong-token')).toThrow(
+      'INVALID_SESSION_TOKEN',
+    );
   });
 
   it('toRoomDTO strips socket IDs and marks host correctly', async () => {

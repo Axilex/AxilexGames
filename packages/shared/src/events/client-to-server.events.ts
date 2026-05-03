@@ -8,6 +8,13 @@ export interface RoomCreatePayload {
 export interface RoomJoinPayload {
   roomCode: string;
   pseudo: string;
+  /**
+   * Token issued by the server on the player's first join (and on every join
+   * via `*:session`). Required to claim a DISCONNECTED slot — without it the
+   * server treats the join as a new player and rejects with `PSEUDO_TAKEN`
+   * if the slot is held.
+   */
+  sessionToken?: string;
 }
 
 export interface GameStartPayload {
@@ -50,6 +57,7 @@ export interface LobbyCreatePayload {
 export interface LobbyJoinPayload {
   roomCode: string;
   pseudo: string;
+  sessionToken?: string;
 }
 
 export interface LobbyChooseGamePayload {
@@ -64,6 +72,7 @@ export interface SurenchereCreatePayload {
 export interface SurenchereJoinPayload {
   roomCode: string;
   pseudo: string;
+  sessionToken?: string;
 }
 
 export interface SurenchereBidPayload {
@@ -99,6 +108,7 @@ export interface SnapAvisCreatePayload {
 export interface SnapAvisJoinPayload {
   roomCode: string;
   pseudo: string;
+  sessionToken?: string;
 }
 
 export interface SnapAvisStartPayload {
@@ -116,6 +126,7 @@ export interface TelepathieCreatePayload {
 export interface TelepathieJoinPayload {
   roomCode: string;
   pseudo: string;
+  sessionToken?: string;
 }
 
 export interface TelepathieStartPayload {

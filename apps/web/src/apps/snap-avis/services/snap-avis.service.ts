@@ -4,8 +4,8 @@ export const snapAvisSocket = {
   create(pseudo: string): void {
     socketService.emit('snapavis:create', { pseudo });
   },
-  join(roomCode: string, pseudo: string): void {
-    socketService.emit('snapavis:join', { roomCode, pseudo });
+  join(roomCode: string, pseudo: string, sessionToken?: string): void {
+    socketService.emit('snapavis:join', { roomCode, pseudo, sessionToken });
   },
   leave(): void {
     socketService.emit('snapavis:leave', undefined as never);

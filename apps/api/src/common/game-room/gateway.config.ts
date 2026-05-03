@@ -1,6 +1,14 @@
 import type { GatewayMetadata } from '@nestjs/websockets';
 
 /**
+ * Single source of truth for allowed CORS origins. Used by both the Socket.IO
+ * gateway config and `app.enableCors()` in `main.ts` so they cannot drift.
+ */
+export const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+
+/**
  * Shared Socket.IO gateway config. Every game gateway uses these settings so
  * ping cadence, transport list and CORS stay in sync across modules.
  *
@@ -16,7 +24,7 @@ export const GAME_GATEWAY_CONFIG: GatewayMetadata = {
   pingTimeout: 5000,
   transports: ['websocket'],
   cors: {
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   },
 };

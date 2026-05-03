@@ -28,6 +28,11 @@ export function useSocketListeners() {
     socketStore.setReconnecting(true);
   });
 
+  // Session token — persisted so the player can claim back the slot on reconnect.
+  socketService.on('wikirace:session', ({ token }) => {
+    sessionStore.setSessionToken(token);
+  });
+
   // Lobby
   socketService.on('wikirace:room:update', (room) => {
     lobbyStore.setRoom(room);

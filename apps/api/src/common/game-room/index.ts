@@ -5,3 +5,4 @@ export * from './array-room-registry.service';
 export * from './room-timer.service';
 export * from './gateway.config';
 export * from './errors';
+export * from './validation';

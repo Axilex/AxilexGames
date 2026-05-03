@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { BaseRoom } from './base-room.interface';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -56,12 +57,13 @@ export abstract class BaseRoomRegistryService<R extends BaseRoom> {
   }
 
   generateCode(): string {
+    // Uses a CSPRNG (`crypto.randomInt`) so codes can't be predicted from a
+    // seed — knowing one code shouldn't help guess the next active room.
     let code: string;
     do {
-      code = Array.from(
-        { length: CODE_LENGTH },
-        () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)],
-      ).join('');
+      code = Array.from({ length: CODE_LENGTH }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join(
+        '',
+      );
     } while (this.rooms.has(code));
     return code;
   }

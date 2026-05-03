@@ -6,9 +6,8 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseFilters, UseInterceptors } from '@nestjs/common';
+import { Logger, UseInterceptors } from '@nestjs/common';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
-import { WsExceptionFilter } from '../../filters/ws-exception.filter';
 import { Server, Socket } from 'socket.io';
 import {
   ServerToClientEvents,
@@ -33,7 +32,9 @@ import { TelepathieService } from '../telepathie/telepathie.service';
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
-@UseFilters(WsExceptionFilter)
+// No global WsExceptionFilter here: every handler is wrapped in try/catch and
+// emits the namespaced `lobby:error` event. Adding the filter would let the
+// generic `error` event leak across game gateways (cross-game error routing).
 @UseInterceptors(WsLoggingInterceptor)
 @WebSocketGateway(GAME_GATEWAY_CONFIG)
 export class CommonLobbyGateway implements OnGatewayDisconnect {
@@ -78,9 +79,10 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
     @MessageBody() payload: LobbyCreatePayload,
   ): Promise<void> {
     try {
-      const room = this.lobbyService.createRoom(payload.pseudo, client.id);
+      const { room, sessionToken } = this.lobbyService.createRoom(payload.pseudo, client.id);
       await client.join(room.code);
       client.emit('lobby:room-update', this.registry.toDTO(room));
+      client.emit('lobby:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }
@@ -96,10 +98,16 @@ export class CommonLobbyGateway implements OnGatewayDisconnect {
         payload.roomCode,
         payload.pseudo,
       );
-      const room = this.lobbyService.joinRoom(payload.roomCode, payload.pseudo, client.id);
+      const { room, sessionToken } = this.lobbyService.joinRoom(
+        payload.roomCode,
+        payload.pseudo,
+        client.id,
+        payload.sessionToken,
+      );
       if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(room.code);
       this.server.to(room.code).emit('lobby:room-update', this.registry.toDTO(room));
+      client.emit('lobby:session', { token: sessionToken });
     } catch (e: unknown) {
       this.emitError(client, e);
     }

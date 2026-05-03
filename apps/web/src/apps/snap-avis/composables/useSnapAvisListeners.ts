@@ -16,6 +16,10 @@ export function useSnapAvisListeners(): void {
     if (socketService.id) store.setMySocketId(socketService.id);
   });
 
+  socketService.on('snapavis:session', ({ token }) => {
+    session.setSessionToken(token);
+  });
+
   socketService.on('snapavis:room-update', (room) => {
     if (!store.mySocketId && socketService.id) store.setMySocketId(socketService.id);
 

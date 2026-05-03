@@ -10,6 +10,8 @@ const USER_AGENT = 'WikiRace/1.0 (educational multiplayer game; contact via GitH
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const CACHE_MAX_SIZE = 500;
 const MAX_RETRIES = 3;
+const NOT_FOUND_TTL_MS = 60 * 1000; // 1 minute — short enough that fixing a typo upstream recovers fast
+const NOT_FOUND_MAX_SIZE = 200;
 
 interface CacheEntry {
   page: WikipediaPage;
@@ -21,6 +23,8 @@ interface CacheEntry {
 export class WikipediaService {
   private readonly logger = new Logger(WikipediaService.name);
   private readonly cache = new Map<string, CacheEntry>();
+  /** Negative cache: slugs that returned 404, with their first-seen timestamp. */
+  private readonly notFound = new Map<string, number>();
 
   selectStartAndTarget(): { start: string; target: string } {
     const pool = [...articlePool];
@@ -57,7 +61,19 @@ export class WikipediaService {
     const cached = this.touch(normalized);
     if (cached) return cached.page;
 
-    const rawHtml = await this.fetchWithRetry(normalized);
+    if (this.isKnownNotFound(normalized)) {
+      throw new Error(`ARTICLE_NOT_FOUND: ${normalized}`);
+    }
+
+    let rawHtml: string;
+    try {
+      rawHtml = await this.fetchWithRetry(normalized);
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('ARTICLE_NOT_FOUND')) {
+        this.rememberNotFound(normalized);
+      }
+      throw err;
+    }
     const htmlContent = sanitizeWikipediaHtml(rawHtml);
     const links = extractSlugsFromHtml(htmlContent);
 
@@ -96,6 +112,24 @@ export class WikipediaService {
     this.cache.delete(slug);
     this.cache.set(slug, entry);
     return entry;
+  }
+
+  private isKnownNotFound(slug: string): boolean {
+    const at = this.notFound.get(slug);
+    if (at === undefined) return false;
+    if (Date.now() - at >= NOT_FOUND_TTL_MS) {
+      this.notFound.delete(slug);
+      return false;
+    }
+    return true;
+  }
+
+  private rememberNotFound(slug: string): void {
+    if (this.notFound.size >= NOT_FOUND_MAX_SIZE) {
+      const oldest = this.notFound.keys().next().value;
+      if (oldest) this.notFound.delete(oldest);
+    }
+    this.notFound.set(slug, Date.now());
   }
 
   private normalizeSlug(slug: string): string {

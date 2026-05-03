@@ -6,6 +6,8 @@ import { SnapAvisPlayer, SnapAvisRoom, SnapAvisImage } from '@wiki-race/shared';
  */
 export interface SnapAvisPlayerInternal extends SnapAvisPlayer {
   currentWord: string | null;
+  /** See `Player.sessionToken` — required to claim a DISCONNECTED slot on reconnect. */
+  sessionToken: string | null;
 }
 
 /**

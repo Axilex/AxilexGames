@@ -4,8 +4,8 @@ export const surenchereSocket = {
   create(pseudo: string, settings?: { totalRounds: number; startBid: number }): void {
     socketService.emit('surenchere:create', { pseudo, settings });
   },
-  join(roomCode: string, pseudo: string): void {
-    socketService.emit('surenchere:join', { roomCode, pseudo });
+  join(roomCode: string, pseudo: string, sessionToken?: string): void {
+    socketService.emit('surenchere:join', { roomCode, pseudo, sessionToken });
   },
   leave(): void {
     socketService.emit('surenchere:leave', undefined as never);

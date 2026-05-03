@@ -7,6 +7,8 @@ export interface TelepathiePlayerInternal extends TelepathiePlayer {
   submittedWordDisplay: string | null;
   /** Mots déjà utilisés dans la manche courante (normalisés) — empêche les doublons */
   usedWords: string[];
+  /** Voir `Player.sessionToken` — requis pour reprendre un slot DISCONNECTED. */
+  sessionToken: string | null;
 }
 
 /** État interne de la room — utilise TelepathiePlayerInternal */

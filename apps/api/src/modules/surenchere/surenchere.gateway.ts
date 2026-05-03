@@ -19,10 +19,10 @@ import {
   SurenchereChooseChallengePayload,
   SurenchereSubmitWordsPayload,
   SurenchereUpdateSettingsPayload,
-  SurenchereRoom,
   SurenchereRoundResult,
 } from '@wiki-race/shared';
 import { SurenchereService } from './surenchere.service';
+import { SurenchereRoomInternal } from './surenchere-room.types';
 import { WsLoggingInterceptor } from '../../interceptors/ws-logging.interceptor';
 import {
   GAME_GATEWAY_CONFIG,
@@ -89,9 +89,14 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     @MessageBody() payload: SurenchereCreatePayload,
   ): Promise<void> {
     try {
-      const room = this.surenchere.createRoom(client.id, payload.pseudo, payload.settings ?? {});
+      const { room, sessionToken } = this.surenchere.createRoom(
+        client.id,
+        payload.pseudo,
+        payload.settings ?? {},
+      );
       await client.join(room.code);
       this.server.to(room.code).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      client.emit('surenchere:session', { token: sessionToken });
     } catch (err) {
       this.emitError(client, err);
     }
@@ -107,10 +112,16 @@ export class SurenchereGateway implements OnGatewayDisconnect {
         payload.roomCode,
         payload.pseudo,
       );
-      const room = this.surenchere.joinRoom(client.id, payload.roomCode, payload.pseudo);
+      const { room, sessionToken } = this.surenchere.joinRoom(
+        client.id,
+        payload.roomCode,
+        payload.pseudo,
+        payload.sessionToken,
+      );
       if (previousSocketId) this.timer.clear(previousSocketId, 'reconnect');
       await client.join(payload.roomCode);
       this.server.to(payload.roomCode).emit('surenchere:room:update', this.surenchere.toDTO(room));
+      client.emit('surenchere:session', { token: sessionToken });
     } catch (err) {
       this.emitError(client, err);
     }
@@ -274,7 +285,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     });
   }
 
-  private buildVoteDisplay(room: SurenchereRoom): Record<string, boolean | null> {
+  private buildVoteDisplay(room: SurenchereRoomInternal): Record<string, boolean | null> {
     const result: Record<string, boolean | null> = {};
     for (const p of room.players) {
       if (p.socketId === room.currentBidderSocketId) continue;
@@ -284,7 +295,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
   }
 
   private emitRoundEnd(
-    room: SurenchereRoom,
+    room: SurenchereRoomInternal,
     result: SurenchereRoundResult,
     finished: boolean,
     scores: Record<string, number>,
@@ -334,7 +345,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
 
   // ── Timer helpers ────────────────────────────────────────────────────────────
 
-  private startBidTimer(room: SurenchereRoom): void {
+  private startBidTimer(room: SurenchereRoomInternal): void {
     const endsAt = Date.now() + BID_TIMEOUT_MS;
     room.bidTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'BIDDING', endsAt });
@@ -350,7 +361,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     this.startWordsTimer(updatedRoom);
   }
 
-  private startWordsTimer(room: SurenchereRoom): void {
+  private startWordsTimer(room: SurenchereRoomInternal): void {
     const secs = room.settings.wordTimerSeconds;
     const endsAt = Date.now() + secs * 1000;
     room.wordsTimerEndsAt = endsAt;
@@ -379,7 +390,7 @@ export class SurenchereGateway implements OnGatewayDisconnect {
     }
   }
 
-  private startChooseTimer(room: SurenchereRoom): void {
+  private startChooseTimer(room: SurenchereRoomInternal): void {
     const endsAt = Date.now() + CHOOSE_TIMEOUT_MS;
     room.chooseTimerEndsAt = endsAt;
     this.server.to(room.code).emit('surenchere:timer-update', { phase: 'CHOOSING', endsAt });

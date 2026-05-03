@@ -12,6 +12,14 @@ export interface Player {
   // Bingo
   bingoValidated: BingoConstraintId[];
   bingoValidatedOnSlug: Partial<Record<BingoConstraintId, string>>;
+  /**
+   * Per-player secret issued on first join. Required to claim a DISCONNECTED
+   * slot on reconnect — prevents anyone with the room code + a known pseudo
+   * from hijacking the session. Server-side only; never serialised in DTOs.
+   * Null while the player is still a seed (created by common-lobby redirect
+   * before the real socket joins).
+   */
+  sessionToken: string | null;
 }
 
 export interface Room {

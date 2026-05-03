@@ -68,21 +68,25 @@ describe('Reconnection flow (integration)', () => {
     await connectClient(guest);
 
     const hostRoom = await createRoom(host, 'Alice');
-    await joinRoom(guest, hostRoom.code, 'Bob');
+    const guestRoom = await joinRoom(guest, hostRoom.code, 'Bob');
 
     // Disconnect Bob
     const disconnectedPromise = waitForEvent(host, 'wikirace:player:disconnected');
     guest.disconnect();
     await disconnectedPromise;
 
-    // Bob reconnects with a new socket
+    // Bob reconnects with a new socket and his original session token
     const reconnectedGuest = createClient(port);
     await connectClient(reconnectedGuest);
 
     const reconnectedPromise = waitForEvent(host, 'wikirace:player:reconnected');
     const roomUpdatePromise = waitForEvent(host, 'wikirace:room:update');
 
-    reconnectedGuest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
+    reconnectedGuest.emit('wikirace:room:join', {
+      roomCode: hostRoom.code,
+      pseudo: 'Bob',
+      sessionToken: guestRoom.sessionToken,
+    });
 
     const [pseudo, updatedRoom] = await Promise.all([reconnectedPromise, roomUpdatePromise]);
     expect(pseudo).toBe('Bob');
@@ -100,7 +104,7 @@ describe('Reconnection flow (integration)', () => {
     await connectClient(guest);
 
     const hostRoom = await createRoom(host, 'Alice');
-    await joinRoom(guest, hostRoom.code, 'Bob');
+    const guestRoom = await joinRoom(guest, hostRoom.code, 'Bob');
 
     // Start game (two-step: host picks chooser, then chooser confirms)
     const hostRoomUpdate = waitForEvent(host, 'wikirace:room:update');
@@ -125,12 +129,16 @@ describe('Reconnection flow (integration)', () => {
     guest.disconnect();
     await disconnectedPromise;
 
-    // Bob reconnects
+    // Bob reconnects with his original session token
     const reconnectedGuest = createClient(port);
     await connectClient(reconnectedGuest);
 
     const gameStatePromise = waitForEvent(reconnectedGuest, 'wikirace:game:state');
-    reconnectedGuest.emit('wikirace:room:join', { roomCode: hostRoom.code, pseudo: 'Bob' });
+    reconnectedGuest.emit('wikirace:room:join', {
+      roomCode: hostRoom.code,
+      pseudo: 'Bob',
+      sessionToken: guestRoom.sessionToken,
+    });
 
     const state = await gameStatePromise;
     expect(state.startSlug).toBe('France');

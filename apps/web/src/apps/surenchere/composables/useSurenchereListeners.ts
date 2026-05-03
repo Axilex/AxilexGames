@@ -16,6 +16,10 @@ export function useSurenchereListeners(): void {
     if (socketService.id) store.setMySocketId(socketService.id);
   });
 
+  socketService.on('surenchere:session', ({ token }) => {
+    session.setSessionToken(token);
+  });
+
   socketService.on('surenchere:room:update', (room) => {
     if (!store.mySocketId && socketService.id) store.setMySocketId(socketService.id);
 

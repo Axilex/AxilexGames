@@ -16,6 +16,10 @@ export function useTelepathieListeners(): void {
     if (socketService.id) store.setMySocketId(socketService.id);
   });
 
+  socketService.on('telepathie:session', ({ token }) => {
+    session.setSessionToken(token);
+  });
+
   socketService.on('telepathie:room-update', (room) => {
     if (!store.mySocketId && socketService.id) store.setMySocketId(socketService.id);
 

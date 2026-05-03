@@ -6,6 +6,8 @@ export interface CommonPlayer {
   pseudo: string;
   status: PlayerStatus;
   isHost: boolean;
+  /** See `Player.sessionToken` — required to claim a DISCONNECTED slot on reconnect. */
+  sessionToken: string | null;
 }
 
 export interface CommonRoom {

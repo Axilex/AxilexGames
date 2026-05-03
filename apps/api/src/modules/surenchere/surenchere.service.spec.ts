@@ -18,7 +18,7 @@ function pickFirstChallenge(service: SurenchereService, room: SurenchereRoom, so
 describe('SurenchereService', () => {
   it('creates a room with host and WAITING phase', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     expect(room.code).toHaveLength(6);
     expect(room.phase).toBe('WAITING');
     expect(room.players).toHaveLength(1);
@@ -28,7 +28,7 @@ describe('SurenchereService', () => {
 
   it('joinRoom adds a second player', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     expect(room.players).toHaveLength(2);
   });
@@ -40,13 +40,13 @@ describe('SurenchereService', () => {
 
   it('joinRoom rejects duplicate pseudo', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     expect(() => service.joinRoom('s2', room.code, 'Alice')).toThrow('PSEUDO_TAKEN');
   });
 
   it('startGame refuses non-host', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     expect(() => service.startGame('s2')).toThrow('NOT_HOST');
   });
@@ -59,7 +59,7 @@ describe('SurenchereService', () => {
 
   it('startGame transitions to CHOOSING_CHALLENGE with 3 options', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     expect(started.phase).toBe('CHOOSING_CHALLENGE');
@@ -71,7 +71,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge rejects non-chooser', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     expect(() =>
@@ -81,7 +81,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge fixes the challenge and moves to BIDDING', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     const picked = started.challengeOptions[1];
@@ -93,7 +93,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge accepts a valid custom phrase', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.startGame('s1');
     const after = service.chooseChallenge('s1', { customPhrase: 'Citer des animaux marins' });
@@ -104,7 +104,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge rejects custom phrase shorter than 5 chars', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.startGame('s1');
     expect(() => service.chooseChallenge('s1', { customPhrase: 'abc' })).toThrow(
@@ -114,7 +114,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge rejects custom phrase longer than 200 chars', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.startGame('s1');
     expect(() => service.chooseChallenge('s1', { customPhrase: 'a'.repeat(201) })).toThrow(
@@ -124,7 +124,7 @@ describe('SurenchereService', () => {
 
   it('chooseChallenge rejects when neither challengeId nor customPhrase provided', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.startGame('s1');
     expect(() => service.chooseChallenge('s1', {})).toThrow('MISSING_CHALLENGE_OPTION');
@@ -132,7 +132,7 @@ describe('SurenchereService', () => {
 
   it('placeBid refuses amount ≤ currentBid', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -142,7 +142,7 @@ describe('SurenchereService', () => {
 
   it('placeBid refuses self bid', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -152,7 +152,7 @@ describe('SurenchereService', () => {
 
   it('pass detects allPassed and sets phase WORDS with wasForced=true', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol');
     const started = service.startGame('s1');
@@ -168,7 +168,7 @@ describe('SurenchereService', () => {
 
   it('triggerChallenge moves to WORDS with wasForced=false', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -180,7 +180,7 @@ describe('SurenchereService', () => {
 
   it('submitWords rejects non-bidder', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -191,7 +191,7 @@ describe('SurenchereService', () => {
 
   it('submitWords rejects if words.length < currentBid', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -202,7 +202,7 @@ describe('SurenchereService', () => {
 
   it('submitWords cleans words and moves to VOTING', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -216,7 +216,7 @@ describe('SurenchereService', () => {
 
   it('vote rejects the bidder voting on their own words', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -228,7 +228,7 @@ describe('SurenchereService', () => {
 
   it('vote rejects double vote', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol'); // 2 voters so first vote doesn't resolve
     const started = service.startGame('s1');
@@ -242,7 +242,7 @@ describe('SurenchereService', () => {
 
   it('vote resolves when all voters have voted (block accept → success)', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -262,7 +262,7 @@ describe('SurenchereService', () => {
 
   it('vote resolves as failure when majority rejects (block reject)', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol');
     const started = service.startGame('s1');
@@ -283,7 +283,7 @@ describe('SurenchereService', () => {
 
   it('vote success forced → scoreDelta = bid + 1 (forced bonus)', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol');
     service.joinRoom('s4', room.code, 'Dave');
@@ -309,7 +309,7 @@ describe('SurenchereService', () => {
 
   it('vote tie (50% accept) resolves as rejected', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     service.joinRoom('s3', room.code, 'Carol');
     const started = service.startGame('s1');
@@ -328,7 +328,7 @@ describe('SurenchereService', () => {
 
   it('game finishes after totalRounds', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice', { totalRounds: 1 });
+    const { room } = service.createRoom('s1', 'Alice', { totalRounds: 1 });
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');
@@ -343,7 +343,7 @@ describe('SurenchereService', () => {
 
   it('resetRoom refuses non-host and clears scores', async () => {
     const { service } = await setup();
-    const room = service.createRoom('s1', 'Alice');
+    const { room } = service.createRoom('s1', 'Alice');
     service.joinRoom('s2', room.code, 'Bob');
     const started = service.startGame('s1');
     pickFirstChallenge(service, started, 's1');

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import {
   PlayerStatus,
   TelepathieSettings,
@@ -11,29 +12,47 @@ import {
 import { TelepathieRegistryService } from './telepathie-registry.service';
 import { TelepathieRoomInternal, TelepathiePlayerInternal } from './telepathie-room.types';
 import { DEFAULT_TELEPATHIE_SETTINGS, getWordPool, shuffle } from './words.data';
+import { assertBounds } from '../../common/game-room';
 
 const MAX_PLAYERS = 8;
+const MAX_WORD_LENGTH = 100;
 
 @Injectable()
 export class TelepathieService {
   constructor(private readonly registry: TelepathieRegistryService) {}
 
-  createRoom(socketId: string, pseudo: string): TelepathieRoomInternal {
+  createRoom(
+    socketId: string,
+    pseudo: string,
+  ): { room: TelepathieRoomInternal; sessionToken: string } {
     const code = this.registry.generateCode();
     const host: TelepathiePlayerInternal = this.makePlayer(pseudo, socketId, true);
-    return this.registry.createRoom(code, host);
+    return { room: this.registry.createRoom(code, host), sessionToken: host.sessionToken! };
   }
 
-  joinRoom(socketId: string, roomCode: string, pseudo: string): TelepathieRoomInternal {
+  joinRoom(
+    socketId: string,
+    roomCode: string,
+    pseudo: string,
+    sessionToken?: string,
+  ): { room: TelepathieRoomInternal; sessionToken: string } {
     const room = this.registry.findRoom(roomCode);
     if (!room) throw new Error('ROOM_NOT_FOUND');
 
     const existing = room.players.find((p) => p.pseudo === pseudo);
     if (existing) {
+      // Same connected socket re-joining (client retry) — no token check needed.
+      const isReclaim = existing.status === PlayerStatus.DISCONNECTED;
+      if (isReclaim) {
+        if (existing.sessionToken !== null && sessionToken !== existing.sessionToken) {
+          throw new Error('INVALID_SESSION_TOKEN');
+        }
+        if (existing.sessionToken === null) existing.sessionToken = randomUUID();
+      }
       this.registry.rebindSocket(existing.socketId, socketId, roomCode);
       existing.socketId = socketId;
       existing.status = PlayerStatus.CONNECTED;
-      return room;
+      return { room, sessionToken: existing.sessionToken ?? '' };
     }
 
     if (room.phase !== 'WAITING') throw new Error('GAME_IN_PROGRESS');
@@ -41,7 +60,7 @@ export class TelepathieService {
 
     const player: TelepathiePlayerInternal = this.makePlayer(pseudo, socketId, false);
     this.registry.addPlayer(roomCode, player);
-    return room;
+    return { room, sessionToken: player.sessionToken! };
   }
 
   leaveRoom(socketId: string): { room: TelepathieRoomInternal | null; deleted: boolean } {
@@ -67,6 +86,16 @@ export class TelepathieService {
 
     const connected = room.players.filter((p) => p.status === PlayerStatus.CONNECTED);
     if (connected.length < 2) throw new Error('NOT_ENOUGH_PLAYERS');
+
+    if (settings?.totalManches !== undefined) {
+      assertBounds(settings.totalManches, 1, 20, 'INVALID_TOTAL_MANCHES');
+    }
+    if (settings?.maxSousRounds !== undefined) {
+      assertBounds(settings.maxSousRounds, 1, 20, 'INVALID_MAX_SOUS_ROUNDS');
+    }
+    if (settings?.roundTimerSeconds !== undefined) {
+      assertBounds(settings.roundTimerSeconds, 5, 300, 'INVALID_ROUND_TIMER');
+    }
 
     room.settings = { ...DEFAULT_TELEPATHIE_SETTINGS, ...settings };
     room.currentManche = 1;
@@ -99,6 +128,9 @@ export class TelepathieService {
     const room = this.registry.findRoomBySocketId(socketId);
     if (!room) throw new Error('ROOM_NOT_FOUND');
     if (room.phase !== 'PLAYING') throw new Error('WRONG_PHASE');
+    if (typeof word !== 'string' || word.length > MAX_WORD_LENGTH) {
+      throw new Error('WORD_TOO_LONG');
+    }
 
     const player = room.players.find((p) => p.socketId === socketId);
     if (!player) throw new Error('PLAYER_NOT_FOUND');
@@ -401,6 +433,7 @@ export class TelepathieService {
       submittedWord: null,
       submittedWordDisplay: null,
       usedWords: [],
+      sessionToken: null,
     };
     this.registry.createRoom(code, host);
 
@@ -417,6 +450,7 @@ export class TelepathieService {
         submittedWord: null,
         submittedWordDisplay: null,
         usedWords: [],
+        sessionToken: null,
       });
     }
   }
@@ -486,6 +520,7 @@ export class TelepathieService {
       submittedWord: null,
       submittedWordDisplay: null,
       usedWords: [],
+      sessionToken: randomUUID(),
     };
   }
 

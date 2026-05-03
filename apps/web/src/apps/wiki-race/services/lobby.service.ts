@@ -5,8 +5,8 @@ export const lobbyService = {
     socketService.emit('wikirace:room:create', { pseudo });
   },
 
-  joinRoom(roomCode: string, pseudo: string): void {
-    socketService.emit('wikirace:room:join', { roomCode, pseudo });
+  joinRoom(roomCode: string, pseudo: string, sessionToken?: string): void {
+    socketService.emit('wikirace:room:join', { roomCode, pseudo, sessionToken });
   },
 
   leaveRoom(roomCode: string): void {
