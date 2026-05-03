@@ -175,7 +175,7 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 
 ### Layout
 
-- `apps/api/src/` — NestJS. Modules par jeu sous `modules/<game>/`, infra partagée sous `common/game-room/`, gateway WikiRace top-level dans `gateways/`, filtres/intercepteurs top-level.
+- `apps/api/src/` — NestJS. Modules par jeu sous `modules/<game>/` (incluant `modules/wiki-race/` — classe `WikiRaceGateway`). Infra partagée sous `common/game-room/`, filtres/intercepteurs top-level.
 - `apps/web/src/` — Vue 3. `apps/<game>/` pour chaque mini-jeu (composants/composables/pages/router/services/stores), `shared/` pour ce qui est commun (UI, stores de session, composables, constantes, services socket).
 - `packages/shared/src/` — `domain/` (types métier), `dto/` (wire-safe), `events/` (contrats Socket.IO), `utils/` (`normalize-word`).
 - `docs/` — architectures par jeu et guides de déploiement (`DEPLOY.md`, `GCP_SETUP.md`).
@@ -186,8 +186,10 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 
 - Nommage : `PascalCase.vue` pour composants Vue, `camelCase.ts` pour services/composables/stores, `kebab-case` pour les fichiers de types et données (`*.types.ts`, `*.data.ts`).
 - Imports : `@/` côté web pointe vers `apps/web/src/`. Côté API : import relatif (`../../common/game-room`) vers `common/`, jamais d'alias custom.
-- Erreurs serveur : `throw new Error('ERROR_CODE')` avec un code SCREAMING_SNAKE. WikiRace + CommonLobby utilisent `WsExceptionFilter` global. Surenchère/Télépathie/Snap-Avis : try/catch dans le gateway → émission directe de `{game}:error` (PAS de filtre global, sinon cross-game routing).
-- Reconnexion : 30 s de grâce via `RoomTimerService.start(socketId, 'reconnect', RECONNECT_TIMEOUT_MS, …)` — une instance par module pour isoler les keys.
+- Erreurs serveur : `throw new Error('ERROR_CODE')` avec un code SCREAMING_SNAKE. **Seul WikiRace** utilise `WsExceptionFilter` global (émet `'error'` avec `{ code, message }`). Tous les autres gateways (CommonLobby, Surenchère, Télépathie, Snap-Avis) : try/catch dans le gateway → émission directe de `{game}:error` (PAS de filtre global, sinon cross-game routing).
+- Reconnexion : 30 s de grâce via `RoomTimerService.start(socketId, 'reconnect', RECONNECT_TIMEOUT_MS, …)` — une instance par module pour isoler les keys. Avant `joinRoom`, la gateway appelle `findReconnectSocketId(roomCode, pseudo)` puis `timer.clear(previousSocketId, 'reconnect')` pour ne pas laisser de timer fantôme.
+- Sécurité de session : à la création/jonction, le serveur émet `*:session` avec un `sessionToken` (UUID) **après** `*:room-update` (préserver l'ordre — les helpers de test attendent `room-update` en premier). Le client le persiste en `sessionStorage` et le renvoie dans le payload `*:join` pour reprendre un slot DISCONNECTED — sinon `INVALID_SESSION_TOKEN`. Seuls les slots seedés (`sessionToken=null`) acceptent une première claim sans token. Quand le type Player partagé est exposé dans le DTO (cas Surenchère), créer un type interne `*PlayerInternal` côté API pour porter le token sans le leaker — pour les autres modules, l'ajouter sur le type Player suffit (DTO mappé explicitement).
+- Validation runtime : pas de `class-validator`. Utiliser `assertBounds(n, min, max, code)` depuis `common/game-room` aux frontières des services pour les payloads numériques (timers, mises, longueurs).
 - Registries : étendre `MapRoomRegistryService` (rooms à `Map<socketId, Player>`) ou `ArrayRoomRegistryService` (rooms à `Player[]`), jamais `BaseRoomRegistryService` directement.
 - Frontend : zéro appel `socket.io-client` direct dans les composants — passe par `shared/services/socket.service.ts` + composables `useXListeners`. Sessions en `sessionStorage` (pas `localStorage`). Navigations internes en named routes (`{ name: 'lobby' }`) toujours.
 - Couleurs/branding par jeu : `GAME_COLOR_SCHEMES` dans `shared/constants/game-colors.ts` — ne pas dupliquer les classes Tailwind.
@@ -198,7 +200,9 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 ### Forbidden
 
 - Pas de BDD ni de cache externe : tout l'état vit en mémoire dans les `*RegistryService`. Ne pas introduire de Redis/Postgres sans discussion préalable (impacte le déploiement et le multi-instance).
-- Pas de filtre `WsExceptionFilter` global sur Surenchère/Télépathie/Snap-Avis — il causerait du cross-game routing d'erreurs (incident connu).
+- Pas de filtre `WsExceptionFilter` global hors WikiRace — il causerait du cross-game routing d'erreurs (incident connu). Les gateways CommonLobby/Surenchère/Télépathie/Snap-Avis émettent `{game}:error` via try/catch.
+- Pas de Math.random() pour les codes de room ni les UUIDs de session — utiliser `crypto.randomInt`/`randomUUID` (codes non prédictibles, tokens non devinables).
+- Pas de dépendance externe pour le rate-limit ou la persistence : tout est in-memory (cf. WikipediaController qui implémente sa propre fenêtre glissante par IP).
 - Pas de paths codés en dur côté frontend pour les routes de jeu : toujours `{ name: '…' }`.
 - Pas d'appel Socket.IO direct dans un composant Vue : passer par les composables + `socket.service.ts`.
 - Ne pas étendre directement `BaseRoomRegistryService` — il manque le CRUD joueur ; passer par `Map…` ou `Array…`.
@@ -213,6 +217,6 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 
 When the user corrects your approach, append a one-line rule here before ending the session. Write it concretely ("Always use X for Y"), never abstractly ("be careful with Y"). If an existing line already covers the correction, tighten it instead of adding a new one. Remove lines when the underlying issue goes away (model upgrades, refactors, process changes).
 
-- (empty)
+- `apps/api/src/modules/game/{game,mode}.service.spec.ts` sont rouges depuis les commits 6e6557f / a0b02d6 (références à `GameStateService` et `timerHandle` retirés). Ne pas les "corriger" en passant — ils nécessitent une réécriture dédiée.
 
 ---
