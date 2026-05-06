@@ -1,5 +1,6 @@
 import { GameMode } from '../domain/enums';
 import { BingoConstraintId } from '../domain/bingo.types';
+import { BugMatrixSettings, BugMatrixVoteLabel } from '../domain/bug-matrix.types';
 
 export interface RoomCreatePayload {
   pseudo: string;
@@ -145,6 +146,26 @@ export interface TelepathieChooseWordPayload {
   word: string;
 }
 
+export interface BugMatrixCreatePayload {
+  pseudo: string;
+  settings?: Partial<BugMatrixSettings>;
+}
+
+export interface BugMatrixJoinPayload {
+  roomCode: string;
+  pseudo: string;
+  sessionToken?: string;
+}
+
+export interface BugMatrixStartPayload {
+  settings?: Partial<BugMatrixSettings>;
+}
+
+export interface BugMatrixVoteSubmitPayload {
+  /** Map targetPseudo → label. Must include exactly all OTHER players (not self). */
+  votes: Record<string, BugMatrixVoteLabel>;
+}
+
 export interface ClientToServerEvents {
   'lobby:create': (payload: LobbyCreatePayload) => void;
   'lobby:join': (payload: LobbyJoinPayload) => void;
@@ -190,4 +211,10 @@ export interface ClientToServerEvents {
   'telepathie:choose-word': (payload: TelepathieChooseWordPayload) => void;
   'telepathie:next-manche': () => void;
   'telepathie:reset': () => void;
+  'bugmatrix:room-create': (payload: BugMatrixCreatePayload) => void;
+  'bugmatrix:room-join': (payload: BugMatrixJoinPayload) => void;
+  'bugmatrix:room-leave': () => void;
+  'bugmatrix:game-start': (payload: BugMatrixStartPayload) => void;
+  'bugmatrix:vote-submit': (payload: BugMatrixVoteSubmitPayload) => void;
+  'bugmatrix:room-reset': () => void;
 }

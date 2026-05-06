@@ -10,17 +10,20 @@ import { useSurenchereListeners } from '@/apps/surenchere/composables/useSurench
 import { useLobbyListeners } from '@/apps/common-lobby/composables/useLobbyListeners';
 import { useSnapAvisListeners } from '@/apps/snap-avis/composables/useSnapAvisListeners';
 import { useTelepathieListeners } from '@/apps/telepathie/composables/useTelepathieListeners';
+import { useBugMatrixListeners } from '@/apps/bug-matrix/composables/useBugMatrixListeners';
 import { useReconnection } from '@/shared/composables/useReconnection';
 import { useSessionStore } from '@/shared/stores/useSessionStore';
 import { useSurenchereSessionStore } from '@/shared/stores/useSurenchereSessionStore';
 import { useCommonSessionStore } from '@/shared/stores/useCommonSessionStore';
 import { useSnapAvisSessionStore } from '@/shared/stores/useSnapAvisSessionStore';
 import { useTelepathieSessionStore } from '@/shared/stores/useTelepathieSessionStore';
+import { useBugMatrixSessionStore } from '@/shared/stores/useBugMatrixSessionStore';
 import { lobbyService } from '@/apps/wiki-race/services/lobby.service';
 import { surenchereSocket } from '@/apps/surenchere/services/surenchere.service';
 import { lobbySocket } from '@/apps/common-lobby/services/lobby.service';
 import { snapAvisSocket } from '@/apps/snap-avis/services/snap-avis.service';
 import { telepathieSocket } from '@/apps/telepathie/services/telepathie.service';
+import { bugMatrixSocket } from '@/apps/bug-matrix/services/bug-matrix.service';
 import DisconnectOverlay from '@/shared/components/ui/DisconnectOverlay.vue';
 
 // Connect first so the socket object exists before listeners are registered
@@ -30,12 +33,14 @@ useSurenchereListeners();
 useLobbyListeners();
 useSnapAvisListeners();
 useTelepathieListeners();
+useBugMatrixListeners();
 
 const wikiSession = useSessionStore();
 const surenchereSession = useSurenchereSessionStore();
 const commonSession = useCommonSessionStore();
 const snapAvisSession = useSnapAvisSessionStore();
 const telepathieSession = useTelepathieSessionStore();
+const bugMatrixSession = useBugMatrixSessionStore();
 
 // Single reconnection watcher: whichever session has an active roomCode drives
 // the rejoin. Common-lobby takes precedence so a player on the lobby page after
@@ -52,6 +57,7 @@ const sessionPrecedence: Array<{
   { session: surenchereSession, rejoin: surenchereSocket.join.bind(surenchereSocket) },
   { session: snapAvisSession, rejoin: snapAvisSocket.join.bind(snapAvisSocket) },
   { session: telepathieSession, rejoin: telepathieSocket.join.bind(telepathieSocket) },
+  { session: bugMatrixSession, rejoin: bugMatrixSocket.join.bind(bugMatrixSocket) },
 ];
 
 function activeSession() {

@@ -7,6 +7,7 @@ import { SnapAvisModule } from './modules/snap-avis/snap-avis.module';
 import { TelepathieModule } from './modules/telepathie/telepathie.module';
 import { CommonLobbyModule } from './modules/common-lobby/common-lobby.module';
 import { WikiRaceModule } from './modules/wiki-race/wiki-race.module';
+import { BugMatrixModule } from './modules/bug-matrix/bug-matrix.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthController } from './health.controller';
     TelepathieModule,
     CommonLobbyModule,
     WikiRaceModule,
+    BugMatrixModule,
   ],
   controllers: [HealthController],
 })

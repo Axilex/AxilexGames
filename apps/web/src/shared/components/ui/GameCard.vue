@@ -89,6 +89,28 @@
         />
       </svg>
 
+      <!-- Brain icon -->
+      <svg
+        v-else-if="icon === 'brain'"
+        class="relative z-10 h-9 w-9 text-white drop-shadow"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.75"
+          d="M9.5 3A2.5 2.5 0 007 5.5v.5a2.5 2.5 0 00-2.5 2.5v.4A3 3 0 003 11.5v.5a3 3 0 00.5 1.65A3 3 0 003 15.3v.7A3 3 0 005.5 19V19a2.5 2.5 0 002.5 2.5h.5a2.5 2.5 0 002 1.5 2.5 2.5 0 002.5-2V5a2 2 0 00-2-2A2.5 2.5 0 009.5 3z"
+        />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.75"
+          d="M14.5 3A2.5 2.5 0 0117 5.5v.5a2.5 2.5 0 012.5 2.5v.4A3 3 0 0121 11.5v.5a3 3 0 01-.5 1.65A3 3 0 0121 15.3v.7A3 3 0 0118.5 19V19a2.5 2.5 0 01-2.5 2.5h-.5a2.5 2.5 0 01-2 1.5"
+        />
+      </svg>
+
       <!-- Soon icon -->
       <svg
         v-else-if="icon === 'soon'"

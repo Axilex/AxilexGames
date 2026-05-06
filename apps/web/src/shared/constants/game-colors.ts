@@ -46,6 +46,14 @@ export const GAME_COLOR_SCHEMES = {
     lobbySelected: 'border-teal-400 bg-teal-50 ring-2 ring-teal-300',
     lobbyHover: 'hover:border-teal-300',
   },
+  emerald: {
+    gradient: 'from-emerald-500 to-cyan-500',
+    cardHover: 'hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100/60',
+    cta: 'text-emerald-600 group-hover:text-emerald-700',
+    tag: 'bg-emerald-50 text-emerald-600',
+    lobbySelected: 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-300',
+    lobbyHover: 'hover:border-emerald-300',
+  },
 } satisfies Record<string, GameColorScheme>;
 
 export type GameColorKey = keyof typeof GAME_COLOR_SCHEMES;

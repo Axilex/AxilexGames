@@ -150,7 +150,7 @@ Boris Cherny (creator of Claude Code) keeps his team's file around 100 lines. Un
 
 ## 10. Project context
 
-**AxilexGames** — hub multijoueur temps réel hébergeant plusieurs mini-jeux indépendants partageant un seul socket : **WikiRace** (navigation Wikipedia FR start→target, modes CLASSIC/BINGO), **Surenchère** (enchères/bluff), **Télépathie** (convergence de mots), **Snap-Avis** (associations d'images). Les joueurs se rassemblent dans un `common-lobby` puis sont redirigés vers le jeu choisi ; la room commune reste vivante en `IN_GAME` pour permettre le retour après la partie.
+**AxilexGames** — hub multijoueur temps réel hébergeant plusieurs mini-jeux indépendants partageant un seul socket : **WikiRace** (navigation Wikipedia FR start→target, modes CLASSIC/BINGO), **Surenchère** (enchères/bluff), **Télépathie** (convergence de mots), **Snap-Avis** (associations d'images), **Bug dans la Matrix** (déduction sociale orale, 3–8 joueurs ; un Normal + N-1 règles "glitched" secrètes). Les joueurs se rassemblent dans un `common-lobby` puis sont redirigés vers le jeu choisi ; la room commune reste vivante en `IN_GAME` pour permettre le retour après la partie.
 
 ### Stack
 
@@ -186,7 +186,7 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 
 - Nommage : `PascalCase.vue` pour composants Vue, `camelCase.ts` pour services/composables/stores, `kebab-case` pour les fichiers de types et données (`*.types.ts`, `*.data.ts`).
 - Imports : `@/` côté web pointe vers `apps/web/src/`. Côté API : import relatif (`../../common/game-room`) vers `common/`, jamais d'alias custom.
-- Erreurs serveur : `throw new Error('ERROR_CODE')` avec un code SCREAMING_SNAKE. **Seul WikiRace** utilise `WsExceptionFilter` global (émet `'error'` avec `{ code, message }`). Tous les autres gateways (CommonLobby, Surenchère, Télépathie, Snap-Avis) : try/catch dans le gateway → émission directe de `{game}:error` (PAS de filtre global, sinon cross-game routing).
+- Erreurs serveur : `throw new Error('ERROR_CODE')` avec un code SCREAMING_SNAKE. **Seul WikiRace** utilise `WsExceptionFilter` global (émet `'error'` avec `{ code, message }`). Tous les autres gateways (CommonLobby, Surenchère, Télépathie, Snap-Avis, BugMatrix) : try/catch dans le gateway → émission directe de `{game}:error` (PAS de filtre global, sinon cross-game routing).
 - Reconnexion : 30 s de grâce via `RoomTimerService.start(socketId, 'reconnect', RECONNECT_TIMEOUT_MS, …)` — une instance par module pour isoler les keys. Avant `joinRoom`, la gateway appelle `findReconnectSocketId(roomCode, pseudo)` puis `timer.clear(previousSocketId, 'reconnect')` pour ne pas laisser de timer fantôme.
 - Sécurité de session : à la création/jonction, le serveur émet `*:session` avec un `sessionToken` (UUID) **après** `*:room-update` (préserver l'ordre — les helpers de test attendent `room-update` en premier). Le client le persiste en `sessionStorage` et le renvoie dans le payload `*:join` pour reprendre un slot DISCONNECTED — sinon `INVALID_SESSION_TOKEN`. Seuls les slots seedés (`sessionToken=null`) acceptent une première claim sans token. Quand le type Player partagé est exposé dans le DTO (cas Surenchère), créer un type interne `*PlayerInternal` côté API pour porter le token sans le leaker — pour les autres modules, l'ajouter sur le type Player suffit (DTO mappé explicitement).
 - Validation runtime : pas de `class-validator`. Utiliser `assertBounds(n, min, max, code)` depuis `common/game-room` aux frontières des services pour les payloads numériques (timers, mises, longueurs).
@@ -196,6 +196,8 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 - Tests : Jest pour l'API (suffix `*.spec.ts`), Vitest pour le web. Pas d'e2e/Playwright dans ce repo.
 - Wikipedia API (`/w/api.php?action=opensearch`) : header `User-Agent` **obligatoire** sinon 403.
 - Configuration build : `apps/api/tsconfig.json` doit garder `rootDir: "src"` et pointer `@wiki-race/shared` vers `packages/shared/dist`. `apps/web/package.json` doit garder `"type": "module"`. ESLint : `eslint-config-prettier` en dernier dans `extends`.
+- Adapter Socket.IO : `AxilexIoAdapter` (dans `apps/api/src/adapters/`) bumpe `setMaxListeners(32)` sur chaque socket. Obligatoire car `@nestjs/websockets` ajoute un listener `disconnect` par gateway et on en a >10. Câblé dans `main.ts` ET dans chaque spec d'intégration (`app.useWebSocketAdapter(new AxilexIoAdapter(app))`) — ne jamais utiliser `IoAdapter` brut, sinon `MaxListenersExceededWarning`.
+- Information secrète par joueur (rôles, règles, mots privés…) : envoyer en **unicast** via `server.to(socket.id).emit(...)` après le broadcast `room-update` ; **strip** les champs sensibles dans `toDTO` selon la phase (cf. BugMatrix `secret-role` + `role`/`ruleLabel`/`ruleCategory` cachés hors REVEAL/FINISHED).
 
 ### Forbidden
 
@@ -218,5 +220,6 @@ Préférer single-file lors de l'itération, suites complètes pour la vérifica
 When the user corrects your approach, append a one-line rule here before ending the session. Write it concretely ("Always use X for Y"), never abstractly ("be careful with Y"). If an existing line already covers the correction, tighten it instead of adding a new one. Remove lines when the underlying issue goes away (model upgrades, refactors, process changes).
 
 - `apps/api/src/modules/game/{game,mode}.service.spec.ts` sont rouges depuis les commits 6e6557f / a0b02d6 (références à `GameStateService` et `timerHandle` retirés). Ne pas les "corriger" en passant — ils nécessitent une réécriture dédiée.
+- Pour `toDTO` : préférer la **construction explicite champ par champ** au pattern `const { sessionToken: _t, ...rest } = p`. ESLint (`@typescript-eslint/no-unused-vars`) déclenche dès qu'on a plusieurs underscores dans un même destructuring (vu sur BugMatrix avec 5 champs à strip). La construction explicite est aussi plus claire pour les réviseurs.
 
 ---

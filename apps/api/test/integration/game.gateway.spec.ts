@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { IoAdapter } from '@nestjs/platform-socket.io';
+import { AxilexIoAdapter } from '../../src/adapters/axilex-io.adapter';
 import { AppModule } from '../../src/app.module';
 import { WikipediaService } from '../../src/modules/wikipedia/wikipedia.service';
 import {
@@ -30,7 +30,7 @@ async function setupApp() {
     .compile();
 
   const app = module.createNestApplication();
-  app.useWebSocketAdapter(new IoAdapter(app));
+  app.useWebSocketAdapter(new AxilexIoAdapter(app));
   await app.listen(0);
   const addr = app.getHttpServer().address();
   const port = typeof addr === 'object' && addr !== null ? addr.port : 3001;

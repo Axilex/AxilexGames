@@ -8,6 +8,7 @@ export * from './domain/surenchere.types';
 export * from './domain/common-lobby.types';
 export * from './domain/snap-avis.types';
 export * from './domain/telepathie.types';
+export * from './domain/bug-matrix.types';
 
 // DTOs (wire format)
 export * from './dto/player.dto';

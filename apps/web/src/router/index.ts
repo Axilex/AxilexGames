@@ -4,6 +4,7 @@ import { surenchereRoutes } from '@/apps/surenchere/router';
 import { commonLobbyRoutes } from '@/apps/common-lobby/router';
 import { snapAvisRoutes } from '@/apps/snap-avis/router';
 import { telepathieRoutes } from '@/apps/telepathie/router';
+import { bugMatrixRoutes } from '@/apps/bug-matrix/router';
 
 /**
  * Main application router.
@@ -27,6 +28,7 @@ const router = createRouter({
     ...surenchereRoutes,
     ...snapAvisRoutes,
     ...telepathieRoutes,
+    ...bugMatrixRoutes,
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',

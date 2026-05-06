@@ -271,12 +271,23 @@ const games = [
     name: 'Télépathie',
     description:
       'Convergez vers le même mot en soumettant des associations simultanément — deux esprits qui se rencontrent gagnent des points.',
-    tags: ['Multijoueur', 'Associations', 'Nouveau'],
+    tags: ['Multijoueur', 'Associations'],
     colorScheme: GAME_COLOR_SCHEMES.teal,
     icon: 'chat',
     to: '/telepathie',
     live: true,
     players: '2–8 joueurs',
+  },
+  {
+    name: 'Bug dans la Matrix',
+    description:
+      'Tout le monde bugge avec une règle secrète… sauf une personne normale. Saurez-vous la trouver ?',
+    tags: ['Multijoueur', 'Déduction', 'Nouveau'],
+    colorScheme: GAME_COLOR_SCHEMES.emerald,
+    icon: 'brain',
+    to: '/bug-matrix',
+    live: true,
+    players: '3–8 joueurs',
   },
 ];
 </script>

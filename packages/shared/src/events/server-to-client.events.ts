@@ -18,6 +18,15 @@ import {
   TelepathieMancheResult,
   TelepathieRankEntry,
 } from '../domain/telepathie.types';
+import {
+  BugMatrixRoomDTO,
+  BugMatrixPhase,
+  BugMatrixRole,
+  BugMatrixRuleCategory,
+  BugMatrixQuestion,
+  BugMatrixRoundResult,
+  BugMatrixRankEntry,
+} from '../domain/bug-matrix.types';
 
 export type ChoosingPreviewData = Omit<ChoosingPreviewPayload, 'roomCode'>;
 
@@ -39,6 +48,25 @@ export interface BingoValidatedPayload {
  */
 export interface SessionTokenPayload {
   token: string;
+}
+
+export interface BugMatrixSecretRolePayload {
+  role: BugMatrixRole;
+  ruleLabel?: string;
+  ruleCategory?: BugMatrixRuleCategory;
+}
+
+export interface BugMatrixThemePayload {
+  themeLabel: string;
+}
+
+export interface BugMatrixPhaseStartPayload {
+  phase: BugMatrixPhase;
+  timerMs?: number;
+}
+
+export interface BugMatrixGameFinishedPayload {
+  rankings: BugMatrixRankEntry[];
 }
 
 export interface ServerToClientEvents {
@@ -94,6 +122,15 @@ export interface ServerToClientEvents {
   'telepathie:game-finished': (payload: { rankings: TelepathieRankEntry[] }) => void;
   'telepathie:error': (payload: { code: string; message: string }) => void;
   'telepathie:session': (payload: SessionTokenPayload) => void;
+  'bugmatrix:room-update': (room: BugMatrixRoomDTO) => void;
+  'bugmatrix:phase-start': (payload: BugMatrixPhaseStartPayload) => void;
+  'bugmatrix:theme': (payload: BugMatrixThemePayload) => void;
+  'bugmatrix:secret-role': (payload: BugMatrixSecretRolePayload) => void;
+  'bugmatrix:question': (payload: BugMatrixQuestion) => void;
+  'bugmatrix:round-result': (result: BugMatrixRoundResult) => void;
+  'bugmatrix:game-finished': (payload: BugMatrixGameFinishedPayload) => void;
+  'bugmatrix:error': (payload: { code: string; message: string }) => void;
+  'bugmatrix:session': (payload: SessionTokenPayload) => void;
   /**
    * Generic error channel — currently only emitted by `WsExceptionFilter` on the
    * wikirace gateway. Same shape as the per-game `*:error` events for consistency.
