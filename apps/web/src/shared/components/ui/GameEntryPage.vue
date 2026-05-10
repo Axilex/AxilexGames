@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <AppNav />
 
     <div class="flex-1 flex items-center justify-center p-4">
@@ -7,12 +7,12 @@
         <!-- Header -->
         <div class="text-center mb-2">
           <div
-            :class="`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br ${gradientClasses} rounded-2xl mb-4 shadow-md ${iconShadowClass}`"
+            :class="`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br ${gradientClasses} rounded-2xl mb-4 shadow-md ${iconShadowClass} dark:shadow-none`"
           >
             <slot name="icon" />
           </div>
-          <h1 class="text-3xl font-bold text-stone-900 tracking-tight">{{ title }}</h1>
-          <p class="text-stone-500 mt-1 text-sm">{{ subtitle }}</p>
+          <h1 class="text-3xl font-bold text-foreground tracking-tight">{{ title }}</h1>
+          <p class="text-foreground-muted mt-1 text-sm">{{ subtitle }}</p>
         </div>
 
         <ErrorToast :message="error ?? ''" />
@@ -33,8 +33,8 @@
           :class="[
             'rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
             hasInviteCode
-              ? 'bg-amber-50 border-amber-300 shadow-amber-100'
-              : 'bg-white border-stone-200',
+              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 shadow-amber-100 dark:shadow-none'
+              : 'bg-card border-border',
           ]"
         >
           <div class="flex items-center gap-2">
@@ -42,7 +42,7 @@
             <h2
               :class="[
                 'text-base font-semibold',
-                hasInviteCode ? 'text-amber-900' : 'text-stone-800',
+                hasInviteCode ? 'text-amber-900 dark:text-amber-200' : 'text-foreground',
               ]"
             >
               {{ hasInviteCode ? 'Vous avez été invité !' : 'Rejoindre une room' }}
@@ -52,9 +52,9 @@
           <!-- Prominent code display when arriving via invite link -->
           <div
             v-if="hasInviteCode"
-            class="bg-white rounded-xl border border-amber-200 px-4 py-3 text-center"
+            class="bg-card rounded-xl border border-amber-200 dark:border-amber-800 px-4 py-3 text-center"
           >
-            <span class="text-2xl font-bold tracking-[0.3em] font-mono text-stone-900">
+            <span class="text-2xl font-bold tracking-[0.3em] font-mono text-foreground">
               {{ joinCode }}
             </span>
           </div>
@@ -80,24 +80,24 @@
 
         <!-- Divider — hidden when arriving via invite (create is just a text link) -->
         <div v-if="!hasInviteCode" class="flex items-center gap-3">
-          <div class="flex-1 h-px bg-stone-200" />
-          <span class="text-xs text-stone-400 font-medium">ou</span>
-          <div class="flex-1 h-px bg-stone-200" />
+          <div class="flex-1 h-px bg-border" />
+          <span class="text-xs text-foreground-subtle font-medium">ou</span>
+          <div class="flex-1 h-px bg-border" />
         </div>
 
         <!-- Create room (second) — collapsed when arriving via invite link -->
         <div
           v-if="!hasInviteCode"
-          class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4"
+          class="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col gap-4"
         >
-          <h2 class="text-base font-semibold text-stone-800">Créer une room</h2>
+          <h2 class="text-base font-semibold text-foreground">Créer une room</h2>
           <BaseButton :loading="creating" class="w-full" @click="handleCreate">
             Créer une room →
           </BaseButton>
         </div>
         <div v-else class="text-center">
           <button
-            class="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors"
+            class="text-xs text-foreground-subtle hover:text-foreground-muted underline underline-offset-2 transition-colors"
             :disabled="creating"
             @click="handleCreate"
           >

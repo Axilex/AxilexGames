@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Mode de jeu</span>
+    <span class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">Mode de jeu</span>
     <div class="grid grid-cols-1 gap-2">
       <button
         v-for="m in modes"
@@ -9,8 +9,8 @@
         class="flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors"
         :class="
           modelValue === m.value
-            ? 'border-amber-400 bg-amber-50 text-stone-900'
-            : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
+            ? 'border-amber-400 bg-amber-50 text-foreground'
+            : 'border-border bg-card text-foreground-muted hover:border-border-strong hover:bg-surface-muted'
         "
         @click="$emit('update:modelValue', m.value)"
       >
@@ -19,7 +19,7 @@
           <div class="text-sm font-semibold">
             {{ m.label }}
           </div>
-          <div class="text-xs text-stone-400">
+          <div class="text-xs text-foreground-subtle">
             {{ m.description }}
           </div>
         </div>

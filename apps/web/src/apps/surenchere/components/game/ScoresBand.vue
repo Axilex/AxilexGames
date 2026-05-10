@@ -7,7 +7,7 @@
         'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border',
         p.socketId === mySocketId
           ? 'bg-amber-50 border-amber-200 text-amber-800'
-          : 'bg-stone-50 border-stone-200 text-stone-700',
+          : 'bg-surface-muted border-border text-foreground-muted',
       ]"
     >
       {{ p.pseudo }}

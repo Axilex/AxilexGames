@@ -49,12 +49,13 @@ const variantClasses = computed(
   () =>
     ({
       primary:
-        'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white shadow-sm focus-visible:ring-amber-500',
+        'bg-amber-600 dark:bg-amber-500 hover:bg-amber-700 dark:hover:bg-amber-400 active:bg-amber-800 text-white shadow-sm focus-visible:ring-amber-500',
       secondary:
-        'bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-700 border border-stone-300 shadow-sm focus-visible:ring-stone-400',
+        'bg-card hover:bg-surface-muted active:bg-border text-foreground-muted border border-border-strong shadow-sm focus-visible:ring-border-strong',
       danger:
         'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-sm focus-visible:ring-red-500',
-      ghost: 'text-stone-600 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-stone-400',
+      ghost:
+        'text-foreground-muted hover:bg-surface-muted hover:text-foreground focus-visible:ring-border-strong',
     })[props.variant],
 );
 </script>

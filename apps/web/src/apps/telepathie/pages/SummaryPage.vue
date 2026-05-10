@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-4 py-3">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
       <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">🔄 Télépathie — Résultats</h1>
+        <h1 class="text-lg font-bold text-foreground">🔄 Télépathie — Résultats</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -10,7 +10,7 @@
     <main class="flex-1 max-w-2xl mx-auto w-full px-4 py-8 flex flex-col gap-8">
       <!-- Podium -->
       <section class="flex flex-col gap-4">
-        <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest text-center">
+        <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest text-center">
           Classement final
         </p>
         <TelepathiePodium :rankings="store.rankings" />

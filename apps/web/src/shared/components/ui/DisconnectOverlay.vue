@@ -2,7 +2,7 @@
   <Transition name="fade">
     <div
       v-if="hasConnectedOnce && (!isConnected || pendingRejoin)"
-      class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface/90 backdrop-blur-sm"
     >
       <!-- Socket disconnected — waiting for auto-reconnect -->
       <div v-if="!isConnected" class="flex flex-col items-center gap-4 text-center">
@@ -26,14 +26,14 @@
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        <p class="text-lg font-semibold text-stone-800">Connexion perdue…</p>
-        <p class="text-sm text-stone-500">Vérifiez votre connexion réseau</p>
+        <p class="text-lg font-semibold text-foreground">Connexion perdue…</p>
+        <p class="text-sm text-foreground-muted">Vérifiez votre connexion réseau</p>
       </div>
 
       <!-- Socket reconnected — waiting for manual room rejoin -->
       <div v-else-if="pendingRejoin" class="flex flex-col items-center gap-5 text-center">
         <div
-          class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center"
+          class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 flex items-center justify-center"
         >
           <svg class="h-7 w-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -45,11 +45,11 @@
           </svg>
         </div>
         <div class="flex flex-col gap-1">
-          <p class="text-lg font-semibold text-stone-800">Connexion rétablie</p>
-          <p class="text-sm text-stone-500">Cliquez pour rejoindre la partie</p>
+          <p class="text-lg font-semibold text-foreground">Connexion rétablie</p>
+          <p class="text-sm text-foreground-muted">Cliquez pour rejoindre la partie</p>
         </div>
         <button
-          class="bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm"
+          class="bg-amber-600 dark:bg-amber-500 hover:bg-amber-700 dark:hover:bg-amber-400 active:bg-amber-800 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm"
           @click="onReconnect"
         >
           Reconnecter →

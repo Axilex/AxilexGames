@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-4">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">🎮 AxilexGames — Salon</h1>
+        <h1 class="text-lg font-bold text-foreground">🎮 AxilexGames — Salon</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -17,22 +17,22 @@
 
       <div class="flex flex-col gap-4">
         <!-- Game choice -->
-        <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4">
+        <div class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
           <template v-if="store.room?.status === 'IN_GAME' && !store.redirecting">
-            <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
+            <span class="text-xs font-semibold uppercase tracking-widest text-foreground-subtle">
               Partie en cours
             </span>
-            <p class="text-sm text-stone-500 text-center">
+            <p class="text-sm text-foreground-muted text-center">
               La partie vient de se terminer. Choisissez un nouveau jeu pour rejouer.
             </p>
             <BaseButton v-if="store.isHost" class="w-full" @click="onResetGame">
               Choisir un nouveau jeu
             </BaseButton>
-            <p v-else class="text-xs text-stone-400 text-center">En attente du host…</p>
+            <p v-else class="text-xs text-foreground-subtle text-center">En attente du host…</p>
           </template>
 
           <template v-else>
-            <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">
+            <span class="text-xs font-semibold uppercase tracking-widest text-foreground-subtle">
               Choix du jeu
             </span>
 
@@ -45,20 +45,20 @@
                   'rounded-xl border px-4 py-3 text-left transition-all',
                   store.gameChoice === game.id
                     ? game.colorScheme.lobbySelected
-                    : ['border-stone-200 bg-stone-50', game.colorScheme.lobbyHover],
+                    : ['border-border bg-surface-muted', game.colorScheme.lobbyHover],
                   !store.isHost ? 'cursor-default' : 'cursor-pointer',
                 ]"
                 @click="store.isHost && onChooseGame(game.id as NonNullable<GameChoice>)"
               >
                 <div class="flex items-center gap-2">
                   <span class="text-lg">{{ game.icon }}</span>
-                  <span class="font-semibold text-stone-900 text-sm">{{ game.name }}</span>
+                  <span class="font-semibold text-foreground text-sm">{{ game.name }}</span>
                 </div>
-                <p class="text-xs text-stone-500 mt-1">{{ game.description }}</p>
+                <p class="text-xs text-foreground-muted mt-1">{{ game.description }}</p>
               </button>
             </div>
 
-            <p v-if="!store.isHost" class="text-xs text-stone-400 text-center">
+            <p v-if="!store.isHost" class="text-xs text-foreground-subtle text-center">
               En attente du choix du host…
             </p>
 
@@ -72,7 +72,7 @@
             </BaseButton>
             <p
               v-if="store.isHost && store.startBlockedReason"
-              class="text-xs text-stone-400 text-center"
+              class="text-xs text-foreground-subtle text-center"
             >
               {{ store.startBlockedReason }}
             </p>

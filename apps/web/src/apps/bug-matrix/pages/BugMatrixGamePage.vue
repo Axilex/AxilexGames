@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-3">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-base font-bold text-stone-900">
+        <h1 class="text-base font-bold text-foreground">
           🧠 Bug dans la Matrix · manche {{ store.room?.round ?? 0 }}/{{
             store.room?.settings.roundCount ?? 0
           }}
@@ -11,9 +11,9 @@
           <span
             v-for="p in store.room?.players ?? []"
             :key="p.pseudo"
-            class="text-xs text-stone-500"
+            class="text-xs text-foreground-muted"
           >
-            {{ p.pseudo }} · <b class="text-stone-900">{{ p.score }}</b>
+            {{ p.pseudo }} · <b class="text-foreground">{{ p.score }}</b>
           </span>
         </div>
       </div>
@@ -36,8 +36,8 @@
       <template v-else-if="store.phase === 'DISCUSSION'">
         <QuestionPrompt :text="store.currentQuestion?.text ?? '…'" />
         <PhaseTimer :ends-at="store.phaseTimerEndsAt" label="Discussion (à l'oral)" />
-        <details class="bg-white rounded-xl border border-stone-200 p-4 text-sm">
-          <summary class="cursor-pointer font-semibold text-stone-700">
+        <details class="bg-card rounded-xl border border-border p-4 text-sm">
+          <summary class="cursor-pointer font-semibold text-foreground-muted">
             Rappel de ta carte secrète
           </summary>
           <div class="mt-3">
@@ -66,7 +66,7 @@
       <!-- REVEAL -->
       <template v-else-if="store.phase === 'REVEAL' && store.lastResult">
         <RoundResultPanel :result="store.lastResult" />
-        <p class="text-center text-sm text-stone-500">Prochaine manche dans quelques secondes…</p>
+        <p class="text-center text-sm text-foreground-muted">Prochaine manche dans quelques secondes…</p>
       </template>
     </main>
   </div>

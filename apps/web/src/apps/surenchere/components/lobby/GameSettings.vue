@@ -1,12 +1,12 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4">
-    <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">Paramètres</span>
-    <div class="flex flex-col gap-3 text-sm text-stone-700">
+  <div class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
+    <span class="text-xs font-semibold uppercase tracking-widest text-foreground-subtle">Paramètres</span>
+    <div class="flex flex-col gap-3 text-sm text-foreground-muted">
       <div class="flex items-center justify-between gap-3">
         <span>Nombre de manches</span>
         <div class="flex items-center gap-1">
           <button
-            class="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-50 disabled:opacity-30"
+            class="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-foreground-muted hover:bg-surface-muted disabled:opacity-30"
             :disabled="localRounds <= 1"
             @click="changeRounds(-1)"
           >
@@ -14,7 +14,7 @@
           </button>
           <span class="w-6 text-center font-bold">{{ localRounds }}</span>
           <button
-            class="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-50 disabled:opacity-30"
+            class="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-foreground-muted hover:bg-surface-muted disabled:opacity-30"
             :disabled="localRounds >= 20"
             @click="changeRounds(1)"
           >
@@ -26,7 +26,7 @@
         <span>Mise de départ</span>
         <div class="flex items-center gap-1">
           <button
-            class="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-50 disabled:opacity-30"
+            class="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-foreground-muted hover:bg-surface-muted disabled:opacity-30"
             :disabled="localStartBid <= 1"
             @click="changeStartBid(-1)"
           >
@@ -34,7 +34,7 @@
           </button>
           <span class="w-6 text-center font-bold">{{ localStartBid }}</span>
           <button
-            class="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-50 disabled:opacity-30"
+            class="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-foreground-muted hover:bg-surface-muted disabled:opacity-30"
             :disabled="localStartBid >= 10"
             @click="changeStartBid(1)"
           >
@@ -44,7 +44,7 @@
       </div>
     </div>
     <BaseButton :disabled="disabled" @click="$emit('start')">Lancer la partie</BaseButton>
-    <p v-if="disabled" class="text-xs text-stone-400 text-center">Il faut au moins 2 joueurs.</p>
+    <p v-if="disabled" class="text-xs text-foreground-subtle text-center">Il faut au moins 2 joueurs.</p>
   </div>
 </template>
 

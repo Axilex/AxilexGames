@@ -1,17 +1,17 @@
 <template>
   <div class="w-full flex flex-col gap-1.5">
     <div class="flex items-center justify-between">
-      <span class="text-xs font-medium text-stone-500">Temps restant</span>
+      <span class="text-xs font-medium text-foreground-muted">Temps restant</span>
       <span
         :class="[
           'text-sm font-bold tabular-nums',
-          secondsLeft <= 3 ? 'text-red-500' : 'text-stone-700',
+          secondsLeft <= 3 ? 'text-red-500' : 'text-foreground-muted',
         ]"
       >
         {{ secondsLeft }}s
       </span>
     </div>
-    <div class="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+    <div class="w-full h-2 bg-border rounded-full overflow-hidden">
       <div
         :class="[
           'h-full rounded-full transition-none',

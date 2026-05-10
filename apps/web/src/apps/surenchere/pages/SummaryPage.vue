@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-4">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">🏆 Surenchère — Fin de partie</h1>
+        <h1 class="text-lg font-bold text-foreground">🏆 Surenchère — Fin de partie</h1>
       </div>
     </header>
 

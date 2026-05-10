@@ -4,18 +4,18 @@
       <div class="text-6xl">
         {{ modeEmoji }}
       </div>
-      <h2 class="text-3xl font-bold text-stone-900">
+      <h2 class="text-3xl font-bold text-foreground">
         {{ winnerPseudo }}
         <span class="text-amber-500">{{ winLabel }}</span>
       </h2>
-      <p class="text-stone-500 text-lg">
+      <p class="text-foreground-muted text-lg">
         {{ subline }}
       </p>
     </div>
     <div v-else class="flex flex-col items-center gap-3">
       <div class="text-6xl">😶</div>
-      <h2 class="text-3xl font-bold text-stone-700">Personne n'a gagné</h2>
-      <p class="text-stone-400">Tous les joueurs ont abandonné ou aucun n'a atteint l'objectif.</p>
+      <h2 class="text-3xl font-bold text-foreground-muted">Personne n'a gagné</h2>
+      <p class="text-foreground-subtle">Tous les joueurs ont abandonné ou aucun n'a atteint l'objectif.</p>
     </div>
   </div>
 </template>

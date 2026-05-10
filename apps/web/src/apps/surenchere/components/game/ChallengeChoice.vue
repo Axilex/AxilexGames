@@ -1,24 +1,24 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-5">
+  <div class="bg-card rounded-2xl border border-border p-6 flex flex-col gap-5">
     <!-- Header -->
     <div class="flex flex-col gap-1">
       <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
         {{ isChooser ? 'À toi de choisir' : `${chooserName ?? "Quelqu'un"} choisit…` }}
       </span>
-      <h2 class="text-xl font-bold text-stone-900">Choisis un défi</h2>
+      <h2 class="text-xl font-bold text-foreground">Choisis un défi</h2>
     </div>
 
     <!-- Choose timer -->
     <div v-if="endsAt" class="flex flex-col gap-1">
-      <div class="flex items-center justify-between text-xs text-stone-500">
+      <div class="flex items-center justify-between text-xs text-foreground-muted">
         <span class="font-semibold uppercase tracking-widest">⏱ Temps de choix</span>
         <span
-          :class="['font-bold tabular-nums', secondsLeft <= 3 ? 'text-red-600' : 'text-stone-700']"
+          :class="['font-bold tabular-nums', secondsLeft <= 3 ? 'text-red-600' : 'text-foreground-muted']"
         >
           {{ secondsLeft }}s
         </span>
       </div>
-      <div class="h-1.5 rounded-full bg-stone-100 overflow-hidden">
+      <div class="h-1.5 rounded-full bg-surface-muted overflow-hidden">
         <div
           class="h-full rounded-full transition-all"
           :class="secondsLeft <= 3 ? 'bg-red-500' : 'bg-amber-500'"
@@ -36,35 +36,35 @@
         class="flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition"
         :class="
           !isChooser || hasCustomPhrase
-            ? 'border-stone-100 bg-stone-50 opacity-40 cursor-not-allowed'
+            ? 'border-border bg-surface-muted opacity-40 cursor-not-allowed'
             : selectedId === opt.id
               ? 'border-amber-500 bg-amber-50 cursor-pointer'
-              : 'border-stone-200 bg-stone-50 hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
+              : 'border-border bg-surface-muted hover:border-amber-400 hover:bg-amber-50 cursor-pointer'
         "
         @click="selectChallenge(opt.id)"
       >
         <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
           {{ opt.category }}
         </span>
-        <span class="text-sm text-stone-700 leading-snug">{{ opt.prompt }}</span>
+        <span class="text-sm text-foreground-muted leading-snug">{{ opt.prompt }}</span>
       </button>
     </div>
 
     <!-- Custom phrase input (chooser only) -->
     <template v-if="isChooser">
-      <div class="flex items-center gap-2 text-xs text-stone-400">
-        <div class="flex-1 h-px bg-stone-200" />
+      <div class="flex items-center gap-2 text-xs text-foreground-subtle">
+        <div class="flex-1 h-px bg-border" />
         <span>ou</span>
-        <div class="flex-1 h-px bg-stone-200" />
+        <div class="flex-1 h-px bg-border" />
       </div>
       <div class="flex flex-col gap-2">
-        <label class="text-xs font-semibold text-stone-500">Écris ton propre défi…</label>
+        <label class="text-xs font-semibold text-foreground-muted">Écris ton propre défi…</label>
         <input
           v-model="customPhrase"
           type="text"
           maxlength="200"
           placeholder="Ex: Citer des animaux qui commencent par..."
-          class="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          class="rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder-foreground-subtle focus:outline-none focus:ring-2 focus:ring-amber-400"
           @input="onCustomPhraseInput"
         />
         <p

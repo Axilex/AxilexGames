@@ -1,8 +1,8 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-4">
+  <div class="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
     <div>
-      <h2 class="text-lg font-bold text-stone-900">À ton avis…</h2>
-      <p class="text-sm text-stone-500 mt-1">
+      <h2 class="text-lg font-bold text-foreground">À ton avis…</h2>
+      <p class="text-sm text-foreground-muted mt-1">
         Pour chaque autre joueur, choisis : <b>Normal</b> (tu penses qu'il n'a pas de règle), ou la
         catégorie de règle que tu devines.
       </p>
@@ -12,9 +12,9 @@
       <li
         v-for="t in targets"
         :key="t.pseudo"
-        class="border border-stone-200 rounded-xl p-4 flex flex-col gap-3"
+        class="border border-border rounded-xl p-4 flex flex-col gap-3"
       >
-        <p class="font-semibold text-stone-900">{{ t.pseudo }}</p>
+        <p class="font-semibold text-foreground">{{ t.pseudo }}</p>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="label in LABELS"
@@ -25,7 +25,7 @@
               'px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors',
               isSelected(t.pseudo, label)
                 ? selectedClass(label)
-                : 'border border-stone-200 text-stone-500 hover:border-stone-300',
+                : 'border border-border text-foreground-muted hover:border-border-strong',
               disabled ? 'opacity-50 cursor-not-allowed' : '',
             ]"
             @click="emit('select', t.pseudo, label)"

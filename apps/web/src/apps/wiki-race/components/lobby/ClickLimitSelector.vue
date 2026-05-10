@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+    <span class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">
       {{ label }}
     </span>
     <div class="flex flex-wrap items-center gap-2">
@@ -13,7 +13,7 @@
         :class="
           modelValue === opt
             ? 'border-amber-400 bg-amber-50 text-amber-700'
-            : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+            : 'border-border bg-card text-foreground-muted hover:border-border-strong'
         "
         @click="$emit('update:modelValue', opt)"
       >
@@ -32,11 +32,11 @@
           :class="
             isCustom
               ? 'border-amber-400 bg-amber-50 text-amber-700'
-              : 'border-stone-200 bg-white text-stone-600'
+              : 'border-border bg-card text-foreground-muted'
           "
           @change="onCustomInput"
         />
-        <span class="text-xs text-stone-400">clics</span>
+        <span class="text-xs text-foreground-subtle">clics</span>
       </div>
 
       <!-- ∞ Illimité -->
@@ -47,7 +47,7 @@
         :class="
           modelValue === null
             ? 'border-amber-400 bg-amber-50 text-amber-700'
-            : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+            : 'border-border bg-card text-foreground-muted hover:border-border-strong'
         "
         @click="$emit('update:modelValue', null)"
       >

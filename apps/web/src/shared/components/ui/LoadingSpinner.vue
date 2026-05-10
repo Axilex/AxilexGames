@@ -24,7 +24,7 @@ const colorClass = computed(
     ({
       white: 'text-white',
       blue: 'text-amber-500',
-      gray: 'text-stone-400',
+      gray: 'text-foreground-subtle',
     })[props.color],
 );
 </script>

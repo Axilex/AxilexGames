@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <!-- Re-affichage de l'image -->
-    <div class="w-full rounded-2xl overflow-hidden bg-stone-100" style="aspect-ratio: 4/3">
+    <div class="w-full rounded-2xl overflow-hidden bg-surface-muted" style="aspect-ratio: 4/3">
       <img :src="result.imageUrl" alt="Photo de la manche" class="w-full h-full object-cover" />
     </div>
 
@@ -12,19 +12,19 @@
         :key="word"
         :class="[
           'rounded-2xl border p-4 flex items-start gap-3',
-          groupScore(pseudos) > 0 ? 'bg-white border-violet-200' : 'bg-stone-50 border-stone-200',
+          groupScore(pseudos) > 0 ? 'bg-card border-violet-200' : 'bg-surface-muted border-border',
         ]"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-base font-bold text-stone-800 mb-1">« {{ word || '—' }} »</p>
-          <p class="text-xs text-stone-500">
+          <p class="text-base font-bold text-foreground mb-1">« {{ word || '—' }} »</p>
+          <p class="text-xs text-foreground-muted">
             {{ pseudos.join(', ') }}
           </p>
         </div>
         <div
           :class="[
             'shrink-0 text-right',
-            groupScore(pseudos) > 0 ? 'text-violet-600' : 'text-stone-400',
+            groupScore(pseudos) > 0 ? 'text-violet-600' : 'text-foreground-subtle',
           ]"
         >
           <span class="text-lg font-extrabold">+{{ groupScore(pseudos) }}</span>
@@ -34,15 +34,15 @@
     </div>
 
     <!-- Scores courants -->
-    <div class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2">
-      <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Scores</p>
+    <div class="bg-card rounded-2xl border border-border p-4 flex flex-col gap-2">
+      <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest mb-1">Scores</p>
       <div
         v-for="[pseudo, total] in sortedScores"
         :key="pseudo"
         class="flex items-center justify-between"
       >
-        <span class="text-sm text-stone-700">{{ pseudo }}</span>
-        <span class="text-sm font-bold text-stone-900 tabular-nums">{{ total }}</span>
+        <span class="text-sm text-foreground-muted">{{ pseudo }}</span>
+        <span class="text-sm font-bold text-foreground tabular-nums">{{ total }}</span>
       </div>
     </div>
   </div>

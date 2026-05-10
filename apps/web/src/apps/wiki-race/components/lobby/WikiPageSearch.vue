@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <label class="block text-sm font-medium text-stone-700 mb-1">{{ label }}</label>
+    <label class="block text-sm font-medium text-foreground-muted mb-1">{{ label }}</label>
 
     <!-- Selected -->
     <div
@@ -23,13 +23,13 @@
         v-model="query"
         type="text"
         :placeholder="placeholder ?? 'Rechercher un article Wikipédia...'"
-        class="w-full bg-white border border-stone-300 hover:border-stone-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-2 text-stone-900 placeholder-stone-400 text-sm transition-colors"
+        class="w-full bg-card border border-border-strong hover:border-border-strong focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-2 text-foreground placeholder-foreground-subtle text-sm transition-colors"
         @input="onInput"
         @blur="onBlur"
         @focus="showDropdown = results.length > 0"
       />
       <div v-if="loading" class="absolute right-3 top-1/2 -translate-y-1/2">
-        <svg class="animate-spin h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin h-4 w-4 text-foreground-subtle" fill="none" viewBox="0 0 24 24">
           <circle
             class="opacity-25"
             cx="12"
@@ -50,12 +50,12 @@
     <!-- Dropdown -->
     <ul
       v-if="showDropdown && results.length > 0"
-      class="absolute z-20 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden"
+      class="absolute z-20 w-full mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden"
     >
       <li
         v-for="result in results"
         :key="result.slug"
-        class="px-3 py-2.5 text-sm text-stone-800 hover:bg-amber-50 hover:text-amber-700 cursor-pointer transition-colors border-b border-stone-100 last:border-0"
+        class="px-3 py-2.5 text-sm text-foreground hover:bg-amber-50 hover:text-amber-700 cursor-pointer transition-colors border-b border-border last:border-0"
         @mousedown.prevent="select(result)"
       >
         {{ result.title }}
@@ -63,7 +63,7 @@
     </ul>
     <p
       v-if="!selected && query.length > 0 && !loading && results.length === 0 && searched"
-      class="mt-1 text-xs text-stone-400"
+      class="mt-1 text-xs text-foreground-subtle"
     >
       Aucun résultat
     </p>

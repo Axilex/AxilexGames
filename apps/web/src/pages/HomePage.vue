@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-stone-100 flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <AppNav />
 
     <main class="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-10">
@@ -14,11 +14,11 @@
           }}
           disponible{{ games.filter((g) => g.live).length > 1 ? 's' : '' }}
         </div>
-        <h1 class="text-5xl sm:text-6xl font-extrabold text-stone-900 tracking-tight leading-tight">
+        <h1 class="text-5xl sm:text-6xl font-extrabold text-foreground tracking-tight leading-tight">
           Joue. Gagne.<br />
           <span class="text-amber-500">Recommence.</span>
         </h1>
-        <p class="text-stone-500 text-lg max-w-md leading-relaxed">
+        <p class="text-foreground-muted text-lg max-w-md leading-relaxed">
           Des mini-jeux multijoueurs directement dans le navigateur. Aucune installation.
         </p>
       </section>
@@ -44,8 +44,8 @@
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span class="text-sm font-semibold text-stone-700">Ton pseudo</span>
-              <span class="text-xs text-stone-400">· commun à tous les salons</span>
+              <span class="text-sm font-semibold text-foreground-muted">Ton pseudo</span>
+              <span class="text-xs text-foreground-subtle">· commun à tous les salons</span>
             </div>
             <BaseInput
               v-model="pseudo"
@@ -60,8 +60,8 @@
           <!-- Join -->
           <div
             :class="[
-              'bg-white rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
-              hasInviteCode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'border-stone-200',
+              'bg-card rounded-2xl p-6 border shadow-sm flex flex-col gap-4',
+              hasInviteCode ? 'bg-amber-50 border-amber-300 shadow-amber-100' : 'border-border',
             ]"
           >
             <div class="flex items-center gap-2">
@@ -69,7 +69,7 @@
               <h2
                 :class="[
                   'text-base font-semibold',
-                  hasInviteCode ? 'text-amber-900' : 'text-stone-800',
+                  hasInviteCode ? 'text-amber-900' : 'text-foreground',
                 ]"
               >
                 {{ hasInviteCode ? 'Vous avez été invité !' : 'Rejoindre un salon' }}
@@ -77,9 +77,9 @@
             </div>
             <div
               v-if="hasInviteCode"
-              class="bg-white rounded-xl border border-amber-200 px-4 py-3 text-center"
+              class="bg-card rounded-xl border border-amber-200 px-4 py-3 text-center"
             >
-              <span class="text-2xl font-bold tracking-[0.3em] font-mono text-stone-900">{{
+              <span class="text-2xl font-bold tracking-[0.3em] font-mono text-foreground">{{
                 joinCode
               }}</span>
             </div>
@@ -104,24 +104,24 @@
 
           <!-- Divider -->
           <div v-if="!hasInviteCode" class="flex items-center gap-3">
-            <div class="flex-1 h-px bg-stone-200" />
-            <span class="text-xs text-stone-400 font-medium">ou</span>
-            <div class="flex-1 h-px bg-stone-200" />
+            <div class="flex-1 h-px bg-border" />
+            <span class="text-xs text-foreground-subtle font-medium">ou</span>
+            <div class="flex-1 h-px bg-border" />
           </div>
 
           <!-- Create -->
           <div
             v-if="!hasInviteCode"
-            class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col gap-4"
+            class="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col gap-4"
           >
-            <h2 class="text-base font-semibold text-stone-800">Créer un salon</h2>
+            <h2 class="text-base font-semibold text-foreground">Créer un salon</h2>
             <BaseButton :loading="creating" class="w-full" @click="createLobby">
               Créer un salon →
             </BaseButton>
           </div>
           <div v-else class="text-center">
             <button
-              class="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors"
+              class="text-xs text-foreground-subtle hover:text-foreground-muted underline underline-offset-2 transition-colors"
               :disabled="creating"
               @click="createLobby"
             >
@@ -142,12 +142,12 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-stone-200 bg-white mt-4">
+    <footer class="border-t border-border bg-card mt-4">
       <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <span class="text-xs font-semibold text-stone-900"
+        <span class="text-xs font-semibold text-foreground"
           >Axilex<span class="text-amber-500">Games</span></span
         >
-        <span class="text-xs text-stone-400">{{ new Date().getFullYear() }}</span>
+        <span class="text-xs text-foreground-subtle">{{ new Date().getFullYear() }}</span>
       </div>
     </footer>
   </div>

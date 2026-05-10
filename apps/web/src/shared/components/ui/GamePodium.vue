@@ -6,15 +6,15 @@
       <div v-if="entries[1]" class="flex flex-col items-center gap-1.5 order-1">
         <span class="text-xl sm:text-2xl leading-none">🥈</span>
         <div
-          class="relative w-20 sm:w-24 rounded-t-xl bg-gradient-to-b from-stone-200 to-stone-300 flex flex-col items-center justify-end pb-3 px-1"
+          class="relative w-20 sm:w-24 rounded-t-xl bg-gradient-to-b from-stone-200 to-stone-300 dark:from-stone-700 dark:to-stone-800 flex flex-col items-center justify-end pb-3 px-1"
           style="height: 90px"
         >
-          <p class="text-xs font-bold text-stone-700 truncate max-w-full text-center leading-tight">
+          <p class="text-xs font-bold text-foreground-muted dark:text-stone-200 truncate max-w-full text-center leading-tight">
             {{ entries[1].pseudo }}
           </p>
-          <p class="text-[11px] font-semibold text-stone-500 mt-0.5">{{ entries[1].score }} pts</p>
+          <p class="text-[11px] font-semibold text-foreground-muted dark:text-foreground-subtle mt-0.5">{{ entries[1].score }} pts</p>
           <span
-            class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-stone-500 bg-stone-100 rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-extrabold text-foreground-muted bg-surface-muted dark:text-foreground-subtle dark:bg-stone-700 rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
             >2</span
           >
         </div>
@@ -24,7 +24,7 @@
       <div v-if="entries[0]" class="flex flex-col items-center gap-1.5 order-2">
         <span class="text-2xl sm:text-3xl leading-none">🥇</span>
         <div
-          class="relative w-24 sm:w-28 rounded-t-xl bg-gradient-to-b from-amber-300 to-amber-500 flex flex-col items-center justify-end pb-3 px-1 shadow-lg shadow-amber-200"
+          class="relative w-24 sm:w-28 rounded-t-xl bg-gradient-to-b from-amber-300 to-amber-500 flex flex-col items-center justify-end pb-3 px-1 shadow-lg shadow-amber-200 dark:shadow-none"
           style="height: 120px"
         >
           <p class="text-xs font-bold text-white truncate max-w-full text-center leading-tight">
@@ -60,7 +60,7 @@
     <!-- ── Reste du classement (4e et au-delà) ── -->
     <div
       v-if="entries.length > 3"
-      class="bg-white rounded-2xl border border-stone-200 overflow-hidden max-w-sm mx-auto w-full"
+      class="bg-card rounded-2xl border border-border overflow-hidden max-w-sm mx-auto w-full"
     >
       <ol>
         <li
@@ -68,14 +68,14 @@
           :key="entry.pseudo"
           :class="[
             'flex items-center justify-between px-4 py-2.5',
-            i > 0 ? 'border-t border-stone-100' : '',
+            i > 0 ? 'border-t border-border' : '',
           ]"
         >
           <div class="flex items-center gap-3">
-            <span class="text-xs font-bold text-stone-400 w-5 tabular-nums">{{ i + 4 }}.</span>
-            <span class="text-sm font-semibold text-stone-800">{{ entry.pseudo }}</span>
+            <span class="text-xs font-bold text-foreground-subtle w-5 tabular-nums">{{ i + 4 }}.</span>
+            <span class="text-sm font-semibold text-foreground">{{ entry.pseudo }}</span>
           </div>
-          <span class="text-sm font-bold text-stone-600 tabular-nums">{{ entry.score }} pts</span>
+          <span class="text-sm font-bold text-foreground-muted tabular-nums">{{ entry.score }} pts</span>
         </li>
       </ol>
     </div>

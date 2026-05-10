@@ -11,19 +11,19 @@
 
         <!-- Panel -->
         <div
-          class="relative z-10 w-full max-w-xl max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden"
+          class="relative z-10 w-full max-w-xl max-h-[85vh] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden"
         >
           <!-- Header -->
           <div
-            class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-stone-200"
+            class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-border"
           >
             <div class="flex items-center gap-2">
               <span class="text-xl">📖</span>
-              <h2 class="text-base font-bold text-stone-900">Règles du jeu</h2>
+              <h2 class="text-base font-bold text-foreground">Règles du jeu</h2>
             </div>
             <button
               type="button"
-              class="text-stone-400 hover:text-stone-700 transition-colors text-lg leading-none"
+              class="text-foreground-subtle hover:text-foreground-muted transition-colors text-lg leading-none"
               aria-label="Fermer"
               @click="closeRules"
             >
@@ -35,20 +35,20 @@
           <div class="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-7">
             <!-- Modes -->
             <section class="flex flex-col gap-3">
-              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+              <h3 class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">
                 Modes de jeu
               </h3>
               <div
                 v-for="m in modes"
                 :key="m.value"
-                class="flex gap-3 p-3 rounded-xl border border-stone-100 bg-stone-50"
+                class="flex gap-3 p-3 rounded-xl border border-border bg-surface-muted"
               >
                 <span class="text-2xl leading-none mt-0.5 shrink-0">{{ m.icon }}</span>
                 <div class="flex flex-col gap-0.5">
-                  <div class="text-sm font-semibold text-stone-900">
+                  <div class="text-sm font-semibold text-foreground">
                     {{ m.label }}
                   </div>
-                  <div class="text-xs text-stone-500">
+                  <div class="text-xs text-foreground-muted">
                     {{ m.description }}
                   </div>
                 </div>
@@ -57,10 +57,10 @@
 
             <!-- Bingo constraints -->
             <section class="flex flex-col gap-3">
-              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+              <h3 class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">
                 Contraintes Bingo
               </h3>
-              <p class="text-xs text-stone-400">
+              <p class="text-xs text-foreground-subtle">
                 Le serveur analyse le contenu et l'infobox de chaque page pour valider les
                 contraintes. Une contrainte n'est validée qu'une seule fois par partie.
               </p>
@@ -68,14 +68,14 @@
                 <div
                   v-for="c in constraintDetails"
                   :key="c.id"
-                  class="flex gap-3 items-start p-3 rounded-xl border border-stone-100"
+                  class="flex gap-3 items-start p-3 rounded-xl border border-border"
                 >
                   <span class="text-base shrink-0">{{ c.icon }}</span>
                   <div>
-                    <div class="text-xs font-semibold text-stone-800">
+                    <div class="text-xs font-semibold text-foreground">
                       {{ c.label }}
                     </div>
-                    <div class="text-xs text-stone-400 mt-0.5">
+                    <div class="text-xs text-foreground-subtle mt-0.5">
                       {{ c.description }}
                     </div>
                   </div>
@@ -85,10 +85,10 @@
 
             <!-- General rules -->
             <section class="flex flex-col gap-2">
-              <h3 class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+              <h3 class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">
                 Règles générales
               </h3>
-              <ul class="text-xs text-stone-500 flex flex-col gap-1 list-disc list-inside">
+              <ul class="text-xs text-foreground-muted flex flex-col gap-1 list-disc list-inside">
                 <li>Seuls les liens Wikipedia visibles dans le texte comptent.</li>
                 <li>Les notes et références (petits chiffres [1]) ne sont pas cliquables.</li>
                 <li>Le Ctrl+F est désactivé pendant la partie.</li>

@@ -6,21 +6,21 @@
         'rounded-2xl p-4 text-center',
         result.hasMatch
           ? 'bg-teal-50 border border-teal-200'
-          : 'bg-stone-100 border border-stone-200',
+          : 'bg-surface-muted border border-border',
       ]"
     >
       <p v-if="result.hasMatch" class="text-base font-bold text-teal-700">🎯 Match trouvé !</p>
-      <p v-else class="text-sm font-semibold text-stone-500">
+      <p v-else class="text-sm font-semibold text-foreground-muted">
         Pas de match — le jeu continue…
-        <span v-if="!mancheOver" class="block text-xs font-normal mt-1 text-stone-400">
+        <span v-if="!mancheOver" class="block text-xs font-normal mt-1 text-foreground-subtle">
           Prochain sous-round dans {{ countdown }}s
         </span>
       </p>
     </div>
 
     <!-- Soumissions -->
-    <div class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2">
-      <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+    <div class="bg-card rounded-2xl border border-border p-4 flex flex-col gap-2">
+      <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
         Sous-round {{ result.sousRound }}
       </p>
       <div
@@ -28,7 +28,7 @@
         :key="pseudo"
         :class="[
           'flex items-center justify-between text-sm rounded-xl px-3 py-2',
-          isWinner(pseudo) ? 'bg-teal-50 text-teal-700' : 'bg-stone-50 text-stone-600',
+          isWinner(pseudo) ? 'bg-teal-50 text-teal-700' : 'bg-surface-muted text-foreground-muted',
         ]"
       >
         <span class="font-medium">{{ pseudo }}</span>

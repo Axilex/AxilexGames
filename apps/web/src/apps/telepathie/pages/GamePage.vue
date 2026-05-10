@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-4 py-3">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
       <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-bold text-stone-900">🔄 Télépathie</span>
-          <span class="text-stone-300">·</span>
-          <span class="text-xs text-stone-500">
+          <span class="text-sm font-bold text-foreground">🔄 Télépathie</span>
+          <span class="text-foreground-subtle">·</span>
+          <span class="text-xs text-foreground-muted">
             Manche {{ store.room?.currentManche ?? 1 }}/{{ store.room?.settings.totalManches ?? 5 }}
           </span>
           <template v-if="store.phase === 'PLAYING' || store.phase === 'ROUND_RESULT'">
-            <span class="text-stone-300">·</span>
-            <span class="text-xs text-stone-400">
+            <span class="text-foreground-subtle">·</span>
+            <span class="text-xs text-foreground-subtle">
               SR {{ store.room?.currentSousRound ?? 1 }}/{{
                 store.room?.settings.maxSousRounds ?? 10
               }}
@@ -23,7 +23,7 @@
             {{ store.myScore }} pts
           </span>
           <button
-            class="text-xs text-stone-400 hover:text-stone-700 transition"
+            class="text-xs text-foreground-subtle hover:text-foreground-muted transition"
             @click="showScores = !showScores"
           >
             🏆 Scores
@@ -36,15 +36,15 @@
       <!-- Panel scores -->
       <div
         v-if="showScores"
-        class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2"
+        class="bg-card rounded-2xl border border-border p-4 flex flex-col gap-2"
       >
-        <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">Classement</p>
+        <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">Classement</p>
         <div
           v-for="player in sortedPlayers"
           :key="player.socketId"
           :class="[
             'flex items-center justify-between text-sm',
-            player.socketId === store.mySocketId ? 'font-bold text-teal-700' : 'text-stone-700',
+            player.socketId === store.mySocketId ? 'font-bold text-teal-700' : 'text-foreground-muted',
           ]"
         >
           <span>{{ player.pseudo }}</span>
@@ -55,12 +55,12 @@
       <!-- ── PHASE: CHOOSING ── -->
       <template v-if="store.phase === 'CHOOSING'">
         <div
-          class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3 text-center"
+          class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-3 text-center"
         >
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
             Manche {{ store.room?.currentManche ?? 1 }} — Choisissez votre mot de départ
           </p>
-          <p class="text-sm text-stone-500">
+          <p class="text-sm text-foreground-muted">
             Entrez un mot que les autres joueurs devront deviner pour vous rejoindre.
           </p>
         </div>
@@ -72,8 +72,8 @@
         <WordInput :disabled="store.hasChosen" button-label="Choisir →" @submit="onChooseWord" />
 
         <!-- Qui a déjà choisi -->
-        <div class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2">
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">En attente</p>
+        <div class="bg-card rounded-2xl border border-border p-4 flex flex-col gap-2">
+          <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">En attente</p>
           <div class="flex flex-wrap gap-2">
             <span
               v-for="player in store.room?.players ?? []"
@@ -82,7 +82,7 @@
                 'px-3 py-1 rounded-full text-xs font-semibold border transition',
                 player.currentWord !== null
                   ? 'bg-teal-100 border-teal-300 text-teal-800'
-                  : 'bg-stone-100 border-stone-200 text-stone-500',
+                  : 'bg-surface-muted border-border text-foreground-muted',
               ]"
             >
               {{ player.pseudo }} {{ player.currentWord !== null ? '✓' : '…' }}
@@ -95,9 +95,9 @@
       <template v-if="store.phase === 'PLAYING'">
         <!-- Mot courant -->
         <div
-          class="bg-white rounded-2xl border border-stone-200 p-5 text-center flex flex-col gap-2"
+          class="bg-card rounded-2xl border border-border p-5 text-center flex flex-col gap-2"
         >
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
             Ton mot actuel
           </p>
           <p class="text-3xl font-extrabold text-teal-700 tracking-tight">
@@ -160,12 +160,12 @@
             'rounded-2xl border p-5 flex flex-col gap-3',
             store.lastMancheResult.hasMatch
               ? 'bg-teal-50 border-teal-200'
-              : 'bg-stone-100 border-stone-200',
+              : 'bg-surface-muted border-border',
           ]"
         >
           <p
             class="text-xs font-semibold uppercase tracking-widest"
-            :class="store.lastMancheResult.hasMatch ? 'text-teal-600' : 'text-stone-500'"
+            :class="store.lastMancheResult.hasMatch ? 'text-teal-600' : 'text-foreground-muted'"
           >
             Manche {{ store.lastMancheResult.manche }} terminée
           </p>
@@ -179,7 +179,7 @@
             !
             <span class="ml-1 font-bold text-teal-600">+1 point</span>
           </p>
-          <p v-else class="text-sm text-stone-600">
+          <p v-else class="text-sm text-foreground-muted">
             ⏱ Aucun match en {{ store.lastMancheResult.sousRoundsPlayed }} sous-rounds.
           </p>
           <!-- Scores actuels -->
@@ -191,7 +191,7 @@
                 'px-3 py-1 rounded-full text-xs font-semibold border',
                 store.lastMancheResult.winners.includes(player.pseudo)
                   ? 'bg-teal-100 border-teal-300 text-teal-800'
-                  : 'bg-stone-100 border-stone-200 text-stone-600',
+                  : 'bg-surface-muted border-border text-foreground-muted',
               ]"
             >
               {{ player.pseudo }} — {{ player.score }} pt{{ player.score > 1 ? 's' : '' }}
@@ -203,7 +203,7 @@
           <BaseButton v-if="store.canNextManche" class="w-full" @click="onNextManche">
             Manche suivante →
           </BaseButton>
-          <p v-else class="text-center text-sm text-stone-400">
+          <p v-else class="text-center text-sm text-foreground-subtle">
             En attente de l'hôte pour la manche suivante…
           </p>
         </div>
@@ -211,13 +211,13 @@
           <BaseButton v-if="store.canNextManche" class="w-full" @click="onNextManche">
             Voir le podium →
           </BaseButton>
-          <p v-else class="text-center text-sm text-stone-400">En attente de l'hôte…</p>
+          <p v-else class="text-center text-sm text-foreground-subtle">En attente de l'hôte…</p>
         </div>
       </template>
 
       <!-- ── PHASE: FINISHED (redirect en cours) ── -->
       <template v-else-if="store.phase === 'FINISHED'">
-        <div class="text-center text-stone-500 text-sm py-8">Calcul du podium…</div>
+        <div class="text-center text-foreground-muted text-sm py-8">Calcul du podium…</div>
       </template>
     </main>
   </div>

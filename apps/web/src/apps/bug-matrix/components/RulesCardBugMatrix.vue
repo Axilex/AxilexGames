@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3">
-    <h2 class="text-base font-bold text-stone-900">Comment jouer</h2>
-    <ul class="text-sm text-stone-600 space-y-2 list-disc pl-4">
+  <div class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-3">
+    <h2 class="text-base font-bold text-foreground">Comment jouer</h2>
+    <ul class="text-sm text-foreground-muted space-y-2 list-disc pl-4">
       <li>Tout le monde reçoit un <b>thème commun</b> et une <b>règle secrète</b>… sauf un joueur qui est <b>Normal</b>.</li>
       <li>Les règles sont des contraintes de langage (ex. "toujours commencer par En fait", "mentionner un animal", "tout dramatiser"…).</li>
       <li>Pendant la <b>discussion</b>, le jeu pose des questions toutes les ~30 sec. Vous y répondez <b>à l'oral</b> entre vous, en respectant votre règle.</li>

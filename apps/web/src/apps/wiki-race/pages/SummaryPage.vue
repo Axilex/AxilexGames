@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
+  <div class="min-h-screen flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-2xl flex flex-col gap-6">
       <WinnerBanner v-if="summary" :summary="summary" />
 
       <!-- BINGO: bingo board summary -->
       <div
         v-if="summary?.mode === 'BINGO'"
-        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6"
+        class="bg-card rounded-2xl border border-border shadow-sm p-6"
       >
         <BingoBoardSummary :summary="summary" />
       </div>
@@ -14,9 +14,9 @@
       <!-- CLASSIC: player paths -->
       <div
         v-else
-        class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 flex flex-col gap-5"
+        class="bg-card rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-5"
       >
-        <h3 class="text-sm font-semibold text-stone-500 uppercase tracking-widest">Parcours</h3>
+        <h3 class="text-sm font-semibold text-foreground-muted uppercase tracking-widest">Parcours</h3>
         <PlayerPathDisplay
           v-for="player in summary?.players"
           :key="player.pseudo"

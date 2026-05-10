@@ -1,17 +1,17 @@
 <template>
-  <div class="h-screen bg-stone-50 flex flex-col overflow-hidden">
+  <div class="h-screen flex flex-col overflow-hidden">
     <!-- Top bar -->
-    <header class="shrink-0 bg-white border-b border-stone-200 px-4 py-3 flex items-center gap-4">
+    <header class="shrink-0 bg-card border-b border-border px-4 py-3 flex items-center gap-4">
       <!-- Mode-specific header content -->
       <div class="flex-1 flex items-center justify-center gap-3 min-w-0">
         <!-- CLASSIC: Départ → Arrivée -->
         <template v-if="gameStore.mode === 'CLASSIC'">
           <div class="flex flex-col items-center min-w-0">
             <span
-              class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest leading-none mb-0.5"
+              class="text-[10px] font-semibold text-foreground-subtle uppercase tracking-widest leading-none mb-0.5"
               >Départ</span
             >
-            <span class="text-lg font-bold text-stone-900 leading-tight truncate max-w-[180px]">
+            <span class="text-lg font-bold text-foreground leading-tight truncate max-w-[180px]">
               {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
             </span>
           </div>
@@ -43,10 +43,10 @@
         <template v-else-if="gameStore.mode === 'BINGO'">
           <div class="flex flex-col items-center min-w-0">
             <span
-              class="text-[10px] font-semibold text-stone-400 uppercase tracking-widest leading-none mb-0.5"
+              class="text-[10px] font-semibold text-foreground-subtle uppercase tracking-widest leading-none mb-0.5"
               >Départ</span
             >
-            <span class="text-base font-bold text-stone-900 truncate max-w-[140px]">
+            <span class="text-base font-bold text-foreground truncate max-w-[140px]">
               {{ decodeURIComponent(gameStore.startSlug).replace(/_/g, ' ') }}
             </span>
           </div>
@@ -59,7 +59,7 @@
                 v-for="i in totalConstraints"
                 :key="i"
                 class="h-2 w-6 rounded-full transition-colors"
-                :class="i <= myValidatedCount ? 'bg-amber-500' : 'bg-stone-200'"
+                :class="i <= myValidatedCount ? 'bg-amber-500' : 'bg-border'"
               />
             </div>
           </div>
@@ -81,7 +81,7 @@
     <!-- Main layout -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Wikipedia content (main area) -->
-      <main class="flex-1 overflow-hidden bg-white border-r border-stone-200">
+      <main class="flex-1 overflow-hidden bg-card border-r border-border">
         <div v-if="!gameStore.currentPage" class="h-full flex items-center justify-center">
           <LoadingSpinner size="lg" color="blue" />
         </div>
@@ -95,7 +95,7 @@
       </main>
 
       <!-- Right sidebar: players + mode info + history -->
-      <aside class="w-60 shrink-0 flex flex-col overflow-hidden bg-stone-50">
+      <aside class="w-60 shrink-0 flex flex-col overflow-hidden bg-surface-muted">
         <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
           <PlayerSidebar
             v-if="gameStore.gameState"
@@ -112,7 +112,7 @@
             :recently-validated="gameStore.recentlyValidatedBingo"
           />
 
-          <div class="border-t border-stone-200 pt-4">
+          <div class="border-t border-border pt-4">
             <NavigationHistory
               v-if="gameStore.gameState"
               :history="myHistory"

@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between">
-      <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+      <span class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">
         Contraintes Bingo
       </span>
-      <span class="text-xs" :class="isValid ? 'text-amber-600' : 'text-stone-400'">
+      <span class="text-xs" :class="isValid ? 'text-amber-600' : 'text-foreground-subtle'">
         {{ modelValue.length }}/{{ max }} sélectionnées ({{ min }}–{{ max }} requises)
       </span>
     </div>
@@ -16,8 +16,8 @@
         class="flex items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors"
         :class="[
           isSelected(constraint.id)
-            ? 'border-amber-400 bg-amber-50 text-stone-900'
-            : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300',
+            ? 'border-amber-400 bg-amber-50 text-foreground'
+            : 'border-border bg-card text-foreground-muted hover:border-border-strong',
           !isSelected(constraint.id) && modelValue.length >= max
             ? 'opacity-40 cursor-not-allowed'
             : 'cursor-pointer',
@@ -30,7 +30,7 @@
           :class="
             isSelected(constraint.id)
               ? 'border-amber-500 bg-amber-500 text-white'
-              : 'border-stone-300 bg-white'
+              : 'border-border-strong bg-card'
           "
         >
           <span v-if="isSelected(constraint.id)">✓</span>

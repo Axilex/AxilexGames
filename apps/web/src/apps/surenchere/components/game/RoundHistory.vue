@@ -1,14 +1,14 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-3">
-    <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">Historique</span>
+  <div class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-3">
+    <span class="text-xs font-semibold uppercase tracking-widest text-foreground-subtle">Historique</span>
     <ul v-if="history.length" class="flex flex-col gap-2">
       <li
         v-for="(r, i) in history.slice(0, 5)"
         :key="i"
-        class="bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-sm flex flex-col gap-1"
+        class="bg-surface-muted border border-border rounded-lg px-3 py-2 text-sm flex flex-col gap-1"
       >
         <div class="flex items-center justify-between">
-          <span class="font-semibold text-stone-900">{{ r.bidderPseudo }}</span>
+          <span class="font-semibold text-foreground">{{ r.bidderPseudo }}</span>
           <span
             :class="[
               'text-xs font-bold px-2 py-0.5 rounded-full',
@@ -20,7 +20,7 @@
             {{ r.scoreDelta >= 0 ? '+' : '' }}{{ r.scoreDelta }}
           </span>
         </div>
-        <span class="text-xs text-stone-500 truncate">
+        <span class="text-xs text-foreground-muted truncate">
           {{ r.challenge.category }} × {{ r.bid }}
         </span>
         <div v-if="r.wasForced" class="flex">
@@ -40,18 +40,18 @@
                 ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
                 : r.wordVerdicts?.[wi] === false
                   ? 'bg-red-50 border border-red-200 text-red-700 line-through'
-                  : 'bg-white border border-stone-200 text-stone-700',
+                  : 'bg-card border border-border text-foreground-muted',
             ]"
           >
             {{ w }}
           </span>
-          <span v-if="r.words.length > 5" class="text-[11px] text-stone-400 px-1">
+          <span v-if="r.words.length > 5" class="text-[11px] text-foreground-subtle px-1">
             +{{ r.words.length - 5 }}
           </span>
         </div>
       </li>
     </ul>
-    <p v-else class="text-sm text-stone-400">Aucune manche terminée.</p>
+    <p v-else class="text-sm text-foreground-subtle">Aucune manche terminée.</p>
   </div>
 </template>
 

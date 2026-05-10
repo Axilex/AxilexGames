@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-4">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">🔄 Télépathie — Salon</h1>
+        <h1 class="text-lg font-bold text-foreground">🔄 Télépathie — Salon</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -25,35 +25,35 @@
         <!-- Réglages (hôte uniquement) -->
         <div
           v-if="store.isHost"
-          class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-4"
+          class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4"
         >
-          <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Réglages</p>
+          <p class="text-xs font-semibold text-foreground-muted uppercase tracking-widest">Réglages</p>
 
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-stone-600">Nombre de manches</label>
+            <label class="text-xs font-medium text-foreground-muted">Nombre de manches</label>
             <select
               v-model.number="settings.totalManches"
-              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
+              class="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
               <option v-for="n in [3, 5, 7, 10]" :key="n" :value="n">{{ n }}</option>
             </select>
           </div>
 
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-stone-600">Sous-rounds max par manche</label>
+            <label class="text-xs font-medium text-foreground-muted">Sous-rounds max par manche</label>
             <select
               v-model.number="settings.maxSousRounds"
-              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
+              class="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
               <option v-for="n in [5, 8, 10, 15, 20]" :key="n" :value="n">{{ n }}</option>
             </select>
           </div>
 
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-stone-600">Secondes par sous-round</label>
+            <label class="text-xs font-medium text-foreground-muted">Secondes par sous-round</label>
             <select
               v-model.number="settings.roundTimerSeconds"
-              class="rounded-xl border border-stone-200 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-400"
+              class="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
               <option :value="15">15 s</option>
               <option :value="20">20 s</option>
@@ -66,14 +66,14 @@
           <BaseButton :disabled="!canStart" class="w-full" @click="onStart">
             Lancer la partie →
           </BaseButton>
-          <p v-if="!canStart" class="text-xs text-stone-400 text-center">
+          <p v-if="!canStart" class="text-xs text-foreground-subtle text-center">
             Il faut au moins 2 joueurs.
           </p>
         </div>
 
         <div
           v-else
-          class="bg-white rounded-2xl border border-stone-200 p-5 text-sm text-stone-500 text-center"
+          class="bg-card rounded-2xl border border-border p-5 text-sm text-foreground-muted text-center"
         >
           En attente de l'hôte…
         </div>

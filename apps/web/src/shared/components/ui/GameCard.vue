@@ -3,10 +3,10 @@
     :is="to ? RouterLink : 'div'"
     v-bind="to ? { to } : {}"
     :class="[
-      'group bg-white rounded-2xl border overflow-hidden flex flex-col transition-all duration-200',
+      'group bg-card rounded-2xl border overflow-hidden flex flex-col transition-all duration-200',
       to
-        ? ['border-stone-200 cursor-pointer', colorScheme.cardHover]
-        : 'border-dashed border-stone-200 opacity-60 cursor-default',
+        ? ['border-border cursor-pointer', colorScheme.cardHover]
+        : 'border-dashed border-border opacity-60 cursor-default',
     ]"
   >
     <!-- Banner -->
@@ -138,27 +138,27 @@
           :class="[
             'text-xs font-semibold rounded-full px-2 py-0.5',
             tag === 'Bientôt'
-              ? 'bg-stone-100 text-stone-400'
+              ? 'bg-surface-muted text-foreground-subtle'
               : tag === 'Nouveau'
-                ? 'bg-violet-50 text-violet-600'
+                ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-300'
                 : tag === 'Multijoueur'
-                  ? 'bg-blue-50 text-blue-600'
+                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300'
                   : colorScheme.tag,
           ]"
         >
           {{ tag }}
         </span>
-        <span v-if="players" class="ml-auto text-xs text-stone-400 font-medium">
+        <span v-if="players" class="ml-auto text-xs text-foreground-subtle font-medium">
           {{ players }}
         </span>
       </div>
 
       <!-- Name + description -->
       <div class="flex flex-col gap-1.5">
-        <h3 class="font-bold text-stone-900 text-base">
+        <h3 class="font-bold text-foreground text-base">
           {{ name }}
         </h3>
-        <p class="text-sm text-stone-500 leading-relaxed">
+        <p class="text-sm text-foreground-muted leading-relaxed">
           {{ description }}
         </p>
       </div>
@@ -187,7 +187,7 @@
             />
           </svg>
         </span>
-        <span v-else class="text-sm text-stone-300 font-medium"> Bientôt disponible </span>
+        <span v-else class="text-sm text-foreground-subtle font-medium"> Bientôt disponible </span>
       </div>
     </div>
   </component>

@@ -9,8 +9,8 @@
       :class="[
         'flex-1 rounded-xl border px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 transition',
         disabled
-          ? 'bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed'
-          : 'border-stone-300 text-stone-800 focus:ring-teal-400',
+          ? 'bg-surface-muted border-border text-foreground-subtle cursor-not-allowed'
+          : 'border-border-strong text-foreground focus:ring-teal-400',
       ]"
       @keydown.enter.prevent="onSubmit"
     />
@@ -20,7 +20,7 @@
       :class="[
         'px-5 py-3 rounded-xl text-sm font-semibold transition',
         disabled || !word.trim()
-          ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+          ? 'bg-border text-foreground-subtle cursor-not-allowed'
           : 'bg-teal-500 text-white hover:bg-teal-600 active:bg-teal-700',
       ]"
     >

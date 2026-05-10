@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-3">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-base font-bold text-stone-900 shrink-0">
+        <h1 class="text-base font-bold text-foreground shrink-0">
           🏆 Surenchère
-          <span class="text-stone-400 font-normal ml-2">
+          <span class="text-foreground-subtle font-normal ml-2">
             Manche {{ store.room?.currentRound ?? 0 }} / {{ store.room?.settings.totalRounds ?? 0 }}
           </span>
         </h1>
@@ -81,7 +81,7 @@
           <!-- ROUND_END -->
           <div
             v-else-if="store.phase === 'ROUND_END'"
-            class="bg-white rounded-2xl border border-stone-200 p-6 text-sm text-stone-500 text-center"
+            class="bg-card rounded-2xl border border-border p-6 text-sm text-foreground-muted text-center"
           >
             Prochaine manche dans quelques secondes…
           </div>

@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
+  <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-4 py-3">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
       <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-bold text-stone-900">📸 Snap Avis</span>
-          <span class="text-stone-300">·</span>
-          <span class="text-xs text-stone-500">
+          <span class="text-sm font-bold text-foreground">📸 Snap Avis</span>
+          <span class="text-foreground-subtle">·</span>
+          <span class="text-xs text-foreground-muted">
             Manche {{ store.room?.currentRound ?? 1 }}/{{ store.room?.settings.totalRounds ?? 8 }}
           </span>
         </div>
@@ -15,7 +15,7 @@
             {{ store.myScore }} pts
           </span>
           <button
-            class="text-xs text-stone-400 hover:text-stone-700 transition"
+            class="text-xs text-foreground-subtle hover:text-foreground-muted transition"
             @click="showScores = !showScores"
           >
             🏆 Scores
@@ -28,15 +28,15 @@
       <!-- Scores panel -->
       <div
         v-if="showScores"
-        class="bg-white rounded-2xl border border-stone-200 p-4 flex flex-col gap-2"
+        class="bg-card rounded-2xl border border-border p-4 flex flex-col gap-2"
       >
-        <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">Classement</p>
+        <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">Classement</p>
         <div
           v-for="player in sortedPlayers"
           :key="player.socketId"
           :class="[
             'flex items-center justify-between text-sm',
-            player.socketId === store.mySocketId ? 'font-bold text-violet-700' : 'text-stone-700',
+            player.socketId === store.mySocketId ? 'font-bold text-violet-700' : 'text-foreground-muted',
           ]"
         >
           <span>{{ player.pseudo }}</span>
@@ -47,7 +47,7 @@
       <!-- ── PHASE: REVEALING ── -->
       <template v-if="store.phase === 'REVEALING'">
         <div class="text-center">
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">
+          <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest mb-2">
             Mémorise cette image !
           </p>
           <ImageReveal
@@ -62,7 +62,7 @@
       <!-- ── PHASE: WRITING ── -->
       <template v-else-if="store.phase === 'WRITING'">
         <div class="text-center mb-1">
-          <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+          <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
             Écris UN mot pour décrire la photo
           </p>
         </div>
@@ -94,7 +94,7 @@
         </BaseButton>
         <p
           v-else-if="!store.isHost && store.phase === 'RESULTS'"
-          class="text-center text-sm text-stone-400"
+          class="text-center text-sm text-foreground-subtle"
         >
           En attente de l'hôte pour la prochaine manche…
         </p>
@@ -102,7 +102,7 @@
 
       <!-- ── PHASE: FINISHED (redirect en cours) ── -->
       <template v-else-if="store.phase === 'FINISHED'">
-        <div class="text-center text-stone-500 text-sm py-8">Calcul du podium…</div>
+        <div class="text-center text-foreground-muted text-sm py-8">Calcul du podium…</div>
       </template>
     </main>
   </div>

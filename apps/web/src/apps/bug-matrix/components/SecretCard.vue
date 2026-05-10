@@ -28,7 +28,7 @@
   </div>
   <div
     v-else
-    class="rounded-2xl border border-stone-200 bg-white p-5 text-stone-500 text-sm text-center"
+    class="rounded-2xl border border-border bg-card p-5 text-foreground-muted text-sm text-center"
   >
     En attente de ton rôle…
   </div>

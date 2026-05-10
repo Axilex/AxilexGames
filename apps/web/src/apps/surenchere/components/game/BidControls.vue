@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-4">
+  <div class="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
     <template v-if="canBid">
       <div class="flex items-center gap-3">
         <button
-          class="w-10 h-10 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-lg"
+          class="w-10 h-10 rounded-lg bg-surface-muted hover:bg-border text-foreground-muted font-bold text-lg"
           @click="dec"
         >
           −
@@ -12,10 +12,10 @@
           v-model.number="amount"
           type="number"
           :min="minAmount"
-          class="flex-1 text-center text-2xl font-bold bg-stone-50 border border-stone-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          class="flex-1 text-center text-2xl font-bold bg-surface-muted border border-border rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <button
-          class="w-10 h-10 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-lg"
+          class="w-10 h-10 rounded-lg bg-surface-muted hover:bg-border text-foreground-muted font-bold text-lg"
           @click="inc"
         >
           +
@@ -30,7 +30,7 @@
     </template>
 
     <template v-else-if="hasPassed">
-      <p class="text-center text-sm text-stone-500 py-4">Vous avez passé pour cette manche.</p>
+      <p class="text-center text-sm text-foreground-muted py-4">Vous avez passé pour cette manche.</p>
     </template>
 
     <template v-else-if="canChallenge">
@@ -38,7 +38,7 @@
     </template>
 
     <template v-else>
-      <p class="text-center text-sm text-stone-500 py-4">En attente des autres joueurs…</p>
+      <p class="text-center text-sm text-foreground-muted py-4">En attente des autres joueurs…</p>
     </template>
   </div>
 </template>

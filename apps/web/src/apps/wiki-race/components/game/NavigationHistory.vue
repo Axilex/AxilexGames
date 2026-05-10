@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between">
-      <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+      <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
         Mon chemin · {{ stepCount }} clic{{ stepCount > 1 ? 's' : '' }}
       </p>
       <button
         v-if="stepCount > 0"
-        class="text-stone-400 hover:text-amber-600 transition-colors p-1 rounded hover:bg-amber-50"
+        class="text-foreground-subtle hover:text-amber-600 transition-colors p-1 rounded hover:bg-amber-50"
         :title="copied ? 'Copié !' : 'Copier le chemin'"
         @click="copyPath"
       >
@@ -43,14 +43,14 @@
 
     <div class="flex flex-col gap-1">
       <!-- Start page -->
-      <span class="text-xs px-2 py-1 rounded-md bg-stone-100 text-stone-600 font-medium truncate">
+      <span class="text-xs px-2 py-1 rounded-md bg-surface-muted text-foreground-muted font-medium truncate">
         {{ decodeURIComponent(startSlug).replace(/_/g, ' ') }}
       </span>
       <!-- Steps -->
       <template v-for="(step, i) in history" :key="i">
         <div class="flex items-center gap-1 pl-2">
           <svg
-            class="h-3 w-3 text-stone-300 shrink-0"
+            class="h-3 w-3 text-foreground-subtle shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -68,14 +68,14 @@
             'text-xs px-2 py-1 rounded-md font-medium truncate',
             i === history.length - 1
               ? 'bg-amber-100 text-amber-700'
-              : 'bg-stone-100 text-stone-600',
+              : 'bg-surface-muted text-foreground-muted',
           ]"
         >
           {{ decodeURIComponent(step.to).replace(/_/g, ' ') }}
         </span>
       </template>
 
-      <span v-if="history.length === 0 && !startSlug" class="text-xs text-stone-400 italic">
+      <span v-if="history.length === 0 && !startSlug" class="text-xs text-foreground-subtle italic">
         En attente...
       </span>
     </div>

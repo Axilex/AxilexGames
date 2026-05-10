@@ -1,14 +1,14 @@
 <template>
   <div v-if="endsAt" class="flex flex-col gap-1">
-    <div class="flex items-center justify-between text-xs text-stone-500">
+    <div class="flex items-center justify-between text-xs text-foreground-muted">
       <span class="font-semibold uppercase tracking-widest">⏱ Temps saisie</span>
       <span
-        :class="['font-bold tabular-nums', secondsLeft <= 10 ? 'text-red-600' : 'text-stone-700']"
+        :class="['font-bold tabular-nums', secondsLeft <= 10 ? 'text-red-600' : 'text-foreground-muted']"
       >
         {{ secondsLeft }}s
       </span>
     </div>
-    <div class="h-1.5 rounded-full bg-stone-100 overflow-hidden">
+    <div class="h-1.5 rounded-full bg-surface-muted overflow-hidden">
       <div
         class="h-full rounded-full transition-all"
         :class="secondsLeft <= 10 ? 'bg-red-500' : 'bg-amber-500'"

@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest">
+    <p class="text-xs font-semibold text-foreground-subtle uppercase tracking-widest">
       Bingo ({{ validated }}/{{ total }})
     </p>
     <div class="flex flex-col gap-1">
@@ -11,7 +11,7 @@
         :class="
           isValidated(constraint.id)
             ? 'bg-amber-50 border border-amber-200 text-amber-700'
-            : 'bg-stone-50 border border-stone-100 text-stone-500'
+            : 'bg-surface-muted border border-border text-foreground-muted'
         "
       >
         <span
@@ -19,7 +19,7 @@
           :class="
             isValidated(constraint.id)
               ? 'border-amber-500 bg-amber-500 text-white'
-              : 'border-stone-300 bg-white'
+              : 'border-border-strong bg-card'
           "
         >
           <span v-if="isValidated(constraint.id)">✓</span>

@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-4">
+  <div class="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
     <div class="flex flex-col gap-1">
       <span class="text-xs font-semibold uppercase tracking-widest text-amber-600">
         {{ canSubmit ? 'À toi de jouer' : `${bidderName ?? 'Le joueur'} écrit ses mots…` }}
       </span>
-      <h2 class="text-xl font-bold text-stone-900">
+      <h2 class="text-xl font-bold text-foreground">
         {{ canSubmit ? `Écris tes ${count} mots` : `${count} mots à trouver` }}
       </h2>
     </div>
@@ -17,13 +17,13 @@
           v-model="words[i]"
           type="text"
           :placeholder="`Mot ${i + 1}`"
-          class="px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          class="px-3 py-2 bg-surface-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           @input="onInput"
         />
       </div>
       <BaseButton :disabled="!isValid" @click="submit">Valider mes mots</BaseButton>
     </template>
-    <p v-else class="text-sm text-stone-500 text-center py-4">En attente de la saisie…</p>
+    <p v-else class="text-sm text-foreground-muted text-center py-4">En attente de la saisie…</p>
   </div>
 </template>
 

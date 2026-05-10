@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-stone-50 flex flex-col">
-    <header class="sticky top-0 z-10 bg-white border-b border-stone-200 px-6 py-4">
+  <div class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-10 bg-card border-b border-border px-6 py-4">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="text-lg font-bold text-stone-900">🏆 Surenchère — Salon</h1>
+        <h1 class="text-lg font-bold text-foreground">🏆 Surenchère — Salon</h1>
         <BaseButton variant="ghost" size="sm" @click="onLeave">Quitter</BaseButton>
       </div>
     </header>
@@ -24,7 +24,7 @@
         />
         <div
           v-else
-          class="bg-white rounded-2xl border border-stone-200 p-5 text-sm text-stone-500 text-center"
+          class="bg-card rounded-2xl border border-border p-5 text-sm text-foreground-muted text-center"
         >
           En attente du host…
         </div>

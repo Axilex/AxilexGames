@@ -4,7 +4,7 @@
       'font-mono text-sm font-semibold tabular-nums px-2 py-0.5 rounded-md',
       isCountdown && secondsLeft < 60
         ? 'text-red-600 bg-red-50 animate-pulse'
-        : 'text-stone-500 bg-stone-100',
+        : 'text-foreground-muted bg-surface-muted',
     ]"
     :title="isCountdown ? 'Temps restant' : 'Temps écoulé'"
   >

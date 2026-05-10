@@ -7,7 +7,7 @@
         'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition',
         submittedPseudos.includes(player.pseudo)
           ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-          : 'bg-stone-100 border-stone-200 text-stone-500',
+          : 'bg-surface-muted border-border text-foreground-muted',
       ]"
     >
       <span>{{ submittedPseudos.includes(player.pseudo) ? '✅' : '⏳' }}</span>

@@ -1,15 +1,15 @@
 <template>
-  <div class="bg-white rounded-2xl border border-stone-200 p-5 flex flex-col gap-2">
-    <span class="text-xs font-semibold uppercase tracking-widest text-stone-400">Code room</span>
+  <div class="bg-card rounded-2xl border border-border p-5 flex flex-col gap-2">
+    <span class="text-xs font-semibold uppercase tracking-widest text-foreground-subtle">Code room</span>
     <div class="flex items-center gap-3">
       <code
-        class="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 text-2xl font-bold tracking-[0.3em] text-stone-900 text-center"
+        class="flex-1 bg-surface-muted border border-border rounded-lg px-4 py-3 text-2xl font-bold tracking-[0.3em] text-foreground text-center"
       >
         {{ code || '—' }}
       </code>
       <button
         v-if="code"
-        class="px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold border border-amber-200"
+        class="px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-800"
         @click="copy"
       >
         {{ copied ? 'Copié!' : 'Copier' }}

@@ -8,7 +8,7 @@
         :disabled="disabled"
         :placeholder="disabled ? 'Mot envoyé ✓' : 'Ton mot…'"
         maxlength="32"
-        class="flex-1 rounded-xl border border-stone-200 px-4 py-3 text-sm font-medium text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:bg-stone-50 disabled:text-stone-400 disabled:cursor-not-allowed transition"
+        class="flex-1 rounded-xl border border-border px-4 py-3 text-sm font-medium text-foreground placeholder-foreground-subtle focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:bg-surface-muted disabled:text-foreground-subtle disabled:cursor-not-allowed transition"
         autocomplete="off"
         autocorrect="off"
         spellcheck="false"
@@ -16,7 +16,7 @@
       <button
         type="submit"
         :disabled="disabled || !word.trim()"
-        class="px-5 py-3 rounded-xl text-sm font-semibold text-white bg-violet-500 hover:bg-violet-600 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed transition"
+        class="px-5 py-3 rounded-xl text-sm font-semibold text-white bg-violet-500 hover:bg-violet-600 disabled:bg-border disabled:text-foreground-subtle disabled:cursor-not-allowed transition"
       >
         {{ disabled ? '✓' : 'Envoyer →' }}
       </button>

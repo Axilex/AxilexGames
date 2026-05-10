@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white rounded-xl border border-stone-200 px-4 py-3 flex items-center gap-3">
-    <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">{{ label }}</span>
+  <div class="bg-card rounded-xl border border-border px-4 py-3 flex items-center gap-3">
+    <span class="text-xs font-semibold uppercase tracking-wider text-foreground-muted">{{ label }}</span>
     <span class="text-2xl font-bold text-emerald-600 tabular-nums">{{ display }}</span>
   </div>
 </template>
