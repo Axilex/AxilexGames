@@ -19,7 +19,7 @@
         >
           <span class="font-semibold text-stone-900 min-w-[80px]">{{ r.pseudo }}</span>
           <span class="flex-1 text-stone-600">{{ r.ruleLabel }}</span>
-          <span class="text-xs font-bold uppercase text-fuchsia-600">{{ r.category }}</span>
+          <span class="text-xs font-bold uppercase text-fuchsia-600">{{ VOTE_LABELS_FR[r.category] }}</span>
         </li>
       </ul>
     </section>
@@ -43,7 +43,7 @@
           <tr v-for="(targetMap, voter) in result.votes" :key="voter" class="border-t border-stone-100">
             <td class="font-semibold py-2">{{ voter }}</td>
             <td v-for="t in targetPseudos" :key="t" class="text-center text-xs font-bold">
-              <span :class="badgeClass(targetMap[t])">{{ targetMap[t] ?? '—' }}</span>
+              <span :class="badgeClass(targetMap[t])">{{ targetMap[t] ? VOTE_LABELS_FR[targetMap[t]] : '—' }}</span>
             </td>
           </tr>
         </tbody>
@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { BugMatrixRoundResult, BugMatrixVoteLabel } from '@wiki-race/shared';
+import { VOTE_LABELS_FR } from '../labels';
 
 const props = defineProps<{ result: BugMatrixRoundResult }>();
 

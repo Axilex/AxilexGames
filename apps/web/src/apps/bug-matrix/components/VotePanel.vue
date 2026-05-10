@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-lg font-bold text-stone-900">À ton avis…</h2>
       <p class="text-sm text-stone-500 mt-1">
-        Pour chaque autre joueur, choisis : <b>NORMAL</b> (tu penses qu'il n'a pas de règle), ou la
+        Pour chaque autre joueur, choisis : <b>Normal</b> (tu penses qu'il n'a pas de règle), ou la
         catégorie de règle que tu devines.
       </p>
     </div>
@@ -30,7 +30,7 @@
             ]"
             @click="emit('select', t.pseudo, label)"
           >
-            {{ label }}
+            {{ VOTE_LABELS_FR[label] }}
           </button>
         </div>
       </li>
@@ -45,6 +45,7 @@
 <script setup lang="ts">
 import type { BugMatrixPlayer, BugMatrixVoteLabel } from '@wiki-race/shared';
 import BaseButton from '@/shared/components/ui/BaseButton.vue';
+import { VOTE_LABELS_FR } from '../labels';
 
 const props = defineProps<{
   targets: BugMatrixPlayer[];
