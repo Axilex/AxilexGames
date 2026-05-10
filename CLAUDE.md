@@ -221,5 +221,6 @@ When the user corrects your approach, append a one-line rule here before ending 
 
 - `apps/api/src/modules/game/{game,mode}.service.spec.ts` sont rouges depuis les commits 6e6557f / a0b02d6 (références à `GameStateService` et `timerHandle` retirés). Ne pas les "corriger" en passant — ils nécessitent une réécriture dédiée.
 - Pour `toDTO` : préférer la **construction explicite champ par champ** au pattern `const { sessionToken: _t, ...rest } = p`. ESLint (`@typescript-eslint/no-unused-vars`) déclenche dès qu'on a plusieurs underscores dans un même destructuring (vu sur BugMatrix avec 5 champs à strip). La construction explicite est aussi plus claire pour les réviseurs.
+- I18n d'enums partagés : ne jamais traduire les valeurs wire (types dans `packages/shared`, ex. `BugMatrixVoteLabel = 'NORMAL' | 'FORM' | 'TONE' | 'CONTENT'`). Créer un mapping FR unique dans le module front concerné (ex. `apps/web/src/apps/bug-matrix/labels.ts` exporte `VOTE_LABELS_FR`) et l'importer partout où l'enum est affiché — pas de duplication par composant.
 
 ---
