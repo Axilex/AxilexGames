@@ -1,5 +1,18 @@
 # web
 
+## 0.5.7
+
+### Patch Changes
+
+- ### ✨ Nouvelles fonctionnalités
+  - [`094a81b`](https://github.com/Axilex/AxilexGames/commit/094a81b) update game color schemes and implement semantic tokens for light/dark mode
+  - [`09476e8`](https://github.com/Axilex/AxilexGames/commit/09476e8) implement dark mode toggle and update UI components for improved theming
+  - [`0e09f77`](https://github.com/Axilex/AxilexGames/commit/0e09f77) add guidelines for internationalization of shared enums in CLAUDE.md
+  - [`117f89e`](https://github.com/Axilex/AxilexGames/commit/117f89e) add French labels for voting categories and update components to use them
+  - [`280b93e`](https://github.com/Axilex/AxilexGames/commit/280b93e) add Bug dans la Matrix game
+- Updated dependencies
+  - @wiki-race/shared@0.5.7
+
 ## 0.5.6
 
 ### Patch Changes
